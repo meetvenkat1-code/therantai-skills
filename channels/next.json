@@ -1,4 +1,6 @@
 {
-  "tag": "v1.1.0",
-  "manifest_sha256": "378ff0fc6df4055911427a15029eaae8cc99ac31aae8754bada832d8c4cd4bbb"
+  "base_url": "https://raw.githubusercontent.com/meetvenkat1-code/therantai-skills/main/skills/",
+  "manifest_sha256": "c84b34952e02adb06803fe6f7e01209a5031be045336d81ff4cbeee5dc9af5f2",
+  "manifest_url": "https://raw.githubusercontent.com/meetvenkat1-code/therantai-skills/main/MANIFEST.json",
+  "tag": "v1.1.0"
 }

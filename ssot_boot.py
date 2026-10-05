@@ -9,6 +9,13 @@ Environment
 
 No tokens and no API calls: only raw.githubusercontent.com and codeload.github.com.
 Python 3.8+ standard library only.
+
+Manifest schema v2 (MANIFEST.json):
+  {"version": "vX.Y.Z", "skills": {name: {"url", "sha256", "bytes", "description"}}}
+Each skill's sha256/bytes are computed over LF-normalized SKILL.md bytes,
+so Windows (CRLF) checkouts verify against the same hash GitHub serves.
+Channel files (channels/<ref>.json) carry {"tag", "manifest_url",
+"manifest_sha256", "base_url"}; only "tag" and "manifest_sha256" are used here.
 """
 import hashlib
 import json
@@ -38,6 +45,15 @@ def sha256(path):
     return hashlib.sha256(pathlib.Path(path).read_bytes()).hexdigest()
 
 
+def _norm(data: bytes) -> bytes:
+    """LF-normalized bytes, matching tools/build_manifest.py hashing."""
+    return data.replace(b"\r\n", b"\n").replace(b"\r", b"\n")
+
+
+def file_sha256(path):
+    return hashlib.sha256(_norm(pathlib.Path(path).read_bytes())).hexdigest()
+
+
 def resolve():
     """Return (tag, manifest_sha256_pin or None)."""
     if not re.fullmatch(r"[\w.-]+/[\w.-]+", REPO):
@@ -61,22 +77,47 @@ def inside(base, rel):
 
 
 def verify(tree, pin):
+    """Verify a skill tree against manifest schema v2.
+
+    Checks the channel pin against MANIFEST.json (raw or LF-normalized
+    bytes, so Windows CRLF checkouts still verify), then for every
+    manifest["skills"][name] checks skills/<name>/SKILL.md exists and its
+    LF-normalized sha256 (and byte size, when present) matches
+    skills[name]["sha256"] (and ["bytes"]).
+    """
     tree = pathlib.Path(tree)
     manifest = tree / "MANIFEST.json"
     if not manifest.is_file():
         raise ValueError("MANIFEST.json missing")
-    if pin and sha256(manifest) != pin:
-        raise ValueError("manifest does not match the channel pin")
+    if pin:
+        raw = manifest.read_bytes()
+        if hashlib.sha256(raw).hexdigest() != pin and hashlib.sha256(_norm(raw)).hexdigest() != pin:
+            raise ValueError("manifest does not match the channel pin")
     man = json.loads(manifest.read_text(encoding="utf-8"))
-    for name, meta in man["skills"].items():
-        for rel, want in meta["files"].items():
-            f = inside(tree, f"skills/{name}/{rel}")
-            if not f.is_file() or sha256(f) != want:
-                raise ValueError(f"hash mismatch: {name}/{rel}")
-    for rel, want in man.get("boot", {}).items():
-        f = inside(tree, rel)
-        if not f.is_file() or sha256(f) != want:
-            raise ValueError(f"hash mismatch: {rel}")
+    try:
+        skills = man["skills"]
+    except KeyError:
+        raise ValueError("manifest has no 'skills' table (expected schema v2)")
+    if not isinstance(skills, dict):
+        raise ValueError("manifest 'skills' must be an object")
+    for name, meta in skills.items():
+        try:
+            want = meta["sha256"]
+        except (KeyError, TypeError):
+            raise ValueError(f"skill {name!r}: manifest entry has no 'sha256' (expected schema v2)")
+        f = inside(tree, f"skills/{name}/SKILL.md")
+        if not f.is_file():
+            raise ValueError(f"hash mismatch: {name}/SKILL.md missing")
+        data = _norm(f.read_bytes())
+        if hashlib.sha256(data).hexdigest() != want:
+            raise ValueError(f"hash mismatch: {name}/SKILL.md")
+        if "bytes" in meta and len(data) != meta["bytes"]:
+            raise ValueError(f"size mismatch: {name}/SKILL.md")
+        url = meta.get("url", "")
+        if url and not url.endswith(f"skills/{name}/SKILL.md"):
+            raise ValueError(f"url mismatch: {name}")
+        if not " ".join(str(meta.get("description", "")).split()):
+            raise ValueError(f"skill {name!r}: description is empty")
     return man
 
 
@@ -131,13 +172,14 @@ def activate(tree):
 
 
 def self_update(tree, man):
-    """Refresh the cached loader from the release, but only if its hash is in the manifest."""
-    want = man.get("boot", {}).get("ssot_boot.py")
-    src, dst = pathlib.Path(tree) / "ssot_boot.py", ROOT / "ssot_boot.py"
-    if want and src.is_file() and sha256(src) == want and (not dst.exists() or sha256(dst) != want):
-        tmp = ROOT / "ssot_boot.py.tmp"
-        shutil.copy2(src, tmp)
-        os.replace(tmp, dst)
+    """No-op under manifest schema v2 (no boot pin).
+
+    Schema v1 pinned ssot_boot.py via manifest["boot"]; schema v2 carries
+    only per-skill {url, sha256, bytes, description} and no longer pins the
+    loader, so there is nothing verified to self-update from. The loader
+    itself ships in the repo and refreshes via normal git/tag updates.
+    """
+    return
 
 
 def prune():

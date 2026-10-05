@@ -1,8 +1,12 @@
 name: release
 
 # One click: Actions -> release -> Run workflow -> enter a version.
-# Lints every skill, builds MANIFEST.json, tags the commit that contains it,
-# smoke-tests the real loader against the new tag, then moves the channel(s).
+# Lints every skill, builds MANIFEST.json (schema v2:
+# {"version": "vX.Y.Z", "skills": {name: {"url", "sha256", "bytes",
+# "description"}}} with LF-normalized hashes), tags the commit that contains
+# it, smoke-tests the real loader (ssot_boot.verify, schema v2) against the
+# new tag, then moves the channel(s) with the v2 channel schema
+# ({"tag", "manifest_url", "manifest_sha256", "base_url"}).
 
 on:
   workflow_dispatch:
@@ -53,8 +57,8 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Lint skills and build manifest
-        run: python tools/build_manifest.py
+      - name: Lint skills and build manifest (schema v2)
+        run: MANIFEST_TAG="$VERSION" python tools/build_manifest.py
 
       - name: Commit manifest and tag
         run: |
@@ -65,19 +69,29 @@ jobs:
           git tag -a "$VERSION" -m "$VERSION"
           git push origin HEAD:main "$VERSION"
 
-      - name: Smoke-test the loader against the new tag
+      - name: Smoke-test the loader against the new tag (schema v2)
         run: |
           SSOT_REPO="${{ github.repository }}" SSOT_REF="$VERSION" \
           SSOT_HOME="$RUNNER_TEMP/ssot-smoke" python ssot_boot.py
           test -s "$RUNNER_TEMP/ssot-smoke/current/INDEX.md"
+          python - <<'PY'
+          import json, pathlib
+          man = json.loads(pathlib.Path("MANIFEST.json").read_text(encoding="utf-8"))
+          assert man.get("version"), "manifest has no version (expected schema v2)"
+          for name, meta in man["skills"].items():
+              assert set(("url", "sha256", "bytes", "description")) <= set(meta), name
+              assert meta["url"].endswith(f"skills/{name}/SKILL.md"), name
+          print(f"manifest schema v2 OK: {len(man['skills'])} skills")
+          PY
 
-      - name: Point channels at this release
+      - name: Point channels at this release (schema v2)
         if: ${{ inputs.promote != 'none' }}
         run: |
           DIGEST=$(sha256sum MANIFEST.json | cut -d' ' -f1)
+          REPO="${{ github.repository }}"
           mkdir -p channels
           write_channel() {
-            printf '{\n  "tag": "%s",\n  "manifest_sha256": "%s"\n}\n' "$VERSION" "$DIGEST" > "channels/$1.json"
+            printf '{\n  "base_url": "https://raw.githubusercontent.com/%s/main/skills/",\n  "manifest_sha256": "%s",\n  "manifest_url": "https://raw.githubusercontent.com/%s/main/MANIFEST.json",\n  "tag": "%s"\n}\n' "$REPO" "$DIGEST" "$REPO" "$VERSION" > "channels/$1.json"
           }
           write_channel next
           if [ "$PROMOTE" = "stable" ]; then write_channel stable; fi

@@ -20,13 +20,14 @@ channels/stable.json structure:
 """
 import hashlib
 import json
+import os
 import pathlib
 import re
 import sys
 
 REPO_SLUG = "meetvenkat1-code/therantai-skills"
 BRANCH = "main"
-TAG = "v1.1.0"
+TAG = os.environ.get("MANIFEST_TAG", "v1.1.0")
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 SKILLS = ROOT / "skills"
