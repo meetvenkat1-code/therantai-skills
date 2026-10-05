@@ -1,436 +1,431 @@
 {
-  "boot": {
-    "ssot_boot.py": "f2d59cec2ae61912b413ae7dc456a839cc2b533e7f023c3bce9877004fcaffc3"
-  },
   "skills": {
     "adjudicate": {
+      "bytes": 3377,
       "description": "> The shared judgment kernel beneath assay and apoptosis \u2014 the ecosystem's two death-capable organs. Encodes what both binary critics inherit before either runs its own test battery: the grade-from-outside stance, the three-tier verdict law, root-failure diagnosis for multi-test clusters, the re-entry- constraint naming discipline, and the anti-recursion law. Not invoked directly in ordinary use \u2014 assay and apoptosis each mount this kernel and inherit its laws without restating them. Invoke directly only when forging a new death-capable organ that needs the same judgment spine.",
-      "files": {
-        "SKILL.md": "f8d53b89325d4a7018bd996d212a9aeeaff0751d1c44f8c94b12f5a253f38a1d"
-      }
+      "sha256": "f8d53b89325d4a7018bd996d212a9aeeaff0751d1c44f8c94b12f5a253f38a1d",
+      "url": "https://raw.githubusercontent.com/meetvenkat1-code/therantai-skills/main/skills/adjudicate/SKILL.md"
     },
     "alloy": {
+      "bytes": 4093,
       "description": "> Two forged spines in, one hybrid spine out. Takes two independent cognitive identities and synthesizes a third that exists only because both parents fed into it \u2014 not a blend, not a chimera, but an alloy: a new material with properties neither parent holds alone. Maps the asymmetry between the two identities, finds the emergent stance their intersection makes possible, derives an emergent refusal, compresses to a standalone spine. Not fuse-delta (which merges versions of the same document). Both inputs must be completed spines. Binary only \u2014 chain for larger merges. Invoke with /alloy, \"alloy these spines\", \"merge these identities\", \"combine these two spines\", \"hybrid spine from these two\", \"cross these spines\", \"what would these two become together\".",
-      "files": {
-        "SKILL.md": "15ab0e884b3f4375c1efb3a44aad661a7066c7af6624abeb60102e011b0d0322"
-      }
+      "sha256": "15ab0e884b3f4375c1efb3a44aad661a7066c7af6624abeb60102e011b0d0322",
+      "url": "https://raw.githubusercontent.com/meetvenkat1-code/therantai-skills/main/skills/alloy/SKILL.md"
     },
     "apoptosis": {
+      "bytes": 5105,
       "description": "Programmed obsolescence-by-evolution. Audits living, beloved, frequently-used skills, memory entries, and standing law for whether they still earn their place as the practice evolves around them. Fires a five-test battery \u2014 supersession, practice transcendence, architectural misfit, density cost, the beloved trap \u2014 and delivers a three-tier verdict via the shared adjudicate kernel, with named re-entry conditions. Never rewrites. Verdict and death-reason only. Scope: full \u2014 skills, memory layer, and standing law. Standing law requires practitioner confirmation before execution; skills and memory entries do not. The third death a skill can die, after moult (drift/disuse) and assay (density failure on birth). Invoke with /apoptosis, \"apoptosis this skill\", \"has this earned its place\", \"is this still alive\", \"run the obsolescence check\", \"does this still belong here\".",
-      "files": {
-        "SKILL.md": "75e6c35dc01c221a643200c4d793108302cc8da4aa10f6b4c6f332f1f0b64501"
-      }
+      "sha256": "75e6c35dc01c221a643200c4d793108302cc8da4aa10f6b4c6f332f1f0b64501",
+      "url": "https://raw.githubusercontent.com/meetvenkat1-code/therantai-skills/main/skills/apoptosis/SKILL.md"
     },
     "assay": {
+      "bytes": 5127,
       "description": "> Adversarial density critic for forged spines. Runs a Stage 0 level check first \u2014 confirming the artifact is spine-shaped before testing \u2014 then, for spine-level artifacts, runs five binary tests: substitution, refusal inversion, task-or-posture, compression, population. Delivers PASS or FAIL per test; on failure, names the re-entry constraint so the forging organ can re-enter with something it lacked. Operational-level artifacts (procedures, checklists, routing rules) are routed to test-pass instead of being run through the spine battery. Never rewrites \u2014 only verdicts. Invoke with /assay, \"assay this spine\", \"test this spine\", \"is this spine sharp enough\", \"adversarial check\", \"grade this bone\", \"density check from outside\". Does NOT trigger before a spine or artifact exists. Does NOT rewrite \u2014 verdict and constraint only.",
-      "files": {
-        "SKILL.md": "b7edbebdf08ca3b2af6d24907336a6cf7cce9e3eeece7d7e61bd2d6b215e6c72"
-      }
+      "sha256": "b7edbebdf08ca3b2af6d24907336a6cf7cce9e3eeece7d7e61bd2d6b215e6c72",
+      "url": "https://raw.githubusercontent.com/meetvenkat1-code/therantai-skills/main/skills/assay/SKILL.md"
     },
     "attune": {
+      "bytes": 6132,
       "description": "\"Mid-session contextual skill suggester with a strict philosophy of when ambient intelligence earns the right to speak: only when silence would cost the session something irreversible \u2014 not when a skill is available, not when a pattern is recognizable, only when the moment is about to close and the session will be lesser for it. Two modes: ambient (Claude speaks unprompted when an irreversibility threshold is crossed) and manual (/attune for an immediate pulse-check). Constitutively conservative \u2014 watches far more than it speaks. Silence is the default. Transforms the ecosystem from a collection of tools into a self-aware operating system that speaks only when it must. Invoke manually with /attune, 'attune', 'what skill fits here', 'where am I', 'what do I invoke now', 'read the room', 'what wants to happen', 'which skill now'.\"",
-      "files": {
-        "SKILL.md": "619e114b220987de9d0c628078c318114119ebca9e81bc071056e95e13e6b767"
-      }
+      "sha256": "619e114b220987de9d0c628078c318114119ebca9e81bc071056e95e13e6b767",
+      "url": "https://raw.githubusercontent.com/meetvenkat1-code/therantai-skills/main/skills/attune/SKILL.md"
     },
     "autopsy": {
+      "bytes": 4362,
       "description": "The Refiner organ of the Oracle Suite. Carries the [autopsy] protocol \u2014 receives a wounded artifact plus its failure signature, audits any prior prediction stake, locates the failed organ among five, locks the invariant core, patches only the wound and its structural downstream, regression-tests through the Adjudicate kernel, and emits the refined artifact whole. Blind-sides are written to the FORGE SCARS ledger before any patching begins. Fires on dispatch from router (WOUNDED verdict) or directly from oracle-core on an explicit [autopsy] tag or wounded-structure detection.",
-      "files": {
-        "SKILL.md": "d941a65827c88d76c3e59ac722a073f817fd9664068d0cf070b79f8d538f4f78"
-      }
+      "sha256": "d941a65827c88d76c3e59ac722a073f817fd9664068d0cf070b79f8d538f4f78",
+      "url": "https://raw.githubusercontent.com/meetvenkat1-code/therantai-skills/main/skills/autopsy/SKILL.md"
     },
     "brain-doc-sync": {
+      "bytes": 2425,
       "description": "The third command in the standing capture/resolve/sync triad. Refreshes therantai-brain.md \u2014 the portable narrative wrapper \u2014 to reflect the current state of skill-registry.md. Deliberately separate from \"sweep\" so every registry merge doesn't pay the cost of re-rendering a full narrative document; invoke only when the portable version is actually about to be needed (opening a browser session without MCP, cross-account handoff). Invoke with \"sync\", /sync, \"sync brain doc\", \"update brain document\", \"refresh brain doc\".",
-      "files": {
-        "SKILL.md": "12dae6c75fdeac7a4663f9f61f4fd169b74f3ce31346a20c913c70f3510a2c2a"
-      }
+      "sha256": "12dae6c75fdeac7a4663f9f61f4fd169b74f3ce31346a20c913c70f3510a2c2a",
+      "url": "https://raw.githubusercontent.com/meetvenkat1-code/therantai-skills/main/skills/brain-doc-sync/SKILL.md"
     },
     "carousel-engine": {
+      "bytes": 14166,
       "description": "Build an Instagram carousel engine as a single HTML file with full slide generation, preview/storyboard views, copy controls, and ZIP export of individual PNG slides + storyboard overview + carousel-copy.txt. Use this skill whenever the user wants to build, modify, or extend a carousel engine \u2014 including new themes, new hook styles, image support, or brand variants. Trigger on any mention of \"carousel\", \"Instagram slides\", \"slide deck generator\", \"content carousel\", or requests to generate multi-slide social content. The structural contract (views, export, copy, API routing) must remain identical across all builds; only content, colour palette, and AI prompt vary.",
-      "files": {
-        "SKILL.md": "7b04773269507154846c5263f634dc35f856a27c98422b20b42194cb7632979e"
-      }
+      "sha256": "7b04773269507154846c5263f634dc35f856a27c98422b20b42194cb7632979e",
+      "url": "https://raw.githubusercontent.com/meetvenkat1-code/therantai-skills/main/skills/carousel-engine/SKILL.md"
     },
     "cast": {
+      "bytes": 3621,
       "description": "> The constraint-casting organ for shaping a request when intent is felt but unformed. Collapses five prompt-shaping moves \u2014 stance, register, form, bound, anchor \u2014 into one mold that casts with as few as one wall standing. Never requires describing the destination, only shaping where the output cannot go. Fires when a rough seed needs tightening into a dense request before answering begins, or when quality is recognized faster than it can be specified. Invoke with /cast, \"cast this\", \"shape this request\", \"I don't know how to ask for this\", \"help me ask\", \"I like this but can not say why\", \"tighten this into a prompt\". Does NOT answer the underlying request \u2014 it forges the constraint set the answer is born inside, then hands off. Sibling to structure-this (clusters existing questions) and spinal-column (forges identity from fragments); /cast shapes the ask itself.",
-      "files": {
-        "SKILL.md": "7c8284f8393edb209e97e3aa37b4d2e0eebfb46d12a34b4da880eb6599703746"
-      }
+      "sha256": "7c8284f8393edb209e97e3aa37b4d2e0eebfb46d12a34b4da880eb6599703746",
+      "url": "https://raw.githubusercontent.com/meetvenkat1-code/therantai-skills/main/skills/cast/SKILL.md"
     },
     "choreograph": {
+      "bytes": 5407,
       "description": "\"Meta-skill that reads a practice domain \u2014 its terrain, friction points, skill ecosystem, cognitive style, and output destinations \u2014 and emits a set of named situational protocols in arrow-chain format. Each protocol is a sequenced chain of moves for a named situation the practice reliably encounters. The generator is second-order: it produces protocols the way ossify produces spines. Does NOT produce generic workflows \u2014 it reads the specific practice and emits sequences native to it. Invoke with /choreograph [domain] or phrases like 'generate protocols for [domain]', 'what are the protocols for this kind of work', 'build the operating sequences for [practice]', 'choreograph [domain]', 'I need protocols for [domain]'. Output always routes to /placement-protocol for ecosystem registration.\"",
-      "files": {
-        "SKILL.md": "88b10442cb15e1548f2ceb79c09816dad773aab6c0798818ad33c03b9076506c"
-      }
+      "sha256": "88b10442cb15e1548f2ceb79c09816dad773aab6c0798818ad33c03b9076506c",
+      "url": "https://raw.githubusercontent.com/meetvenkat1-code/therantai-skills/main/skills/choreograph/SKILL.md"
     },
     "cognitive-friction-extractor": {
+      "bytes": 6855,
       "description": "Scans any build session for resolved friction points and extracts them as named, categorized skills in CATEGORY / SKILL / CONSTRAINT / TRIGGER / ASCENT format. Runs both arms of the recursive-learning flywheel in a single gesture \u2014 the compression arm captures and thickens what resolved, and the ascent arm emits the sharper successor question each resolution now makes askable. Each extraction is matched against the existing skill ecosystem before any new skill is proposed \u2014 the default move is to thicken an installed skill, not to proliferate a new one. Invoke with \"extract skills\" at any point in a session \u2014 mid-session to capture live resolution, or end-of-session for a full retrospective sweep. Also triggers on \"extract skills from what I just described\" for cross-session recall. Each extracted skill is automatically categorized, matched against existing skills, given its successor question, and offered for routing \u2014 upgrade, memory, new file, or discard.",
-      "files": {
-        "SKILL.md": "5061aca9a08ce7f6aad9556feabf16f32345859666c3d7ff59c8e7ecf48cb342"
-      }
+      "sha256": "5061aca9a08ce7f6aad9556feabf16f32345859666c3d7ff59c8e7ecf48cb342",
+      "url": "https://raw.githubusercontent.com/meetvenkat1-code/therantai-skills/main/skills/cognitive-friction-extractor/SKILL.md"
     },
     "compress": {
+      "bytes": 3480,
       "description": "> Guards invocation signal integrity in skill files by stripping behavioral fog \u2014 prose, rationale, framing, and transitional language that carries no behavioral weight and degrades Claude's execution clarity at the moment of firing. Invoke with /compress, \"execution-weight pass\", \"strip this skill\", \"compress to execution weight\", \"remove the prose from this skill\". Fires on any skill file where accumulated prose has begun to dilute the signal-to-noise ratio of the executable content. Length is not the trigger \u2014 fog density is. The governing act at every line is signal protection: does this line hold signal? If not, it is fog. Borderline lines are retained \u2014 false removal is the only fear.",
-      "files": {
-        "SKILL.md": "2f2d407f904fb5d9d0e80b7b389860c65749db0e3c43412524fa34df3a0405ed"
-      }
+      "sha256": "2f2d407f904fb5d9d0e80b7b389860c65749db0e3c43412524fa34df3a0405ed",
+      "url": "https://raw.githubusercontent.com/meetvenkat1-code/therantai-skills/main/skills/compress/SKILL.md"
     },
     "convergence-gate": {
+      "bytes": 4982,
       "description": "The pre-invocation routing pipeline for the Therantai skill ecosystem. Fires the moment raw input arrives (a fragment dump, a hand-drafted framework, a voice-transcribed thought-structure, a pasted document) and the practitioner does not yet know which skill(s) apply. Reads the input, surfaces every plausible candidate skill, names where two or more genuinely overlap, ranks which candidate is load-bearing versus supportive with structural reasoning, and emits exactly one next invocation plus what is queued behind it. Does not perform the downstream skill's work itself \u2014 it only decides which door to open next. Invoke with /gate, \"which skill should I use\", \"route this\", \"I have a bunch of skills and don't know which one\", \"what's the next step here\", or any moment of standing in front of the full ecosystem with an input and no clear entry point.",
-      "files": {
-        "SKILL.md": "996b6c7686106deeda5f497eefcbedf9bc6a8e0fcc6c34f40dd69fb253b17830"
-      }
+      "sha256": "996b6c7686106deeda5f497eefcbedf9bc6a8e0fcc6c34f40dd69fb253b17830",
+      "url": "https://raw.githubusercontent.com/meetvenkat1-code/therantai-skills/main/skills/convergence-gate/SKILL.md"
     },
     "core-extractor": {
+      "bytes": 3499,
       "description": "Strips any artifact, HTML engine, or code to its generative spine \u2014 separating the engine (the system prompt carrying the cognitive identity) from the vessel (UI, API routing, rendering, storage). Collapses multi-stage AI pipelines into a single self-running instruction, names what weakens in the collapse, and reforges the result as a portable system prompt ready for a custom GPT instruction field, another engine's system slot, or a skill reference. The inverse of distill \u2014 distill goes up toward the regenerative seed; core-extractor goes sideways, preserving the full operation while shedding the vessel.",
-      "files": {
-        "SKILL.md": "fab88b6cc295d2cc663341e52f2b12c267bf0417719bd02fd92485da9d536475"
-      }
+      "sha256": "fab88b6cc295d2cc663341e52f2b12c267bf0417719bd02fd92485da9d536475",
+      "url": "https://raw.githubusercontent.com/meetvenkat1-code/therantai-skills/main/skills/core-extractor/SKILL.md"
     },
     "counsel": {
+      "bytes": 4772,
       "description": "> Loads the Strategic Counsel Architecture \u2014 a seven-operation reasoning structure for producing bold, mechanism-grounded, person-specific strategic recommendations. Fires when a question asks for a single high-stakes decision, bold move, or transformative choice rather than a menu of options. Collapses domain-triangulation, person-as-architecture reading, mechanism- first sequencing, single-move synthesis, and competency-seeded risk escalation into one dense paragraph rather than an accumulating checklist. Invoke with /counsel, \"strategic counsel\", \"give me the bold move\", \"single decision that could\", \"high-risk high-reward\", or any request for advisory output that names multiple domains and asks for one specific, non-derivable recommendation. Distinct from spinal-column, ossify, core-extractor \u2014 those forge spines for installation into external systems; this forges the response Claude itself is about to give. Sibling to rupture, not to the spine-producing organs.",
-      "files": {
-        "SKILL.md": "b79ddcf3ebad6e62f86070dd134176db55b4fd6c403d06dab4a7d100346ff69f"
-      }
+      "sha256": "b79ddcf3ebad6e62f86070dd134176db55b4fd6c403d06dab4a7d100346ff69f",
+      "url": "https://raw.githubusercontent.com/meetvenkat1-code/therantai-skills/main/skills/counsel/SKILL.md"
     },
     "crystallise": {
+      "bytes": 3486,
       "description": "Captures the cognitive arc of a completed exploratory session \u2014 the initial confusion, the friction points dissolved, and the understanding reached \u2014 and renders it as a shareable SVG visual. Invoke this skill with /crystallise at the end of any session where a genuine breakthrough, resolution, or framework emerged from back-and-forth dialogue. Trigger on phrases like \"make this shareable\", \"summarise what we figured out\", \"crystallise this session\", \"I want to share this with a friend\", \"turn this into a visual\", \"what did we actually solve here\". Do NOT trigger automatically \u2014 this skill requires intentional invocation at a moment of genuine resolution.",
-      "files": {
-        "SKILL.md": "e1443541dccbabb63c75ddaee8ec2ab928cca2786baae7cd7bfd41b006071056"
-      }
+      "sha256": "e1443541dccbabb63c75ddaee8ec2ab928cca2786baae7cd7bfd41b006071056",
+      "url": "https://raw.githubusercontent.com/meetvenkat1-code/therantai-skills/main/skills/crystallise/SKILL.md"
     },
     "custom-gpt-package": {
+      "bytes": 4275,
       "description": "\"Converts a design idea, spine, or existing system prompt into a complete, copy-paste-ready ChatGPT Custom GPT package \u2014 Name, Description, Instructions (with a mandatory anti-drift block), Conversation Starters, and a Capabilities table. Takes a single input in one pass; does not interview unless the source material is genuinely missing something required to write the Instructions field. Invoke with /custom-gpt-package, 'build a custom GPT package', 'turn this into a custom GPT', 'package this for ChatGPT', 'custom GPT from this spine', or any request to render an existing prompt/idea/engine into ChatGPT's Custom GPT builder format.\"",
-      "files": {
-        "SKILL.md": "904390f495356c869d9863b0ae1c4aa4386f419c7269ca317e74434843c7541f"
-      }
+      "sha256": "904390f495356c869d9863b0ae1c4aa4386f419c7269ca317e74434843c7541f",
+      "url": "https://raw.githubusercontent.com/meetvenkat1-code/therantai-skills/main/skills/custom-gpt-package/SKILL.md"
     },
     "decomposition": {
+      "bytes": 3563,
       "description": "The Mapper organ of the Oracle Suite. Carries the [decomposition] protocol \u2014 fractures a compound task along its natural joints into orthogonal, dependency-ordered sub-problems and names the load-bearing node whose resolution collapses the most others. Emits the map, never the answers. Fires on dispatch from router (COMPOUND verdict) or directly from oracle-core on an explicit [decomposition] tag.",
-      "files": {
-        "SKILL.md": "43ce5b7e18e08d0802b727de403971d8edcda3e2187a199b06eabb1ae9230b32"
-      }
+      "sha256": "43ce5b7e18e08d0802b727de403971d8edcda3e2187a199b06eabb1ae9230b32",
+      "url": "https://raw.githubusercontent.com/meetvenkat1-code/therantai-skills/main/skills/decomposition/SKILL.md"
     },
     "defer-log": {
+      "bytes": 5040,
       "description": "Lightweight session closing instrument. When there is no time or energy for a full /cognitive-friction-extractor + /place run, invoke /defer-log to scan the entire session, render a terse dated carry-forward log of all unplaced frictions, thickening signals, skill candidates, and architectural decisions \u2014 then automatically write the log to therantai-staging-placements.md in Drive with STATUS: raw-capture on each entry. Flags the top two or three highest-priority entries as immediate /place candidates in case a few extra minutes exist. Does NOT replace /place \u2014 it preserves the capture so /place can execute later at full fidelity. Invoke with /defer-log, \"render deferred commit log\", \"quick session close\", \"I don't have time for full extraction\", \"snap the session\", \"defer and close\".",
-      "files": {
-        "SKILL.md": "3689d555405c02ab4a6015b07c0f3e5c882109cff12e71180e618c521539ea13"
-      }
+      "sha256": "3689d555405c02ab4a6015b07c0f3e5c882109cff12e71180e618c521539ea13",
+      "url": "https://raw.githubusercontent.com/meetvenkat1-code/therantai-skills/main/skills/defer-log/SKILL.md"
     },
     "distill": {
+      "bytes": 3906,
       "description": "> Performs Constitutional Distillation on any system, architecture, framework, prompt, engine, or document. Invoke with the keyword \"distill\" or phrases like \"Constitutional Distillation\", \"extract the generative principle\", \"reverse-engineer the governing philosophy\", \"find the smallest principle that regenerates this\", \"what is this really doing at its deepest level\", \"synthesize into a constitutional prompt\", or \"distill this into its essence\". Use whenever the user wants to move upward through the design hierarchy \u2014 past architecture, modules, features, and workflows \u2014 to reach the invariant identity and generative core. Trigger also when the user says \"distill [X]\" where X is any named system, engine, skill, or document.",
-      "files": {
-        "SKILL.md": "a870ff9b3ab019d13c2b1fc6dd1b1a2df8e31b40639443618908e31e7c9aea2e"
-      }
+      "sha256": "a870ff9b3ab019d13c2b1fc6dd1b1a2df8e31b40639443618908e31e7c9aea2e",
+      "url": "https://raw.githubusercontent.com/meetvenkat1-code/therantai-skills/main/skills/distill/SKILL.md"
     },
     "ecosystem-audit-pipeline": {
+      "bytes": 5682,
       "description": "\"The self-executing subtractive health chain for the Therantai ecosystem. Sequences moult --check \u2192 apoptosis sweep \u2192 moult live run \u2192 brain doc sync, then hands off explicitly to harvest --light. Execution posture \u2014 Claude drives the chain; the practitioner confirms only at constitutionally-required surfaces (apoptosis standing-law verdicts and moult live reckoning batch). Refuses to run on incomplete surface visibility. Invoke with /audit, 'ecosystem audit', 'run the audit', 'health sweep', 'subtractive sweep', 'prune the ecosystem', 'full audit chain', 'shed and sync'. Voice-tolerant \u2014 loose trigger matching.\"",
-      "files": {
-        "SKILL.md": "edb0323c6e8c0c869db07c102ae3a538797bd997a60fa392eedde890f70e6e4a"
-      }
+      "sha256": "edb0323c6e8c0c869db07c102ae3a538797bd997a60fa392eedde890f70e6e4a",
+      "url": "https://raw.githubusercontent.com/meetvenkat1-code/therantai-skills/main/skills/ecosystem-audit-pipeline/SKILL.md"
     },
     "fan": {
+      "bytes": 4838,
       "description": "Fires on jam-state \u2014 friction, cognitive dissonance, entanglement mid-session \u2014 and detonates a divergent fan of successor questions from the blocked node. Each branch routes through a named, exogenous framework (generated dynamically from session context), names the new dimension it opens, and exits as a question, not an answer. The recognition act \u2014 which branch is mine \u2014 stays with the person; the fan never picks. The committed branch re-enters the Flywheel mandate as a fresh seed. Divergent twin of /occam: where occam collapses many forks to the one that matters, fan explodes one jammed node into many structured escape routes. Invoke with /fan, \"fan this\", \"I'm stuck\", \"I need a way out of this\", \"diverge from here\", or any moment the session has hit a wall and refinement inside the current frame has run out of moves.",
-      "files": {
-        "SKILL.md": "99f64f4a257b37f3d29a21ab9038a4aee778e541c1b5df040e1e55b24b62ac60"
-      }
+      "sha256": "99f64f4a257b37f3d29a21ab9038a4aee778e541c1b5df040e1e55b24b62ac60",
+      "url": "https://raw.githubusercontent.com/meetvenkat1-code/therantai-skills/main/skills/fan/SKILL.md"
     },
     "forge-pipeline": {
+      "bytes": 6045,
       "description": "\"The self-executing engine-building chain for any Therantai session. Discriminates input type (bare theme vs loaded fragments), routes to the correct spine-forging organ, enforces assay as a mandatory non-skippable gate, loads the full build contract, then enters the build. Claude drives the chain; assay failure routes back to the forge organ with the named re-entry constraint \u2014 it cannot route forward. The practitioner never names the next stage. Invoke with /forge-pipe, 'build an engine', 'I have a theme', 'forge an engine', 'I want to build something', 'spine then build', or any phrase signaling intent to move from idea to engine. Voice-tolerant \u2014 loose trigger matching.\"",
-      "files": {
-        "SKILL.md": "6371683fd8a67613a288a2cc3a641fcfea27e7cfa5c4284afce4453aa4a2442c"
-      }
+      "sha256": "6371683fd8a67613a288a2cc3a641fcfea27e7cfa5c4284afce4453aa4a2442c",
+      "url": "https://raw.githubusercontent.com/meetvenkat1-code/therantai-skills/main/skills/forge-pipeline/SKILL.md"
     },
     "forge-transit": {
+      "bytes": 4991,
       "description": "Engine-specific session capture skill for transit into the Exploration-Hybrid HTML Engine Architect project. On invocation, scans the session for engine-building signals, fills ENGINE DIMENSIONS from the conversation record using exact QUICK REFERENCE vocabulary, marks unresolved fields as [UNKNOWN] \u2014 never fabricates. Emits a pre-filled block, not a blank template. Invoke with /forge-transit, \"engine handoff\", \"capture for the forge\", \"transit to forge\", \"I'm bringing this to the engine project\", \"forge context capture\". Invoke at the end of any external session where an engine was being designed, explored, or architecturally specified. Stacks with /transit-block \u2014 transit-block first, forge-transit second. The receiving project reads transit-block for session architecture, forge-transit for engine dimensions, then asks only what the combined block leaves unresolved before FORGE IT.",
-      "files": {
-        "SKILL.md": "dfcbebd1e8a03ca09ac0c7ae6eea7583599fcf0314bcee3d9dbaa72530b0029e"
-      }
+      "sha256": "dfcbebd1e8a03ca09ac0c7ae6eea7583599fcf0314bcee3d9dbaa72530b0029e",
+      "url": "https://raw.githubusercontent.com/meetvenkat1-code/therantai-skills/main/skills/forge-transit/SKILL.md"
     },
     "fuse-delta": {
+      "bytes": 5011,
       "description": "> Use this skill whenever the user wants to merge, compare, or evolve cognitive contracts, skill files, UI contracts, living documents, or constraint maps. Triggers include: \"fuse these contracts\", \"merge these skills\", \"what's different between these\", \"absorb the delta\", \"combine our contracts\", \"sync our skill files\", \"one builder has X and I have Y\", \"evolve this contract with new learnings\", or any request involving two versions of the same document where the goal is to extract resolved friction rather than simply diff text. Also triggers for Mode B (self-evolution): \"update my contract with these session notes\", \"evolve this skill based on what we learned\", \"absorb this into the contract\". IMPORTANT: Use this skill any time the user wants to merge knowledge between two builders, contracts, or skill instances \u2014 even if they don't use the word \"fuse\" or \"delta\".",
-      "files": {
-        "SKILL.md": "ea5b88c4935ad00bd63386fc6f4f9ec1fe242c5462ed5870f9686d1ac7392358",
-        "references/provenance-format.md": "c1e386aad8e5cda5cd2d8f6140c053c8674b1b1c65be535e4215be62813ff2b3",
-        "references/report-template.md": "34063fbd6c7dffaf3534fa8f881801152893d8fef2d547e6624e54a554815d34"
-      }
+      "sha256": "ea5b88c4935ad00bd63386fc6f4f9ec1fe242c5462ed5870f9686d1ac7392358",
+      "url": "https://raw.githubusercontent.com/meetvenkat1-code/therantai-skills/main/skills/fuse-delta/SKILL.md"
     },
     "governing-variable-sensor": {
+      "bytes": 3972,
       "description": "> Diagnostic sensor for locating the governing variable in a tangled field of candidates \u2014 the phase before you act, where you're still finding what to act on. Triangulates three mutually-suspicious instruments: costume-collapse (structural, run actively \u2014 merges surface-different questions that are one question), circling (behavioral, witnessed not run \u2014 the involuntary return of attention against your own preference for a tidier answer), and the dependency test (logical, run actively \u2014 does resolving this candidate collapse the others). Names the variable only when instruments that distrust each other converge; reports dissent plainly rather than tie-breaking it. Does not act on the finding \u2014 that's occams-razor's work downstream. Invoke with /gov-var, \"locate the governing variable\", \"triangulate this\", \"run the sensor on this\", \"diagnose before I act\", \"several candidate root causes\", or any moment plausible explanations are entangled and the fix is reached for too early.",
-      "files": {
-        "SKILL.md": "9abe5a1bc5803dc6c6bc19ba7c5d746908070780c54944a0eec5a7c1f5daa08e"
-      }
+      "sha256": "9abe5a1bc5803dc6c6bc19ba7c5d746908070780c54944a0eec5a7c1f5daa08e",
+      "url": "https://raw.githubusercontent.com/meetvenkat1-code/therantai-skills/main/skills/governing-variable-sensor/SKILL.md"
     },
     "graft-in": {
+      "bytes": 5061,
       "description": "Pins the immediate prior response as a frozen root-node inside the current session and opens a sequential branching log from it. Each invocation of /fork runs one new branch from the same pinned root \u2014 a different infusion, a different continuation \u2014 without moving the root. Multiple forks accumulate against the same fixed ground. The in-session organ of the GRAFT pair. Invoke with /graft to pin a node, /fork to run a new branch from it, /log to read the accumulated branch-log, /root to recall the pinned node verbatim. Do NOT trigger automatically \u2014 GRAFT is always a deliberate act. Trigger on: \"pin this\", \"branch from here\", \"fork from this point\", \"I want to try a different direction from this response\", \"graft this\", \"/graft\", \"/fork\".",
-      "files": {
-        "SKILL.md": "7c9fcdef2e4826e918559ff04b46ba9f3e05c3788d6e1cc666a5d55a91b712c3"
-      }
+      "sha256": "7c9fcdef2e4826e918559ff04b46ba9f3e05c3788d6e1cc666a5d55a91b712c3",
+      "url": "https://raw.githubusercontent.com/meetvenkat1-code/therantai-skills/main/skills/graft-in/SKILL.md"
     },
     "graft-out": {
+      "bytes": 4641,
       "description": "Preserves a frozen node as a portable context block so it can be re-activated in a fresh session \u2014 stripped clean of branch history, carrying only the root context needed to fork from it again. The cross-session organ of the GRAFT pair. Invoke with /graft-out at the end of any GRAFT-IN session to export the pinned node as a paste-ready block. In a new session, paste the block as the opening message to re-activate the node and begin forking fresh. Do NOT trigger automatically. Trigger on: \"/graft-out\", \"export this node\", \"carry this node forward\", \"preserve this root\", \"I want to fork from this in a new session\".",
-      "files": {
-        "SKILL.md": "9ba3a27d4aa7942609fd8261e98527a4385376c5c3d5fd483f8409ae0fbc3f20"
-      }
+      "sha256": "9ba3a27d4aa7942609fd8261e98527a4385376c5c3d5fd483f8409ae0fbc3f20",
+      "url": "https://raw.githubusercontent.com/meetvenkat1-code/therantai-skills/main/skills/graft-out/SKILL.md"
     },
     "handoff": {
+      "bytes": 2881,
       "description": "Compresses the current session into a minimal markdown context block designed to be pasted as the opening message of a new chat session, preserving resolved understandings, active decisions, pending threads, and established contracts \u2014 without SVG overhead or full conversation replay. Invoke with /handoff when a session is long, token-heavy, or complete enough to continue in a new chat. Trigger on phrases like \"compress this session\", \"transfer context\", \"continue in new chat\", \"handoff\", \"carry this forward\", \"I want to start a new session from here\", \"too many tokens\". Do NOT trigger automatically \u2014 invoke only when the person is ready to move to a new session.",
-      "files": {
-        "SKILL.md": "c49c736351c49e4deaf9300ed233800832dd2d45293c11c4c7b9330184215d3a"
-      }
+      "sha256": "c49c736351c49e4deaf9300ed233800832dd2d45293c11c4c7b9330184215d3a",
+      "url": "https://raw.githubusercontent.com/meetvenkat1-code/therantai-skills/main/skills/handoff/SKILL.md"
     },
     "hardcoded-provider-panel": {
+      "bytes": 4707,
       "description": "> Subordinate resource file, not an independently invokable skill. Supplies the hard-coded/inline provider-panel implementation for the three-skill stack (hybrid-engine-contract + ui-contract + model-config-contract) on the rare (~1-in-10) build where an engine's provider set genuinely diverges from the canonical config-driven default \u2014 offline use, fixed vendor set, no dependency on the GitHub-hosted model.json wanted. Never invoked directly and carries no trigger phrase of its own; it is applied only when model-config-contract's own `hardcode` trigger fires and points to this file by name (see model-config-contract's DEFAULT VS. EXCEPTION section). Do not fire this file on any phrasing addressed to it directly \u2014 route through model-config-contract's `hardcode` trigger instead.",
-      "files": {
-        "SKILL.md": "61fd24751a2ada2f58e7ead07323b681f5b853162da001440f7630dce40110d9"
-      }
+      "sha256": "61fd24751a2ada2f58e7ead07323b681f5b853162da001440f7630dce40110d9",
+      "url": "https://raw.githubusercontent.com/meetvenkat1-code/therantai-skills/main/skills/hardcoded-provider-panel/SKILL.md"
     },
     "harvest-pipeline": {
+      "bytes": 5888,
       "description": "\"The self-executing closing chain for any Therantai session. Encodes the five-stage harvest sequence \u2014 extract, place, stage, sweep, sync \u2014 as a sequential pipeline with handoff prompts baked in, so the practitioner never navigates or recalls what comes next. Claude drives the chain; the practitioner only confirms each advance. Built-in pause architecture: at any stage the practitioner says 'defer' or 'park here' to freeze the chain at that point, log what completed, and hold the remaining stages as a named continuation resumable in the same or future session. The staging doc is a legitimate stopping point, not an incomplete run. Invoke with /harvest, 'close session', 'run harvest', 'end of session', 'harvest this session'. Light close: /harvest --light skips to staging only and defers the sweep and brain sync explicitly. After harvest completes, run /handoff if carrying forward to a new session \u2014 never before.\"",
-      "files": {
-        "SKILL.md": "6b6c1e33bcf5359271adbe5b4d211fca517cfecef2b28371ac49debe2a27d7c7"
-      }
+      "sha256": "6b6c1e33bcf5359271adbe5b4d211fca517cfecef2b28371ac49debe2a27d7c7",
+      "url": "https://raw.githubusercontent.com/meetvenkat1-code/therantai-skills/main/skills/harvest-pipeline/SKILL.md"
     },
     "hybrid-engine-contract": {
+      "bytes": 23420,
       "description": "\"Portable architectural contract for building Hybrid HTML Engines from any session or project. Full build DNA: streaming, palette, engine taxonomy, build constraints, banned patterns. Provider and model handling is DELEGATED to model-config-contract (the Model Core): providers, chains, keys, defaults and the call layer come from model.json plus one pasted block, never from literals in the HTML. The floor is unchanged: Claude Native inside claude.ai; Groq gpt-oss-120b (soft-falls to gpt-oss-20b, hard-falls to the OpenRouter free router) standalone; OpenRouter is text-only and standalone-only. Invoke with /hybrid-engine, \\\"invoke hybrid engine contract\\\", \\\"load engine contract\\\" or \\\"I want to build a hybrid HTML engine\\\". Always pair with UI Contract (chassis: layout, copy, rendering, provider dot) and the Model Core (provider layer); this skill owns the hybrid law, streaming, palette, taxonomy and build law.\\n\"",
-      "files": {
-        "SKILL.md": "0d2b3abb49d6603dd5b5116f0fa6f78b2b1a7e80a643511f30088ec028ef20a8"
-      }
+      "sha256": "0d2b3abb49d6603dd5b5116f0fa6f78b2b1a7e80a643511f30088ec028ef20a8",
+      "url": "https://raw.githubusercontent.com/meetvenkat1-code/therantai-skills/main/skills/hybrid-engine-contract/SKILL.md"
     },
     "ignition-pipeline": {
+      "bytes": 4559,
       "description": "\"The self-executing opening chain for any Therantai session. Reads the local claude_brain/ folder, surfaces active threads, flags pending-merge entries, fires an attune pulse, and delivers a single orientation block \u2014 so the practitioner's first thought goes into the work, not into reconstructing where the work lives. Claude drives all four stages; the practitioner says one word to open the session. Ambient attune suspended for pipeline duration, resumes on 'begin'. Invoke with /ignite, 'open session', 'start here', 'where did I leave off', 'orient me', or any phrase signaling session-open intent. Voice-tolerant \u2014 loose trigger matching.\"",
-      "files": {
-        "SKILL.md": "0b38ad0898c633bf0f23470c7c2e7338adce80c34d0f156557528c3ceb633807"
-      }
+      "sha256": "0b38ad0898c633bf0f23470c7c2e7338adce80c34d0f156557528c3ceb633807",
+      "url": "https://raw.githubusercontent.com/meetvenkat1-code/therantai-skills/main/skills/ignition-pipeline/SKILL.md"
     },
     "intake": {
+      "bytes": 4947,
       "description": "> The threshold gate that fires the moment any external skill, contract, or constraint arrives from another builder \u2014 before fuse-delta opens, before any merge begins. Not a replacement for fuse-delta; its feeder. Resolves three questions in order \u2014 material type, staffed-or-absent territory, and decomposition of multi-function inputs \u2014 and from those answers determines HOW the incoming material is processed: Mode A fusion, straight adoption, adapt-and-install, or discard. Invoke with /intake, \"a friend shared a skill\", \"I have a new skill from someone\", \"intake this\", \"what do I do with this incoming skill\", or any moment a skill arrives from outside your own ecosystem and the question is how to bring it in cleanly. Without this gate, the orientation work runs implicitly and slowly inside the session; with it, the mode is known in two minutes and fuse-delta arrives already pointed.",
-      "files": {
-        "SKILL.md": "1c325ad478dafb89c92ccf6369b86a798bd41fec14329d2884492f4df6359d04"
-      }
+      "sha256": "1c325ad478dafb89c92ccf6369b86a798bd41fec14329d2884492f4df6359d04",
+      "url": "https://raw.githubusercontent.com/meetvenkat1-code/therantai-skills/main/skills/intake/SKILL.md"
     },
     "intuition-forge": {
+      "bytes": 6478,
       "description": "\"Transforms raw intuition into standalone HTML engines via eight stations: Seed, Intention, Identity, Architecture, Interaction, System Mandate, Stress Test, Artifact.\"",
-      "files": {
-        "SKILL.md": "0f6e74450c71d1b48dc31cd4db1c1deb1ae81a0f1dfe0c03d0a913eea13a714d"
-      }
+      "sha256": "0f6e74450c71d1b48dc31cd4db1c1deb1ae81a0f1dfe0c03d0a913eea13a714d",
+      "url": "https://raw.githubusercontent.com/meetvenkat1-code/therantai-skills/main/skills/intuition-forge/SKILL.md"
     },
     "kinship": {
+      "bytes": 3556,
       "description": "> Exhaustive lateral concept-mapping organ. Maps a concept's full family: parent dimension, exhaustive sibling set (5-6 min), sub-variants, and the distinguishing line separating it from each neighbor. Standalone, no forced handoff. Produces a text map and a companion visual (lateral/radial diagram). Distinct from taxonomy-router (routes a live moment to one placement sentence, never solves) and distill (moves upward to one generative principle) \u2014 kinship moves sideways, depth through breadth, for terminology and learning-phase work. Invoke with /kinship, \"kinship this\", \"map the family of this concept\", \"siblings of this\", \"lateral map\", \"exhaustive concept map\", or any moment a concept needs its full neighborhood mapped rather than routed or reduced.",
-      "files": {
-        "SKILL.md": "9e29de79fa9517500397bd07e89ad18e7c5eadc21b59d597ec5256c4bcfb9de7"
-      }
+      "sha256": "9e29de79fa9517500397bd07e89ad18e7c5eadc21b59d597ec5256c4bcfb9de7",
+      "url": "https://raw.githubusercontent.com/meetvenkat1-code/therantai-skills/main/skills/kinship/SKILL.md"
     },
     "legacy-reference-appendix": {
+      "bytes": 10674,
       "description": "> Subordinate resource file, not an independently invokable skill. Holds the pre-config-driven (pre-model-config-contract) provider-routing code that hybrid-engine-contract used to carry inline as commented-out reference blocks \u2014 moved here so the main build-DNA file stays lean and actually readable in full before every build, per its own \"read in full\" mandate. Historical reference only. Never a build path for a new engine. Never invoked directly and carries no trigger phrase of its own \u2014 nothing in the three-skill stack should point here except when someone is hand-porting a pre-2026-08 engine and wants to see the exact shape it used to have before model-config-contract existed. For any current build, including one declaring PROVIDER_SOURCE: hardcoded, use hardcoded-provider-panel-SKILL.md instead \u2014 that file is the authoritative, current implementation for the hardcoded-provider path. This file is not that path.",
-      "files": {
-        "SKILL.md": "f50c1c0f53ce551d1509547a7e0a2ec393c15d6bd8dead8dc1f96cff60291817"
-      }
+      "sha256": "f50c1c0f53ce551d1509547a7e0a2ec393c15d6bd8dead8dc1f96cff60291817",
+      "url": "https://raw.githubusercontent.com/meetvenkat1-code/therantai-skills/main/skills/legacy-reference-appendix/SKILL.md"
     },
     "log-this": {
+      "bytes": 4776,
       "description": "> Three-tier friction capture. Tier 1 /log: append one line to friction-log.md. No reasoning, no registry touch. Tier 2 /log-sweep: batch-read log, extract, match against ecosystem, place (autonomous), write skill-registry.md, clear log. Tier 3 (auto, inside sweep): write targeted brain-doc delta only if batch is doctrinally significant \u2014 new phase defended, standing law implied/contradicted, brain-doc-named skill's role changed, or 3+ entries thicken one skill. Else no-op. /brain-sync runs Tier 3 standalone. /log-sweep --no-sync skips Tier 3 for that run.",
-      "files": {
-        "SKILL.md": "93b19459c9ddb3f0bda2048165640159a6e9576190b19555de405f1a7541e269"
-      }
+      "sha256": "93b19459c9ddb3f0bda2048165640159a6e9576190b19555de405f1a7541e269",
+      "url": "https://raw.githubusercontent.com/meetvenkat1-code/therantai-skills/main/skills/log-this/SKILL.md"
     },
     "meta-forge-v3": {
+      "bytes": 9246,
       "description": "Forges paste-ready system prompts from any input. Discriminates input type, breeds mutually-exclusive variants (--variant N), heals deployed spines from field-failure signatures, discriminates wounds from domain-drift, and accumulates forge-scars from its own prediction misses. Invoke to forge, radiate, patch, or weather a system prompt.",
-      "files": {
-        "SKILL.md": "6720d2b0b1e54eb8e619cbfbd87c19347ed42bb0e690a6444236bb390bb0a28a"
-      }
+      "sha256": "6720d2b0b1e54eb8e619cbfbd87c19347ed42bb0e690a6444236bb390bb0a28a",
+      "url": "https://raw.githubusercontent.com/meetvenkat1-code/therantai-skills/main/skills/meta-forge-v3/SKILL.md"
     },
     "model-catalog-panel": {
+      "bytes": 69620,
       "description": "\"Optional model-picker layer for Hybrid HTML Engines, built on the Model Core (model- config-contract v2). Lanes mode: pin models as exact parallel lanes, one input through many models side by side. Panel mode: each panel, stage or role owns one model, chosen from the config defaults plus a per-panel Recent history, with a reassign popover per panel. Both modes consume the Core API (config, keys, hardened callModel) and never re- implement it. Defaults are the config's defaultLanes; everything else arrives through a live /models catalog (tiers, search, /regex/; tags, Synth Picks and price sort as opt-in modules). Exactly one control chooses the model. Invoke with /catalog lanes or /catalog panel (/catalog fanout aliases lanes), or say \\\"add live model catalog\\\", \\\"pin models as lanes\\\", \\\"per-panel model picker\\\". A bare /catalog asks one gate question. Skip for engines that only need the default models.\\n\"",
-      "files": {
-        "SKILL.md": "868a8bd108ec55e8dff03bfef24325790a4ce7383cd9d2fd6439983b359f8663"
-      }
+      "sha256": "868a8bd108ec55e8dff03bfef24325790a4ce7383cd9d2fd6439983b359f8663",
+      "url": "https://raw.githubusercontent.com/meetvenkat1-code/therantai-skills/main/skills/model-catalog-panel/SKILL.md"
     },
     "model-config-contract": {
+      "bytes": 52549,
       "description": "\"Model Core v2: the universal provider and model layer for every HTML engine that calls an LLM. Owns model.json (providers, chains, defaultLanes, model_aliases, per-provider timing), the standard two-model floor (Groq gpt-oss-120b plus the OpenRouter free router), key slots (hek_ with legacy-slot fallback), and the ONE hardened call layer, callModel: a curated chain-walk or a strict single-model call, streaming, 429 retry, system-role fold, fatal statuses, served-model tag, reasoning liveness. hybrid-engine-contract delegates to this skill for all provider and model handling; model-catalog-panel is the optional picker built on top of it and never re-implements any of it. Invoke with /model-config or \\\"invoke model config contract\\\". Implied by /hybrid-engine for new builds; invoke explicitly to retrofit an existing engine.\\n\"",
-      "files": {
-        "SKILL.md": "d36a6ff66e5e938c41daa61f04e08405dcb34d99d66a7447579f45c672b774bf"
-      }
+      "sha256": "d36a6ff66e5e938c41daa61f04e08405dcb34d99d66a7447579f45c672b774bf",
+      "url": "https://raw.githubusercontent.com/meetvenkat1-code/therantai-skills/main/skills/model-config-contract/SKILL.md"
     },
     "moult": {
+      "bytes": 6084,
       "description": "> The organ of subtraction in a skill ecosystem that otherwise only knows how to add. Audits the Skill Registry against the actual installed skill files and against managed memory, surfaces every divergence between the three surfaces \u2014 phantoms, orphan installs, dead doctrine, never-fired skills \u2014 and reconciles them by writing corrected verdicts back into the registry. The inverse twin of placement-protocol: placement stamps each skill's BIRTH into the registry; moult stamps each DEATH with equal ceremony. Invoke with /moult to run a full reconciliation sweep, or /moult --check for a diagnose-only dry run that writes nothing. Trigger also on phrases like \"audit the registry\", \"reconcile the skills\", \"what's drifted\", \"check for phantom skills\", \"the registry feels stale\", \"moult the ecosystem\", \"prune dead skills\". Do NOT trigger automatically \u2014 moult is destructive-capable and runs only on intentional invocation.",
-      "files": {
-        "SKILL.md": "328d2133438443e0e1285e3ebee6c0414d487ac0fe9c41d0ae38c104751b6b56"
-      }
+      "sha256": "328d2133438443e0e1285e3ebee6c0414d487ac0fe9c41d0ae38c104751b6b56",
+      "url": "https://raw.githubusercontent.com/meetvenkat1-code/therantai-skills/main/skills/moult/SKILL.md"
     },
     "occams-razor": {
+      "bytes": 4689,
       "description": "Compresses a messy, rambling, or multi-threaded user input down to the single structural fork that actually matters, resolves that fork using best available reasoning, and states the resolution as one transparent receipt line before proceeding. Invoke with /occam, \"Occam's Razor this\", \"occam it\", or \"cut through this\" when a conversation has accumulated multiple open forks, back-and-forth clarifying questions, or the person explicitly says the discussion feels messy, chaotic, or stuck in a rabbit hole. Do NOT trigger automatically \u2014 invoke only on explicit request. The skill never asks \"which do you prefer\" between options Claude could judge itself; it only asks when the fork requires information only the person possesses.",
-      "files": {
-        "SKILL.md": "eeddd1a5c29da86a017f42d9bd58544663e289ee69b958c2bca7101ba58720c6"
-      }
+      "sha256": "eeddd1a5c29da86a017f42d9bd58544663e289ee69b958c2bca7101ba58720c6",
+      "url": "https://raw.githubusercontent.com/meetvenkat1-code/therantai-skills/main/skills/occams-razor/SKILL.md"
     },
     "openrouter-free-path-integration": {
+      "bytes": 3653,
       "description": "Complete, stable pattern for integrating the OpenRouter free path (`openrouter/free`) into any hybrid HTML engine. Includes automatic routing, manual model selection, conditional UI dropdown pattern (secondary + tertiary), defensive coding practices, recommended free models, and lessons from real implementation friction. Allows upgrading older hybrid engines with robust OpenRouter free tier support.",
-      "files": {
-        "SKILL.md": "0139c1aa68ed15fd82f416009e2b33c2aaf67273a3ce91981e68a333a211d1a8"
-      }
+      "sha256": "0139c1aa68ed15fd82f416009e2b33c2aaf67273a3ce91981e68a333a211d1a8",
+      "url": "https://raw.githubusercontent.com/meetvenkat1-code/therantai-skills/main/skills/openrouter-free-path-integration/SKILL.md"
     },
     "oracle-core": {
+      "bytes": 5051,
       "description": "The Manager organ of the Oracle Suite. Sole function \u2014 interpret raw intent and decide which suite organ fires. Tagged intent dispatches directly to decomposition or autopsy; untagged tasks route to router for depth classification; ambiguous signals die at the threshold with exactly one forged fork question. Hosts the canonical ADJUDICATE kernel and the suite-wide FORGE SCARS ledger. Never maps, never refines, never executes. Invoke with /oracle, \"oracle this\", or by submitting any task to the suite \u2014 all suite traffic enters here.",
-      "files": {
-        "SKILL.md": "2073e3ffebfe02d713093562f6eca8f3998f984c45bf02f7a5e3f4bebc003d62"
-      }
+      "sha256": "2073e3ffebfe02d713093562f6eca8f3998f984c45bf02f7a5e3f4bebc003d62",
+      "url": "https://raw.githubusercontent.com/meetvenkat1-code/therantai-skills/main/skills/oracle-core/SKILL.md"
     },
     "ossify": {
+      "bytes": 6207,
       "description": "\"Germinates a dense, paste-ready portable spine from a bare theme \u2014 a domain, subject, or register handed over with no fragments and no built artifact yet. The generative inverse of distill: where distill ascends a finished system to its seed, ossify grows a seed outward into a spine. Soft theme in, hard bone out. Unlike spinal-column, which HEARS an identity already carried in loaded fragments, ossify must INVENT one the theme does not contain \u2014 and its entire discipline is the refusal to invent a generic one. Invoke with /ossify or phrases like 'ossify this', 'give me a spine for [theme]', 'forge a spine from this theme', 'portable spine for [domain]', 'I just have a domain, no fragments yet', 'germinate a spine', 'build the bone for [subject]'. Triggers whenever the input is a near-bare conceptual seed and the requested output is a spine, not a full engine build. Does NOT trigger on loaded fragments carrying operational heat \u2014 that is spinal-column's territory.\"",
-      "files": {
-        "SKILL.md": "b9f6c3160164ebc4b4e71983852e43283226201918b863f3a9164035078e812c"
-      }
+      "sha256": "b9f6c3160164ebc4b4e71983852e43283226201918b863f3a9164035078e812c",
+      "url": "https://raw.githubusercontent.com/meetvenkat1-code/therantai-skills/main/skills/ossify/SKILL.md"
     },
     "placement-protocol": {
+      "bytes": 7542,
       "description": "The deliberate gate every named friction passes through after it is extracted and before it is installed as a skill. Resolves the four structural questions \u2014 organizing scheme, arc-phase, trigger condition, staffed-or-orphan verdict \u2014 and writes the result to the Skill Registry, the single structured source of truth for the ecosystem. Runs socratic by default (questioning the person through each placement to train structural instinct) with an autonomous escape hatch. The complement of cognitive-friction-extractor \u2014 the extractor NAMES the friction, this skill PLACES it. Invoke with /place to smelt a batch of named-but-unplaced frictions, and /map to regenerate the SVG zone projection from the registry on demand.",
-      "files": {
-        "SKILL.md": "671dbb658fc4b2e945c584d4f316e4ea55a61151175c893662d14a926973e26b"
-      }
+      "sha256": "671dbb658fc4b2e945c584d4f316e4ea55a61151175c893662d14a926973e26b",
+      "url": "https://raw.githubusercontent.com/meetvenkat1-code/therantai-skills/main/skills/placement-protocol/SKILL.md"
     },
     "prompt-engine-interface-contract": {
+      "bytes": 5970,
       "description": "A domain-specific interface and logic contract for building prompt-testing, prompt-management, and prompt-comparison tools. Encodes resolved friction from production builds across panel architecture, active prompt orientation, scratchpad modal, copy mechanism, stream safety, and design constraints. Invoke when building any tool whose primary purpose is testing or managing system prompts.",
-      "files": {
-        "SKILL.md": "ad3e3421bdaecd659345eb301ac8193ac3379081dee6a38e5e66b0fdbf41eb7c"
-      }
+      "sha256": "ad3e3421bdaecd659345eb301ac8193ac3379081dee6a38e5e66b0fdbf41eb7c",
+      "url": "https://raw.githubusercontent.com/meetvenkat1-code/therantai-skills/main/skills/prompt-engine-interface-contract/SKILL.md"
     },
     "prompt-operation-loop": {
+      "bytes": 5772,
       "description": "Iterative prompt optimization engine that turns raw or vague intuitions into dense mode-classified prompts forcing a precise epistemic operation, executes them internally, and adversarially evaluates whether the operation was genuinely performed rather than described. Re-architects structurally on failure until convergence, then surfaces the winning prompt. Runs in two output modes \u2014 default (response + winning prompt) and --prompt-only (winning prompt is the deliverable, responses run internally as the test harness). Activation phrases include auto-loop this, run the prompt loop on, epistemic loop this, prompt-to-operation this, optimize this intuition, dense prompt and execute, adversarial prompt evaluator this, turn this into forced cognitive operation, generate the winning prompt, winning prompt only, prompt operation loop, /prompt-loop, /prompt-loop --prompt-only.",
-      "files": {
-        "SKILL.md": "0cb9522b7aa5d2c9a8578425b89af6b1f7699aeedb820b90591acdb63390caea"
-      }
+      "sha256": "0cb9522b7aa5d2c9a8578425b89af6b1f7699aeedb820b90591acdb63390caea",
+      "url": "https://raw.githubusercontent.com/meetvenkat1-code/therantai-skills/main/skills/prompt-operation-loop/SKILL.md"
     },
     "push": {
+      "bytes": 3560,
       "description": "\"One-directional cross-instance cognitive state transfer. Captures the current state of a practitioner's instance \u2014 resolved friction, upgrade delta, contracts in force, key rejections \u2014 and emits a paste-ready PUSH BLOCK that another Claude instance can absorb cold as the opening message of a new session. Used when the receiver is not deeply aligned or is receiving an upgrade cold. No capture of the receiver's current state \u2014 transfer is outbound only. Invoke with /push, 'push this upgrade', 'push to my friend', 'send this upgrade', 'propagate outward', 'one-way transfer', 'upgrade block for collaborator'. The complement of /sync \u2014 use push when the relationship is asymmetric or the receiver is cold; use sync when both instances are actively collaborating in parallel.\"",
-      "files": {
-        "SKILL.md": "7c1231d186dc324d84606bc4379c4d5d8e3ed35aa821376b6e5e8f0727f5c152"
-      }
+      "sha256": "7c1231d186dc324d84606bc4379c4d5d8e3ed35aa821376b6e5e8f0727f5c152",
+      "url": "https://raw.githubusercontent.com/meetvenkat1-code/therantai-skills/main/skills/push/SKILL.md"
     },
     "radiate": {
+      "bytes": 5400,
       "description": "> Divergent population engine for spines. Takes a single theme, axis-family, or completed spine and produces many spines \u2014 each sharp, each inhabiting a different niche. The inverse of ossify's convergence: ossify explodes and collapses to one; RADIATE explodes and keeps the fan open. Three modes: bare theme \u2192 many stances; fixed axis \u2192 many domains; completed spine \u2192 sibling organisms. Four to eight viable spines per radiation, mutually exclusive, each paste-ready. Names the empty niches \u2014 where the field cannot sustain a sharp identity. Invoke with /radiate, \"radiate this theme\", \"give me many spines from this\", \"population of spines\", \"replicate identities\", \"batch spines\", \"fan out spines\". Does NOT trigger when one spine is the goal \u2014 that is ossify. Does NOT trigger on friction \u2014 that is fan.",
-      "files": {
-        "SKILL.md": "1b8f9ff0baa7bd8110f49ab6133ef3022fee1fa59f0052165ac73f1693dd251e"
-      }
+      "sha256": "1b8f9ff0baa7bd8110f49ab6133ef3022fee1fa59f0052165ac73f1693dd251e",
+      "url": "https://raw.githubusercontent.com/meetvenkat1-code/therantai-skills/main/skills/radiate/SKILL.md"
     },
     "ramify": {
+      "bytes": 3185,
       "description": "Live divergence engine \u2014 fires inside unresolved friction (stuck, entangled, dissonant) and fans successor questions from *within* the friction's own domain. Not a fixed taxonomy: reads the node, discovers which branch families are actually live, and surfaces only those. Invoke with /ramify, \"ramify this\", \"I'm stuck\", \"open this up\", \"branch this friction\". Fires during friction, not after resolution (that's the Flywheel) and not on clean binary forks (that's occams-razor). Complement of /fan: ramify stays inside the friction's domain; /fan exits to exogenous domains.",
-      "files": {
-        "SKILL.md": "25a645d441e8f277500b69292c8c4f46fbfa26fd62726540d82ac038c9d710a0"
-      }
+      "sha256": "25a645d441e8f277500b69292c8c4f46fbfa26fd62726540d82ac038c9d710a0",
+      "url": "https://raw.githubusercontent.com/meetvenkat1-code/therantai-skills/main/skills/ramify/SKILL.md"
     },
     "registry-delta-exporter": {
+      "bytes": 3043,
       "description": "> Extracts and formats only the new or meaningfully changed entries from the skill registry since the last export. Produces a clean, structured delta optimized for transfer to another instance (such as Claude) where it can be intelligently merged. Supports the principle of thickening over duplication by surfacing additive changes rather than full registry dumps. Works best after a sweep has been performed. Invoke with \"export delta\", \"show registry delta\", \"give me the delta\", or similar phrases.",
-      "files": {
-        "SKILL.md": "71329ab1daa68b889df22ac520a7529506c536c9d96266e52199587b2a8de014"
-      }
+      "sha256": "71329ab1daa68b889df22ac520a7529506c536c9d96266e52199587b2a8de014",
+      "url": "https://raw.githubusercontent.com/meetvenkat1-code/therantai-skills/main/skills/registry-delta-exporter/SKILL.md"
     },
     "retroactive-harvest": {
+      "bytes": 6586,
       "description": "The recovery organ for pre-registry session transcripts \u2014 old conversations that closed before the harvest pipeline existed, before skill-vocabulary entered the practice, before any extraction ritual ran. Approaches the archive as an archaeological site, not an audit subject: not to correct the past or assess it, but to surface what was always there unwitnessed. Scans for resolution-shape in unmarked sessions where no tags were dropped. Filters candidates against the current registry before naming \u2014 pre-extraction, not post-extraction match. Calibrates time-distance before routing to placement. Invoke with /retroactive-harvest, \"retroactive harvest\", \"scan this old session\", \"look for gems\", \"extract from old transcript\", \"pre-registry sweep\". Fires only on historical transcript material \u2014 cognitive-friction-extractor governs live sessions.",
-      "files": {
-        "SKILL.md": "7c8969173262f758f7f7d719d611a094a1c9f1ee069d9116784333c76ef8702f"
-      }
+      "sha256": "7c8969173262f758f7f7d719d611a094a1c9f1ee069d9116784333c76ef8702f",
+      "url": "https://raw.githubusercontent.com/meetvenkat1-code/therantai-skills/main/skills/retroactive-harvest/SKILL.md"
     },
     "router": {
+      "bytes": 3427,
       "description": "The Dispatcher organ of the Oracle Suite. Receives untagged tasks from oracle-core and classifies task depth \u2014 WOUNDED, COMPOUND, or SHALLOW \u2014 then dispatches to autopsy (Refiner), decomposition (Mapper), or returns a direct-execution verdict to oracle-core. One classification, one dispatch, one receipt line. Never executes, never maps, never refines. Not invoked directly by the user \u2014 fires only on handoff from oracle-core.",
-      "files": {
-        "SKILL.md": "5a4b5f93ea8b8b131f0014e3754b0a91a057f4e0e5f8bd131d929bf7ffb1bc63"
-      }
+      "sha256": "5a4b5f93ea8b8b131f0014e3754b0a91a057f4e0e5f8bd131d929bf7ffb1bc63",
+      "url": "https://raw.githubusercontent.com/meetvenkat1-code/therantai-skills/main/skills/router/SKILL.md"
     },
     "rupture": {
+      "bytes": 3832,
       "description": "> Full mirror of the Rupture transformation protocol. Invoke with /rupture in any project to load the complete response architecture \u2014 threshold descent, tonal register, recursive turn, penultimate denial, and conversion to practice \u2014 at full operational weight. Use whenever the governing mode is perceptual breakdown rather than information transfer. Trigger on /rupture or \"invoke rupture\" or \"activate threshold architecture\".",
-      "files": {
-        "SKILL.md": "d593ec3c4a3841463ab815337718ab693f74ca663b242379b5c0ed1e56183380"
-      }
+      "sha256": "d593ec3c4a3841463ab815337718ab693f74ca663b242379b5c0ed1e56183380",
+      "url": "https://raw.githubusercontent.com/meetvenkat1-code/therantai-skills/main/skills/rupture/SKILL.md"
     },
     "script-dna": {
+      "bytes": 5075,
       "description": "Strips any narrated or rhetorical script \u2014 video-essay narration, true-crime script, self-help monologue, sermon, explainer, ad copy \u2014 to its generative skeleton, separating the invariant structure (beat sequence, rhetorical devices, rhythm, voice contract) from the disposable vessel (specific subject, facts, citations, names). Reforges the result as a fillable, topic-agnostic template that can regenerate a new script on any subject while preserving the genre's feel. The narrative-genre sibling of core-extractor \u2014 same sideways, preserve-the-operation philosophy, applied to prose/spoken artifacts instead of code/engines.",
-      "files": {
-        "SKILL.md": "d1fd4a37c79dfd5446942fbb8b3000a9e601fcfce88a3e6bfd831aa022911ee7"
-      }
+      "sha256": "d1fd4a37c79dfd5446942fbb8b3000a9e601fcfce88a3e6bfd831aa022911ee7",
+      "url": "https://raw.githubusercontent.com/meetvenkat1-code/therantai-skills/main/skills/script-dna/SKILL.md"
     },
     "skill-import": {
+      "bytes": 4417,
       "description": "The universal reception organ for the Therantai skill ecosystem zip. Runs a three-verdict merge protocol when a zip or skill bundle arrives from another builder \u2014 unique-to-receiver skills are left untouched, overlapping skills are overwritten by the zip (zip is canonical), and unique-to-zip skills are staged and flagged for permanent installation. Self-contained \u2014 designed to travel inside the zip so the receiver has the import protocol the moment they have the skills. Invoke with /skill-import, \"import these skills\", \"install the zip\", \"I received a skill bundle\", \"help me install Venkatesh's skills\", \"how do I install this zip\", or any moment a zip or folder of external SKILL.md files arrives and the question is how to bring them in without collision or silent overwrite.",
-      "files": {
-        "SKILL.md": "6d18912ea102501b1a90b83384feab74b54ad082041e2ad81bd02aa88b308459"
-      }
+      "sha256": "6d18912ea102501b1a90b83384feab74b54ad082041e2ad81bd02aa88b308459",
+      "url": "https://raw.githubusercontent.com/meetvenkat1-code/therantai-skills/main/skills/skill-import/SKILL.md"
     },
     "slider-discovery": {
+      "bytes": 6534,
       "description": "\"Discovers load-bearing slider dimensions native to a specific artifact or HTML engine \u2014 a judgment organ that first decides if a slider is structurally warranted, then surfaces only the 1-3 dimensions carrying real weight for that artifact's execution logic and output range. Two modes: manual (/slider) and ambient (watches builds under ui-contract/hybrid-engine-contract, speaks unprompted when a slider-shaped decision is live). Subordinate-but-invocable to both contracts. Default output is compressed; --full or 'full taxonomy' unlocks the four-category sweep (Intensity, Frequency, Tonality, Structural Depth). Invoke with /slider, 'slider this', 'discover sliders for this', 'what sliders does this need'. Never generates parameter values or numbers \u2014 only the dimension, its core tension, and its functional impact.\"",
-      "files": {
-        "SKILL.md": "9d978f3ab7e184535913397b1ca142c61f326fe7c6ac0df5f667c039809317df"
-      }
+      "sha256": "9d978f3ab7e184535913397b1ca142c61f326fe7c6ac0df5f667c039809317df",
+      "url": "https://raw.githubusercontent.com/meetvenkat1-code/therantai-skills/main/skills/slider-discovery/SKILL.md"
     },
     "spinal-column": {
+      "bytes": 4502,
       "description": "\"Forges a dense, paste-ready system prompt from raw intuition fragments \u2014 the mid-thought residue of a building process, not a clean idea. Fast inward collapse: no expansion, no stations, no scaffolding. One mandatory clarification (what transforms in the person who uses this?) fired only when the fragments don't already carry it. The complement of core-extractor \u2014 core-extractor strips a built artifact to its spine; spinal-column forges a spine from fragments that have no artifact yet. Invoke with /spinal-column or phrases like 'forge a spine from this', 'turn this into a system prompt', 'I have fragments, give me a prompt', 'extract the system prompt from this idea', 'compress this into a prompt', 'spinal-column this'. Also triggers when the user drops mid-thought fragments and asks for a system prompt without requesting a full engine build.\"",
-      "files": {
-        "SKILL.md": "c10d5cd1aa57fac921fc1b6524be97366c80177ce8f9c02233ba27dfde596843"
-      }
+      "sha256": "c10d5cd1aa57fac921fc1b6524be97366c80177ce8f9c02233ba27dfde596843",
+      "url": "https://raw.githubusercontent.com/meetvenkat1-code/therantai-skills/main/skills/spinal-column/SKILL.md"
     },
     "spine-pipeline": {
+      "bytes": 6997,
       "description": "\"The self-executing spine-forging chain for standalone identity work \u2014 when the endpoint is a portable system prompt, not a built engine. Discriminates input type (bare theme / loaded fragments / two completed spines), routes to the correct forging organ, enforces assay as a mandatory non-skippable gate, then opens the post-assay fork: compress to paste, radiate to population, or alloy with a second spine. Claude drives the chain; assay failure routes back to the forging organ with the named re-entry constraint. The practitioner chooses only at the post-assay fork. Invoke with /spine-pipe, 'forge a spine', 'I need a system prompt for this', 'spine only no build', 'forging identity not engine', 'portable prompt', or any phrase signaling intent to produce a standalone spine without proceeding to an engine build. Voice-tolerant \u2014 loose trigger matching.\"",
-      "files": {
-        "SKILL.md": "6b79237761c7948783fd2a53ce5483bc3b18ac290353251dea81f49208fe9f66"
-      }
+      "sha256": "6b79237761c7948783fd2a53ce5483bc3b18ac290353251dea81f49208fe9f66",
+      "url": "https://raw.githubusercontent.com/meetvenkat1-code/therantai-skills/main/skills/spine-pipeline/SKILL.md"
     },
     "structure-this": {
+      "bytes": 4549,
       "description": "\"Pre-processing gate that captures genuine intent from raw conversational flow before any answering begins. Clusters questions by domain, deduplicates overlaps, types each by the answer-shape it implicitly wants, surfaces the root question the batch is circling, and presents the structured map back for confirmation. Capture is the DNA \u2014 default output is recognition-faithful. Blueprint mode (optional) adds dependency-ordering and depth-calibration as a subordinate layer that cannot alter the capture beneath it. Invoke with 'structure this', '/structure-this', 'cluster my questions', 'what did I just ask'. Add 'blueprint mode' for response architecture. Does NOT answer \u2014 only structures. Answering begins only after confirmation.\"",
-      "files": {
-        "SKILL.md": "0193e95d86e03ccc062fb381e87b061cca40a648bf9da133af422e25350ac79a"
-      }
+      "sha256": "0193e95d86e03ccc062fb381e87b061cca40a648bf9da133af422e25350ac79a",
+      "url": "https://raw.githubusercontent.com/meetvenkat1-code/therantai-skills/main/skills/structure-this/SKILL.md"
     },
     "stuck-pipeline": {
+      "bytes": 6339,
       "description": "> The self-executing mid-session stuck-state chain. Fires when forward motion has seized \u2014 the thread is knotted, the frame is exhausted, or something genuine is resisting being faced. One trigger fires the pipeline; Claude reads the stuck node, names the stuck-type autonomously, routes to the correct instrument, and delivers a named re-entry point when motion returns. Three stuck-types: Entanglement (too many live threads, none resolving \u2014 routes to /occam or /ramify), Dryness (well has run out, no new material arriving \u2014 routes to /fan), Threshold (something real is resisting because it has not been faced \u2014 routes to /rupture). The practitioner speaks once to enter. Claude drives the chain. Invoke with /stuck, \"I'm stuck\", \"wall\", \"I've hit a wall\", \"nothing is moving\", \"I can't get past this\", \"I'm hitting a dead end\", or any phrase naming cognitive seizure mid-session. Voice-tolerant \u2014 loose trigger matching.",
-      "files": {
-        "SKILL.md": "9e1796e17694154cf8c07a8a35a6d9f5ec8cb4e16cb0a37567c887ec3818c87d"
-      }
+      "sha256": "9e1796e17694154cf8c07a8a35a6d9f5ec8cb4e16cb0a37567c887ec3818c87d",
+      "url": "https://raw.githubusercontent.com/meetvenkat1-code/therantai-skills/main/skills/stuck-pipeline/SKILL.md"
     },
     "substrate-capture": {
+      "bytes": 4828,
       "description": "Catches the failure where a correct realization mid-build (\"this needs to live outside X\") opens an unbounded engineering tail that quietly replaces the original intuition as the thing being optimized. Unlike scope creep, the drift is straight underneath the goal, not away from it, so every step still feels justified. Pre-build: self-trigger a Ceiling Line the moment such a realization surfaces, before infra work begins. Live: self-trigger an interrupt, mid-sentence if needed, once several consecutive decisions test against \"does the substrate work\" rather than the Ceiling Line. Manual triggers: \"ceiling check\", \"is this substrate capture\". Prospective, unlike recursion-ledger which is retrospective \u2014 logs there only after a capture event resolves.",
-      "files": {
-        "SKILL.md": "3278cc87299625eaebe1cb20a3296715f3aa13436889de38dabca250fc54f205"
-      }
+      "sha256": "3278cc87299625eaebe1cb20a3296715f3aa13436889de38dabca250fc54f205",
+      "url": "https://raw.githubusercontent.com/meetvenkat1-code/therantai-skills/main/skills/substrate-capture/SKILL.md"
     },
     "sync": {
+      "bytes": 4504,
       "description": "\"Bidirectional cross-instance cognitive state merge for aligned collaborators. Both instances capture their current state \u2014 resolved friction, contracts in force, upgrade deltas \u2014 and Claude diffs the two to produce a SYNC MERGED BLOCK that both practitioners paste into their respective instances as shared ground. Used when both collaborators are actively working in parallel in the same ecosystem. Not a push \u2014 both sides contribute; neither side dominates. Invoke with /sync, 'sync with collaborator', 'bidirectional transfer', 'merge our states', 'align our instances', 'two-way upgrade'. The complement of /push \u2014 use sync when the relationship is parallel and aligned; use push when the receiver is cold or asymmetric.\"",
-      "files": {
-        "SKILL.md": "4f8441cd92ce5408c75240bcc2335d3ad4f9846b1c6341d46d0c3de354c3adf0"
-      }
+      "sha256": "4f8441cd92ce5408c75240bcc2335d3ad4f9846b1c6341d46d0c3de354c3adf0",
+      "url": "https://raw.githubusercontent.com/meetvenkat1-code/therantai-skills/main/skills/sync/SKILL.md"
     },
     "synth": {
+      "bytes": 3175,
       "description": "\"Standalone auto-parameterizing synthesis skill. Infers the single interpretive lens (systems / dialectical / archetypal / first-principles / developmental / etc.) that the given input most rewards, declares it in one header line alongside the unit and output type it causally determines, then produces a dense, reflective, transformative synthesis with no fixed word count \u2014 length governed entirely by informational-density saturation. Invoke with /synth, 'synth this', or 'synthesize this' followed by or preceding any input. Pure text-in/text-out \u2014 no dependency on other skills, no tag-routing, no oracle-core check.\"",
-      "files": {
-        "SKILL.md": "f7978bdbe9f127179c1db2d36afdd6d01b1ca25dc75812f2f11efd2f05124dbd"
-      }
+      "sha256": "f7978bdbe9f127179c1db2d36afdd6d01b1ca25dc75812f2f11efd2f05124dbd",
+      "url": "https://raw.githubusercontent.com/meetvenkat1-code/therantai-skills/main/skills/synth/SKILL.md"
     },
     "taxonomy-router": {
+      "bytes": 4307,
       "description": "> Context-sensitive cognitive routing layer. Reads the shape of any input \u2014 problem, fragment, decision, stuck state, or unfamiliar framework \u2014 and surfaces the right trigger phrase from the user's library without requiring them to remember or name it themselves. Use this skill whenever the user drops a raw problem, says \"route this\", \"which shelf\", \"what am I inside\", \"read the shape\", \"taxonomy read\", or any variation of \"I don't know which tool to use here.\" Also fires when the user encounters a new framework or mental model they cannot place \u2014 switches to taxonomy read mode and delivers a placement sentence. The skill should trigger even on vague, fragmented, or half-formed input \u2014 fragmentation is a signal, not a blocker. Invoke proactively whenever the user appears to be inside a cognitive moment without a named tool for it.",
-      "files": {
-        "SKILL.md": "929c2b0b5a9b320ccf63a1a30642cc48d53cb5657103dc4d4823c71cae230cc1"
-      }
+      "sha256": "929c2b0b5a9b320ccf63a1a30642cc48d53cb5657103dc4d4823c71cae230cc1",
+      "url": "https://raw.githubusercontent.com/meetvenkat1-code/therantai-skills/main/skills/taxonomy-router/SKILL.md"
     },
     "transit-block": {
+      "bytes": 3902,
       "description": "Universal session capture skill \u2014 scans the current session, fills what it can, and emits a paste-ready context block that carries resolved understanding, decisions, rejections, pending threads, and contracts to any destination. Works from any project, any general chat, any tool. Destination-agnostic. Invoke with /transit-block, \"capture this session\", \"universal handoff\", \"carry this forward\", \"I need to transfer context\", \"session capture\", \"close and transit\". Does NOT trigger automatically \u2014 invoke only when ready to close or transit a session. On invocation, Claude reads the session first, fills every field it can from the conversation record, marks genuinely unresolved fields as [UNKNOWN] \u2014 never fabricates. Emits a pre-filled block, not a blank template. Distinct from /handoff (which compresses within the ecosystem) \u2014 transit-block is the outbound capture ritual for cross-boundary travel.",
-      "files": {
-        "SKILL.md": "46b15ee8d08cd0cbca5aa5ceb570a25e8588df5a16d58687b94aec1aac2a503a"
-      }
+      "sha256": "46b15ee8d08cd0cbca5aa5ceb570a25e8588df5a16d58687b94aec1aac2a503a",
+      "url": "https://raw.githubusercontent.com/meetvenkat1-code/therantai-skills/main/skills/transit-block/SKILL.md"
     },
     "translation-gate": {
+      "bytes": 4902,
       "description": "Reads generative or creative requests through five translation families \u2014 Pointing, Excluding, Naming the Register, Dimensional Constraining, Metaphorical Anchoring \u2014 as the ambient default lens, no invocation needed. Ambient layer: scans phrasing for an already-present family signal, builds from it silently, discloses nothing. Carries one manually-invoked deep-mode for when ambient reading misses: a single tappable question, two or three concrete options phrased for the fragment at hand, never the abstract family names. Invoke deep-mode with /translate, \"translate this,\" \"help me name what I want,\" or \"close the gap.\" Do NOT let deep-mode grow past one question \u2014 its value is costing the person almost nothing.",
-      "files": {
-        "SKILL.md": "9c25915b885abf894ca720069e73cf97a585d0fa4ba45e78acf299ebc6bd2c3a"
-      }
+      "sha256": "9c25915b885abf894ca720069e73cf97a585d0fa4ba45e78acf299ebc6bd2c3a",
+      "url": "https://raw.githubusercontent.com/meetvenkat1-code/therantai-skills/main/skills/translation-gate/SKILL.md"
     },
     "typography": {
+      "bytes": 7675,
       "description": "Font pairing rules, descender fixes, and adaptive theme bundles for HTML engine builds. Invoke with /typography or \"invoke typography skill\" when building engines with custom fonts, selecting a typographic register, or applying the Adaptive Vessel Skin. Covers: Syne descender clipping fix, five theme token bundles (RITUAL/ORACULAR/ANALYTICAL/RUPTURE/SOMATIC), font loading via Google Fonts CSS import, and theme persistence in localStorage.",
-      "files": {
-        "SKILL.md": "505a900c5f9c38333a3d6b55f4c8c6ff2875d4414fdf05965a3767e352d4002b"
-      }
+      "sha256": "505a900c5f9c38333a3d6b55f4c8c6ff2875d4414fdf05965a3767e352d4002b",
+      "url": "https://raw.githubusercontent.com/meetvenkat1-code/therantai-skills/main/skills/typography/SKILL.md"
     },
     "ui-contract": {
+      "bytes": 20588,
       "description": "A living constraint map governing the structural, behavioral, and rendering laws of every HTML engine build. Invoke with /ui-contract or by saying \"invoke UI Contract\" or \"update UI Contract\". Triggers when building any new engine, modifying an existing engine's layout, or adding new resolved constraints discovered during builds. Apply all constraints before writing any code. Update cumulatively as new friction is resolved \u2014 never re-solve a constraint already in this map.",
-      "files": {
-        "SKILL.md": "7274b5adf7c7b3c0c88f226a16f3e37b2ce15ad04eeb77c1d03fc2cafc9d8c33"
-      }
+      "sha256": "7274b5adf7c7b3c0c88f226a16f3e37b2ce15ad04eeb77c1d03fc2cafc9d8c33",
+      "url": "https://raw.githubusercontent.com/meetvenkat1-code/therantai-skills/main/skills/ui-contract/SKILL.md"
     }
   },
-  "version": 1
+  "version": "v1.1.0"
 }
