@@ -1,1 +1,4 @@
-{"tag": "v1.0.0", "commit": "HEAD", "manifest_sha": ""}
+{
+  "tag": "v1.0.0",
+  "manifest_sha256": "31a538e36e202255d754b2e6c6835643e82f82a59c584ad76f913c69e78a9048"
+}
