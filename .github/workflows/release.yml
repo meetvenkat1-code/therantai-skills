@@ -1,0 +1,93 @@
+name: release
+
+# One click: Actions -> release -> Run workflow -> enter a version.
+# Lints every skill, builds MANIFEST.json, tags the commit that contains it,
+# smoke-tests the real loader against the new tag, then moves the channel(s).
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version tag, e.g. v3.2.1"
+        required: true
+        type: string
+      promote:
+        description: "Channel(s) that should point at this release"
+        required: true
+        type: choice
+        default: next
+        options:
+          - next
+          - stable
+          - none
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    env:
+      VERSION: ${{ inputs.version }}
+      PROMOTE: ${{ inputs.promote }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Validate version
+        run: |
+          [[ "$VERSION" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "::error::version must look like v3.2.1"; exit 1; }
+          if git rev-parse -q --verify "refs/tags/$VERSION" >/dev/null; then
+            echo "::error::$VERSION already exists; tags are immutable, cut a new patch"
+            exit 1
+          fi
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Lint skills and build manifest
+        run: python tools/build_manifest.py
+
+      - name: Commit manifest and tag
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add MANIFEST.json
+          git diff --cached --quiet || git commit -m "release: manifest for $VERSION"
+          git tag -a "$VERSION" -m "$VERSION"
+          git push origin HEAD:main "$VERSION"
+
+      - name: Smoke-test the loader against the new tag
+        run: |
+          SSOT_REPO="${{ github.repository }}" SSOT_REF="$VERSION" \
+          SSOT_HOME="$RUNNER_TEMP/ssot-smoke" python ssot_boot.py
+          test -s "$RUNNER_TEMP/ssot-smoke/current/INDEX.md"
+
+      - name: Point channels at this release
+        if: ${{ inputs.promote != 'none' }}
+        run: |
+          DIGEST=$(sha256sum MANIFEST.json | cut -d' ' -f1)
+          mkdir -p channels
+          write_channel() {
+            printf '{\n  "tag": "%s",\n  "manifest_sha256": "%s"\n}\n' "$VERSION" "$DIGEST" > "channels/$1.json"
+          }
+          write_channel next
+          if [ "$PROMOTE" = "stable" ]; then write_channel stable; fi
+          git add channels
+          git diff --cached --quiet || git commit -m "channels: $PROMOTE -> $VERSION"
+          git push origin HEAD:main
+
+      - name: Publish GitHub Release
+        run: |
+          git archive --format=zip --prefix="skills-${VERSION}/" -o "skills-${VERSION}.zip" "$VERSION"
+          FLAGS=(--generate-notes --title "$VERSION")
+          if [ "$PROMOTE" != "stable" ]; then FLAGS+=(--prerelease); fi
+          gh release create "$VERSION" "skills-${VERSION}.zip" "${FLAGS[@]}"
