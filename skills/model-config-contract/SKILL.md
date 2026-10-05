@@ -1,11 +1,22 @@
 ---
 name: model-config-contract
-description: "Model Core v2: the universal provider and model layer for every HTML engine that calls an LLM. Owns model.json (providers, chains, defaultLanes, model_aliases, per-provider timing), the standard two-model floor (Groq gpt-oss-120b plus the OpenRouter free router), key slots (hek_ with legacy-slot fallback), and the ONE hardened call layer, callModel: a curated chain-walk or a strict single-model call, streaming, 429 retry, system-role fold, fatal statuses, served-model tag, reasoning liveness. hybrid-engine-contract delegates to this skill for all provider and model handling; model-catalog-panel is the optional picker built on top of it and never re-implements any of it. Invoke with /model-config or \"invoke model config contract\". Implied by /hybrid-engine for new builds; invoke explicitly to retrofit an existing engine.\n"
+description: >
+  Model Core v2: the universal provider and model layer for every HTML engine that
+  calls an LLM. Owns model.json (providers, chains, defaultLanes, model_aliases,
+  per-provider timing), the standard two-model floor (Groq gpt-oss-120b plus the
+  OpenRouter free router), key slots (hek_ with legacy-slot fallback), and the ONE
+  hardened call layer, callModel: a curated chain-walk or a strict single-model
+  call, streaming, 429 retry, system-role fold, fatal statuses, served-model tag,
+  reasoning liveness. hybrid-engine-contract delegates to this skill for all
+  provider and model handling; model-catalog-panel is the optional picker built on
+  top of it and never re-implements any of it. Invoke with /model-config or "invoke
+  model config contract". Implied by /hybrid-engine for new builds; invoke
+  explicitly to retrofit an existing engine.
 ---
 
 # Model Core (model-config-contract v2)
 
-> **STATUS: v2, released as a set of four.** Install together, replacing the old ones: `model-config-contract` (this file), `hybrid-engine-contract`, `ui-contract`, `model-catalog-panel` (v3.2). The live `model.json` was updated on GitHub on 2026-10-03 (`defaultLanes`, `model_aliases`, OpenRouter chain reduced to `openrouter/free`).
+> **STATUS: v2, released as a set of four.** Install together, replacing the old ones: `model-config-contract` (this file), `hybrid-engine-contract`, `ui-contract`, `model-catalog-panel` (v3.2.1). The live `model.json` was updated on GitHub on 2026-10-03 (`defaultLanes`, `model_aliases`, OpenRouter chain reduced to `openrouter/free`).
 
 The one layer that makes provider and model handling **data and one shared runtime**, instead of four hand-built copies per engine. Every engine that calls an LLM gets it; engines that want a model picker add `model-catalog-panel` on top.
 

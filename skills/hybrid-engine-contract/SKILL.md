@@ -1,6 +1,17 @@
 ---
 name: hybrid-engine-contract
-description: "Portable architectural contract for building Hybrid HTML Engines from any session or project. Full build DNA: streaming, palette, engine taxonomy, build constraints, banned patterns. Provider and model handling is DELEGATED to model-config-contract (the Model Core): providers, chains, keys, defaults and the call layer come from model.json plus one pasted block, never from literals in the HTML. The floor is unchanged: Claude Native inside claude.ai; Groq gpt-oss-120b (soft-falls to gpt-oss-20b, hard-falls to the OpenRouter free router) standalone; OpenRouter is text-only and standalone-only. Invoke with /hybrid-engine, \"invoke hybrid engine contract\", \"load engine contract\" or \"I want to build a hybrid HTML engine\". Always pair with UI Contract (chassis: layout, copy, rendering, provider dot) and the Model Core (provider layer); this skill owns the hybrid law, streaming, palette, taxonomy and build law.\n"
+description: >
+  Portable architectural contract for building Hybrid HTML Engines from any session or
+  project: provider delegation, streaming, palette, engine taxonomy, build constraints,
+  banned patterns. Provider and model handling is delegated to model-config-contract (the
+  Model Core): providers, chains, keys, defaults and the call layer come from model.json
+  plus one pasted block, never from literals in the HTML. Floor: Claude Native inside
+  claude.ai; Groq gpt-oss-120b (soft-falls to gpt-oss-20b, hard-falls to the OpenRouter free
+  router) standalone; OpenRouter is text-only and standalone-only. Invoke with
+  /hybrid-engine, "invoke hybrid engine contract", "load engine contract" or "I want to
+  build a hybrid HTML engine". Always pair with /ui-contract (layout, copy, rendering,
+  provider dot) and /model-config (provider layer); this skill owns the hybrid law,
+  streaming rules, palette, taxonomy and build law.
 ---
 
 # Hybrid Engine Contract

@@ -1,6 +1,17 @@
 ---
 name: model-catalog-panel
-description: "Optional model-picker layer for Hybrid HTML Engines, built on the Model Core (model- config-contract v2). Lanes mode: pin models as exact parallel lanes, one input through many models side by side. Panel mode: each panel, stage or role owns one model, chosen from the config defaults plus a per-panel Recent history, with a reassign popover per panel. Both modes consume the Core API (config, keys, hardened callModel) and never re- implement it. Defaults are the config's defaultLanes; everything else arrives through a live /models catalog (tiers, search, /regex/; tags, Synth Picks and price sort as opt-in modules). Exactly one control chooses the model. Invoke with /catalog lanes or /catalog panel (/catalog fanout aliases lanes), or say \"add live model catalog\", \"pin models as lanes\", \"per-panel model picker\". A bare /catalog asks one gate question. Skip for engines that only need the default models.\n"
+description: >
+  Optional model-picker layer for Hybrid HTML Engines, built on the Model Core (model-
+  config-contract v2). Lanes mode: pin models as exact parallel lanes, one input through
+  many models side by side. Panel mode: each panel, stage or role owns one model, chosen
+  from the config defaults plus a per-panel Recent history, with a reassign popover per
+  panel. Both modes consume the Core API (config, keys, hardened callModel) and never re-
+  implement it. Defaults are the config's defaultLanes; everything else arrives through a
+  live /models catalog (tiers, search, /regex/; tags, Synth Picks and price sort as opt-in
+  modules). Exactly one control chooses the model. Invoke with /catalog lanes or /catalog
+  panel (/catalog fanout aliases lanes), or say "add live model catalog", "pin models as
+  lanes", "per-panel model picker". A bare /catalog asks one gate question. Skip for
+  engines that only need the default models.
 ---
 
 # Model Catalog Panel v3.2
@@ -25,7 +36,7 @@ invokable: true
 triggers: ["/catalog", "/catalog lanes", "/catalog fanout", "/catalog panel", "invoke model catalog panel", "add live model catalog", "pin models as lanes", "fan-out lanes", "per-panel model picker", "each stage has its own model"]
 requires: [hybrid-engine-contract, ui-contract, model-config-contract]
 phase: Build
-version: "3.2"
+version: "3.2.1"
 reference_builds:
   - "osho-refraction-standalone.html (Lanes, single path, left system-prompt panel, right drawer with Corpus)"
   - "sequential-pipeline.html (Panel)"
@@ -59,7 +70,8 @@ An outside review reported that the catalog fetch can fail in the browser on Ope
 
 1. **`catalogHeaders(cfg, key)`** (Section 2). A catalog read is a GET of public data and sends the least that works: nothing at all for OpenRouter (its `/models` is public, so even a saved key is not sent), and only the auth header for a keyed provider such as Groq. This replaces the review's "delete `HTTP-Referer` and `X-Title`" patch, which left `Authorization` and `Content-Type` in place, used names (`P()`, `.endpoint`) that do not exist in this skill, and dropped the 401/403 key message and the empty-catalog guard.
 2. **Provider tabs switch instantly.** In both modes the click handler renders the new tab first and fetches second, so a failed fetch no longer leaves the old tab showing with the error under the wrong provider (B3 `makePicker`, A5 `renderCatalog`).
-3. **In-flight guard** (`inflight[pid]`). Instant tabs make rapid clicks easy; two concurrent fetches of one provider are now impossible.
+3. **Auth header taken from config.** `catalogHeaders` keeps the provider's own auth header (`cfg.authHeader` in `model.json`) instead of matching two hardcoded names, so a provider such as one using `x-goog-api-key` does not have its key silently dropped (v3.2.1).
+4. **In-flight guard** (`inflight[pid]`). Instant tabs make rapid clicks easy; two concurrent fetches of one provider are now impossible.
 4. **Panel plumbing made complete.** Panel mode's code used `h()`, `HISTORY_CAP`, `normaliseModels` and `rebuildSelects` that nothing defined, and called `$("#id")` while the Lanes code called `$("id")`, so the two modes could not share one plumbing block. The `$` in Section 1a now accepts both forms, `h` is defined there, and the Panel block under B1 defines the rest and states the shapes of the three engine-owned names (`state`, `ui`, `STAGES`).
 5. **Rejected: a boot-time auto-fetch loop in `renderConfigUI`.** It contradicts the banned pattern "never auto-refetch the catalog on load", would fire again when the live config swaps in, and assumed a `#drawerPicker .cat-status` node that Lanes engines do not have. Auto-fetch already happens in `makePicker.show()`, which passes the real status element, so its errors are visible.
 
@@ -158,7 +170,7 @@ Which providers are fetchable is decided by config: any non-native provider whos
 const catalogHeaders = (cfg, k) => {
   if (!k || /openrouter\.ai/.test(cfg.endpoint)) return {};     // OpenRouter's /models is public: no key, no headers, no preflight
   const h = headersFor(cfg, k), o = {};
-  Object.keys(h).forEach(n => { if (/^(authorization|x-api-key)$/i.test(n)) o[n] = h[n]; });   // keyed providers (Groq): auth header only
+  const an = (cfg.authHeader || "Authorization").toLowerCase(); Object.keys(h).forEach(n => { if (n.toLowerCase() === an) o[n] = h[n]; });   // keyed providers (Groq): the provider's own auth header only, as named in model.json
   return o;
 };
 const inflight = {};                                             // one catalog fetch per provider at a time
