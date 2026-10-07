@@ -331,6 +331,13 @@ select#providerSelect{
   width:100%;background:rgba(245,101,101,.1);border:1px solid var(--coral);color:var(--coral);
   border-radius:10px;padding:.8rem 1rem;font-size:.8rem;
 }
+
+/* ===== MIC STATUS LINE (unobtrusive voice diagnostics) ===== */
+.mic-status{
+  position:fixed;left:0;right:0;bottom:88px;z-index:90;pointer-events:none;
+  text-align:center;font-size:.65rem;color:var(--text-muted);
+  padding:.15rem .5rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
 </style>
 </head>
 <body>
@@ -454,6 +461,7 @@ select#providerSelect{
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
   </button>
 </div>
+<div class="mic-status" id="micStatus">mic: idle · err: none · restarts: 0 · last result: never</div>
 
 <script>
 /* ============ SYSTEM PROMPT (Constraint 20 schema, library entry) ============ */
@@ -867,25 +875,23 @@ async function callAI(systemPrompt, userMessage, onChunk){
   }
 }
 
-/* ============ MIC LISTENING PILL (visual "it's actually recording" indicator) ============ */
-// Driven by REAL microphone amplitude via getUserMedia + AnalyserNode, running
-// alongside (separate from) the SpeechRecognition engine used for transcription.
-// Bell-shaped ceiling mask stays (short bars at the edges, tall in the middle,
-// matching the Wispr Flow reference), but each bar's height is now a function
-// of actual live volume instead of Math.random() — so the bars swell when you
-// speak and settle low when you're silent, in sync with your voice.
+/* ============ MIC LISTENING PILL (synthetic activity wave — NEVER touches the mic) ============ */
+// MIC EXCLUSIVITY (verified on-device class of bug, see toggleMic): Android
+// Chrome grants the microphone to effectively ONE capture client. Any open
+// getUserMedia stream (including a "visualizer" analyser) starves the
+// SpeechRecognition engine -> audio-capture errors or permanent silence while
+// the UI still shows "listening". The old analyser opened such a stream for
+// the whole held period, so it has been REMOVED. The pill bars below are
+// purely synthetic: idle-low, swelling briefly on each onresult pulse.
+// While the recognizer is active or restarting, NO getUserMedia stream may
+// be alive. The only getUserMedia use left is the short permission probe in
+// canActuallyUseMic(), whose tracks are stopped before recognition starts.
 const MIC_PILL_BAR_COUNT = 15;
 let micPillAnimId = null;
 let micPillBarEls = [];
 let micPillBarMask = [];
 let micPillSmoothed = []; // per-bar smoothed level, for gentle rise/fall instead of jumpy snapping
-
-// Web Audio pipeline for real amplitude
-let micAudioCtx = null;
-let micAnalyser = null;
-let micStream = null;
-let micSourceNode = null;
-let micFreqData = null;
+let micPillEnergy = 0.08; // 0.08 idle .. 1.0 just-pulsed; decays every frame
 
 function buildMicPillBars(){
   const wave = document.getElementById('micPillWave');
@@ -909,57 +915,21 @@ function buildMicPillBars(){
   micPillSmoothed = micPillBarEls.map(() => 0);
 }
 
-// Starts a getUserMedia stream + AnalyserNode purely for amplitude reading.
-// Independent of SpeechRecognition, so it can't interfere with transcription
-// and keeps working even through SpeechRecognition's silence-gap restarts.
-async function startMicAudioAnalyser(){
-  if(micAudioCtx) return true; // already running
-  try{
-    micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    micAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    micAnalyser = micAudioCtx.createAnalyser();
-    micAnalyser.fftSize = 64; // small = fast, we only need coarse volume
-    micAnalyser.smoothingTimeConstant = 0.4; // node's own light smoothing
-    micSourceNode = micAudioCtx.createMediaStreamSource(micStream);
-    micSourceNode.connect(micAnalyser);
-    micFreqData = new Uint8Array(micAnalyser.frequencyBinCount);
-    return true;
-  }catch(e){
-    // Mic permission denied/unavailable for raw audio (rare if SpeechRecognition
-    // already has it) — fall back to idle-low bars rather than breaking the pill.
-    micAudioCtx = null;
-    micAnalyser = null;
-    return false;
-  }
-}
-
-function stopMicAudioAnalyser(){
-  if(micSourceNode){ try{ micSourceNode.disconnect(); }catch(e){} micSourceNode = null; }
-  if(micStream){ micStream.getTracks().forEach(t => t.stop()); micStream = null; }
-  if(micAudioCtx){ try{ micAudioCtx.close(); }catch(e){} micAudioCtx = null; }
-  micAnalyser = null;
-  micFreqData = null;
-}
-
-// Reads current volume (0..1) from the analyser. Uses average amplitude
-// across the frequency bins as a simple, cheap loudness proxy.
-function readMicVolume(){
-  if(!micAnalyser || !micFreqData) return 0;
-  micAnalyser.getByteFrequencyData(micFreqData);
-  let sum = 0;
-  for(let i = 0; i < micFreqData.length; i++){ sum += micFreqData[i]; }
-  const avg = sum / micFreqData.length; // 0..255
-  return Math.min(1, avg / 90); // normalize; /90 (not /255) so normal speech visibly fills the bars
+// Called from recognizer.onresult: brief swell so the user sees their speech
+// registered. Decays back to idle-low automatically in animateMicPillWave.
+function pulseMicPill(){
+  micPillEnergy = 1;
 }
 
 function animateMicPillWave(){
-  const volume = readMicVolume(); // 0 (silence) .. 1 (loud)
+  const volume = micPillEnergy; // 0.08 (idle) .. 1 (just pulsed)
+  micPillEnergy += (0.08 - micPillEnergy) * 0.06; // gentle decay to idle
   micPillBarEls.forEach((bar, i) => {
     const ceiling = micPillBarMask[i];
     const floor = 3;
     // Each bar gets a touch of its own randomness so the bars don't all move
     // in lockstep like a single pulsing block — but the shared `volume` term
-    // dominates, so the whole cluster clearly swells and settles with speech.
+    // dominates, so the whole cluster visibly swells on speech activity.
     const perBarNoise = 0.75 + Math.random() * 0.5; // 0.75x-1.25x variation per bar
     const target = floor + (ceiling - floor) * volume * perBarNoise;
     // Smooth toward target: fast rise (attack) so it feels responsive when you
@@ -974,17 +944,18 @@ function animateMicPillWave(){
   micPillAnimId = requestAnimationFrame(animateMicPillWave);
 }
 
-async function showMicPill(){
+function showMicPill(){
   buildMicPillBars();
   document.getElementById('micPill').classList.add('show');
-  await startMicAudioAnalyser(); // no-op if already running; safe if it fails
+  // NOTE: intentionally NO getUserMedia / AudioContext here (see exclusivity
+  // note above). Purely visual from here on.
+  try{ console.log('[mic] pill shown (synthetic wave, no audio stream)'); }catch(e){}
   if(!micPillAnimId) animateMicPillWave();
 }
 
 function hideMicPill(){
   document.getElementById('micPill').classList.remove('show');
   if(micPillAnimId){ cancelAnimationFrame(micPillAnimId); micPillAnimId = null; }
-  stopMicAudioAnalyser();
 }
 
 // X button: discard everything transcribed during this mic-held session and stop.
@@ -993,12 +964,8 @@ function cancelMicSession(){
   input.value = micSessionStartText;
   committedText = micSessionStartText;
   sessionFinal = '';
-  restartAttempts = 0;
-  micHeld = false;
-  clearTimeout(restartTimer);
-  document.getElementById('micBtn').classList.remove('listening');
-  hideMicPill();
-  if(isListening && recognizer){ try{ recognizer.stop(); }catch(e){} }
+  try{ console.log('[mic] cancelMicSession: discarding session text'); }catch(e){}
+  hardStopMic();
 }
 
 // Checkmark: stop listening but keep whatever was transcribed (same as clicking mic again).
@@ -1026,6 +993,21 @@ let restartTimer = null;
 let restartAttempts = 0;
 let lastStartTime = 0;
 let lastResultTime = 0;
+// Bounded-retry + diagnostics state. micFailCount counts CONSECUTIVE failed
+// cycles (a cycle = one engine start -> onend with zero results AND a
+// non-no-speech error, or a bare end with zero results and no error).
+// Plain silence ('no-speech' error, or any end that followed real silence)
+// is normal and NEVER increments the counter. After MIC_MAX_FAILURES the
+// engine hard-stops with a visible message instead of restarting silently
+// forever (the old bug: healthy-looking UI, zero transcription).
+const MIC_MAX_FAILURES = 5;
+let micFailCount = 0;
+let micLastError = 'none';
+let micState = 'idle'; // idle | listening | restarting | stopped
+let micStatusMessage = '';
+let cycleHadResult = false;
+let cycleError = '';
+let micStatusTimer = null;
 // Snapshot of the input's text at the moment the mic was turned on, so
 // "cancel" can restore exactly this and discard only what voice added.
 let micSessionStartText = '';
@@ -1047,13 +1029,18 @@ function isSecureContextForSpeech(){
 // Tries getUserMedia directly, regardless of protocol, and reports whether
 // the browser actually granted it. This is the real test — isSecureContextForSpeech()
 // is just used afterward to choose a more accurate error message if it fails.
+// MIC EXCLUSIVITY: every track is stopped synchronously before resolving, so
+// NO getUserMedia stream is alive when SpeechRecognition later starts. The
+// toggleMic start path additionally waits ~150ms after the probe resolves.
 async function canActuallyUseMic(){
   if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return false;
   try{
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    stream.getTracks().forEach(t => t.stop()); // just probing; release immediately
+    try{ stream.getTracks().forEach(t => t.stop()); }catch(stopErr){} // release immediately, before recognition
+    try{ console.log('[mic] probe ok, tracks stopped before recognition'); }catch(e){}
     return true;
   }catch(e){
+    try{ console.log('[mic] probe failed'); }catch(e2){}
     return false;
   }
 }
@@ -1081,6 +1068,31 @@ function joinTranscript(base, current){
   return base.replace(/\s+$/, '') + ' ' + current.replace(/^\s+/, '');
 }
 
+// Unobtrusive diagnostics line under the mic control. Shows state, last
+// error code, restart count, and seconds since the last result so a silent
+// failure is visible instead of a healthy-looking stuck UI.
+function updateMicStatus(){
+  try{
+    const el = document.getElementById('micStatus');
+    if(!el) return;
+    const age = lastResultTime ? Math.max(0, Math.round((Date.now() - lastResultTime) / 1000)) + 's ago' : 'never';
+    el.textContent = 'mic: ' + micState
+      + ' · err: ' + (micLastError || 'none')
+      + ' · restarts: ' + restartAttempts
+      + ' · fails: ' + micFailCount + '/' + MIC_MAX_FAILURES
+      + ' · last result: ' + age
+      + (micStatusMessage ? ' · ' + micStatusMessage : '');
+  }catch(e){}
+}
+
+function ensureMicStatusTimer(){
+  if(micStatusTimer) return;
+  try{
+    micStatusTimer = setInterval(() => { if(micHeld) updateMicStatus(); }, 1000);
+    if(micStatusTimer && micStatusTimer.unref) micStatusTimer.unref();
+  }catch(e){}
+}
+
 function attachRecognizerHandlers(){
   const micBtn = document.getElementById('micBtn');
   const input = document.getElementById('teluguInput');
@@ -1088,10 +1100,17 @@ function attachRecognizerHandlers(){
   recognizer.onstart = () => {
     isListening = true;
     lastStartTime = Date.now();
+    cycleHadResult = false;
+    cycleError = '';
+    if(micState !== 'listening'){ micState = micHeld ? 'listening' : micState; }
+    try{ console.log('[mic] onstart (held=' + micHeld + ')'); }catch(e){}
+    updateMicStatus();
   };
   recognizer.onresult = (e) => {
     lastResultTime = Date.now();
     restartAttempts = 0; // healthy speech resets backoff
+    micFailCount = 0; // healthy speech resets the failure cap
+    cycleHadResult = true;
     // Rebuild session text from resultIndex forward, splitting final vs
     // interim so only stabilized words are ever committed. This prevents
     // both duplication (re-appending the same final twice) and drops
@@ -1102,6 +1121,7 @@ function attachRecognizerHandlers(){
         const res = e.results[i];
         if(!res || !res[0]) continue;
         const text = res[0].transcript || '';
+        if(!text) continue;
         if(res.isFinal){
           sessionFinal = joinTranscript(sessionFinal, text);
         } else {
@@ -1109,48 +1129,77 @@ function attachRecognizerHandlers(){
         }
       }
     }catch(err){}
+    try{ pulseMicPill(); }catch(err){}
     input.value = joinTranscript(joinTranscript(committedText, sessionFinal), interim);
+    try{ console.log('[mic] onresult committed="' + sessionFinal + '" interim="' + interim + '"'); }catch(err){}
+    updateMicStatus();
   };
   recognizer.onerror = (e) => {
-    const err = (e && e.error) || '';
-    // Transient mobile conditions: silence gap, BT/hand-off blip, flaky
-    // radio, or an abort from a restart race. Keep micHeld + UI untouched
-    // and let onend (which always follows onerror) do the silent restart.
-    if(err === 'no-speech' || err === 'audio-capture' || err === 'network'
-       || err === 'aborted' || err === 'audio-busy' || err === 'bad-grammar'){
+    const err = (e && e.error) || 'unknown';
+    cycleError = err;
+    if(err !== 'no-speech') micLastError = err;
+    try{ console.log('[mic] onerror code=' + err + ' (held=' + micHeld + ')'); }catch(e2){}
+    // 'no-speech' (silence gap) is normal mid-conversation: never a failure,
+    // never touches micHeld/UI; onend restarts silently.
+    // Other transient mobile conditions (BT hand-off blip, flaky radio, or an
+    // abort from a restart race) are RECORDED here and COUNTED in onend if the
+    // cycle produced zero results — onend always follows onerror, so counting
+    // there keeps exactly one count per failed cycle.
+    if(err === 'no-speech'){
       isListening = false;
+      updateMicStatus();
       return;
     }
-    // Genuine hard failures only: user denied permission, engine missing,
-    // or language unsupported. Anything else falls through to silent retry
-    // so one stray error can never kill a held session on mobile.
+    // Genuine permission/unsupported failures stop immediately with UI teardown.
     if(err === 'not-allowed' || err === 'service-not-allowed'
        || err === 'permission-denied' || err === 'not-supported'
        || err === 'language-not-supported'){
-      hardStopMic();
+      try{ console.log('[mic] hard failure, stopping: ' + err); }catch(e2){}
+      hardStopMic('Microphone blocked (' + err + '). Allow mic access, then tap the mic again.');
       return;
     }
     isListening = false;
-    if(micHeld) scheduleRestart(150);
+    updateMicStatus();
+    // NOTE: no scheduleRestart() here — onend follows every onerror and owns
+    // the restart-or-cap decision, so each failed cycle is counted exactly once.
   };
   recognizer.onend = () => {
     isListening = false;
-    // Commit ONLY finalized words. The old code committed input.value
-    // (which includes unstable interim) — that is what dropped the last
-    // spoken word whenever mobile force-stopped mid-utterance.
+    try{ console.log('[mic] onend (held=' + micHeld + ' hadResult=' + cycleHadResult + ' cycleError=' + cycleError + ')'); }catch(e2){}
+    // Commit ONLY finalized words. Committing input.value (which includes
+    // unstable interim) is what used to drop the last spoken word whenever
+    // mobile force-stopped mid-utterance.
     if(sessionFinal && sessionFinal.trim()){
       committedText = joinTranscript(committedText, sessionFinal);
       sessionFinal = '';
       input.value = committedText;
     }
 
-    if(micHeld){
-      // Still "on" from the user's point of view — silent restart.
-      // micBtn keeps 'listening' and the pill stays .show: no flicker.
-      scheduleRestart();
-    } else if(input.value.trim()){
-      try{ input.focus(); }catch(err){}
+    if(!micHeld){
+      if(input.value.trim()){ try{ input.focus(); }catch(err){} }
+      return;
     }
+    // Still "on" from the user's point of view. Decide: silent restart,
+    // or failure-cap stop. micBtn keeps 'listening' and the pill stays
+    // .show across silent restarts: no flicker.
+    if(cycleHadResult){
+      micFailCount = 0;
+      scheduleRestart();
+      return;
+    }
+    if(cycleError === '' || cycleError === 'no-speech'){
+      // Normal silence (quiet room / pause between sentences): NOT a failure.
+      scheduleRestart();
+      return;
+    }
+    micFailCount++;
+    updateMicStatus();
+    if(micFailCount >= MIC_MAX_FAILURES){
+      try{ console.log('[mic] failure cap reached (' + micFailCount + '), stopping. lastError=' + cycleError); }catch(e2){}
+      hardStopMic('Microphone failed (' + cycleError + ') after ' + micFailCount + ' tries. Check the mic, then tap the mic again.');
+      return;
+    }
+    scheduleRestart();
   };
 }
 
@@ -1158,6 +1207,7 @@ function attachRecognizerHandlers(){
 // feeling continuous; exponential backoff avoids hot-looping when the
 // engine is repeatedly refused (e.g. mic busy), and a full recognizer
 // rebuild every few attempts un-sticks Android Chrome's wedged state.
+// Bounded by micFailCount in onend: this function never restarts past the cap.
 function scheduleRestart(baseDelay){
   if(!micHeld) return;
   clearTimeout(restartTimer);
@@ -1166,6 +1216,9 @@ function scheduleRestart(baseDelay){
   else if(restartAttempts >= 3) delay = Math.max(delay, 300);
   delay = Math.min(delay, 1500);
   restartAttempts++;
+  micState = 'restarting';
+  updateMicStatus();
+  try{ console.log('[mic] scheduleRestart in ' + delay + 'ms (restarts=' + restartAttempts + ' fails=' + micFailCount + ')'); }catch(e){}
   restartTimer = setTimeout(() => {
     if(!micHeld) return;
     // Every 4th consecutive restart, rebuild the engine: reusing one
@@ -1184,6 +1237,7 @@ function safeStart(){
   if(!micHeld || !recognizer) return;
   if(isListening) return;
   try{
+    try{ console.log('[mic] safeStart attempt'); }catch(e){}
     recognizer.start();
   }catch(err){
     const msg = String((err && err.message) || err);
@@ -1201,30 +1255,48 @@ function safeStart(){
         scheduleRestart(400);
       }
     } else {
+      try{ console.log('[mic] safeStart threw, scheduling restart: ' + msg); }catch(e2){}
       scheduleRestart(300);
     }
   }
 }
 
-// Hard stop: only for genuine permission denial / unsupported engine.
-// This is the ONLY path that clears micHeld + UI outside explicit user stop.
-function hardStopMic(){
+// Hard stop. With a message (failure cap / permission denial) the message —
+// always including the error code — stays visible in #micStatus and the
+// restart/fail counts are preserved for diagnosis. Plain user stops pass no
+// message and reset the counters to idle.
+function hardStopMic(message){
   micHeld = false;
   clearTimeout(restartTimer);
-  restartAttempts = 0;
-  sessionFinal = '';
   isListening = false;
+  sessionFinal = '';
+  micState = 'stopped';
+  if(message){
+    micStatusMessage = message;
+    try{ console.log('[mic] hardStop: ' + message); }catch(e){}
+  } else {
+    micStatusMessage = '';
+    restartAttempts = 0;
+    micFailCount = 0;
+    micLastError = 'none';
+    micState = 'idle';
+    try{ console.log('[mic] stopped by user'); }catch(e){}
+  }
   const micBtn = document.getElementById('micBtn');
   if(micBtn) micBtn.classList.remove('listening');
   try{ hideMicPill(); }catch(e){}
   try{ if(recognizer) recognizer.abort(); }catch(e){}
+  updateMicStatus();
 }
 
 function startRecognitionSession(){
   if(!recognizer){ recognizer = initSpeechRecognition(); }
   if(!recognizer) return;
   sessionFinal = '';
+  cycleHadResult = false;
+  cycleError = '';
   attachRecognizerHandlers();
+  try{ console.log('[mic] startRecognitionSession'); }catch(e){}
   safeStart();
 }
 
@@ -1246,12 +1318,8 @@ function toggleMic(){
       sessionFinal = '';
       if(input) input.value = committedText;
     }
-    micHeld = false;
-    clearTimeout(restartTimer);
-    restartAttempts = 0;
-    micBtn.classList.remove('listening');
-    hideMicPill();
-    try{ if(isListening && recognizer){ recognizer.stop(); } }catch(e){}
+    try{ console.log('[mic] toggleMic: manual stop, keeping text'); }catch(e){}
+    hardStopMic();
     return;
   }
 
@@ -1273,15 +1341,26 @@ function toggleMic(){
 
     // Starting a fresh mic-on period. Seed committedText from whatever's
     // currently in the box (e.g. typed text, or text left from before) so we
-    // append to it rather than erase it. Small delay lets Android release
-    // the getUserMedia probe stream before SpeechRecognition claims the mic,
-    // avoiding spurious audio-capture/busy errors on mobile.
+    // append to it rather than erase it. The probe above stopped all its
+    // tracks before resolving, and this small delay lets Android release the
+    // capture client before SpeechRecognition claims the mic, avoiding
+    // spurious audio-capture/busy errors on mobile. No other getUserMedia
+    // stream is open at this point (the pill wave is synthetic).
     const input = document.getElementById('teluguInput');
     committedText = input.value || '';
     sessionFinal = '';
     restartAttempts = 0;
+    micFailCount = 0;
+    micLastError = 'none';
+    micStatusMessage = '';
+    cycleHadResult = false;
+    cycleError = '';
     micSessionStartText = input.value || '';
     micHeld = true;
+    micState = 'listening';
+    ensureMicStatusTimer();
+    updateMicStatus();
+    try{ console.log('[mic] toggleMic: fresh start, probe ok'); }catch(e){}
     micBtn.classList.add('listening'); // stays on for the whole held period, no flicker between restarts
     showMicPill();
     clearTimeout(restartTimer);
@@ -1292,6 +1371,7 @@ function toggleMic(){
 // Mobile backgrounding (screen lock / tab switch) force-ends the engine.
 // When the page becomes visible again, silently resume if still held.
 document.addEventListener('visibilitychange', () => {
+  try{ console.log('[mic] visibilitychange hidden=' + document.hidden + ' held=' + micHeld + ' listening=' + isListening); }catch(e){}
   if(!document.hidden && micHeld && !isListening){
     scheduleRestart(200);
   }
@@ -1300,13 +1380,8 @@ document.addEventListener('visibilitychange', () => {
 // If the user sends the message while the mic is still on, stop listening
 // and reset the continuous-transcript state so the next mic-on starts clean.
 function stopMicForSend(){
-  micHeld = false;
-  clearTimeout(restartTimer);
-  restartAttempts = 0;
-  sessionFinal = '';
-  document.getElementById('micBtn').classList.remove('listening');
-  hideMicPill();
-  if(isListening && recognizer){ try{ recognizer.stop(); }catch(e){} }
+  try{ console.log('[mic] stopMicForSend'); }catch(e){}
+  hardStopMic();
   committedText = '';
 }
 
