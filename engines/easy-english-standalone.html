@@ -1383,6 +1383,9 @@ function hardStopMic(message){
   if(micBtn) micBtn.classList.remove('listening');
   try{ hideMicPill(); }catch(e){}
   try{ if(recognizer) recognizer.abort(); }catch(e){}
+  // Every stop path funnels through here (manual stop, cancel, send, failure
+  // cap, permission denial): restore the normal soft keyboard.
+  try{ const ti = document.getElementById('teluguInput'); if(ti) ti.removeAttribute('inputmode'); }catch(e){}
   updateMicStatus();
 }
 
@@ -1466,6 +1469,12 @@ function toggleMic(){
     try{ console.log('[mic] toggleMic: fresh start, probe ok'); }catch(e){}
     micBtn.classList.add('listening'); // stays on for the whole held period, no flicker between restarts
     showMicPill();
+    // Focus the text box with the soft keyboard suppressed: interim/final
+    // transcripts land in a focused field (mobile IME friendly) without the
+    // keyboard popping up over the mic UI. Removed again on every stop path
+    // in hardStopMic(). Observability/focus only — no lifecycle effect.
+    try{ input.setAttribute('inputmode', 'none'); }catch(e){}
+    try{ input.focus({ preventScroll: true }); }catch(e){ try{ input.focus(); }catch(e2){} }
     clearTimeout(restartTimer);
     restartTimer = setTimeout(() => { if(micHeld) startRecognitionSession(); }, 150);
   });
