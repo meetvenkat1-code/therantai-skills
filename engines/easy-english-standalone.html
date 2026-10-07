@@ -334,9 +334,10 @@ select#providerSelect{
 
 /* ===== MIC STATUS LINE (unobtrusive voice diagnostics) ===== */
 .mic-status{
-  position:fixed;left:0;right:0;bottom:88px;z-index:90;pointer-events:none;
+  position:fixed;left:0;right:0;bottom:88px;z-index:90;
   text-align:center;font-size:.65rem;color:var(--text-muted);
   padding:.15rem .5rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  cursor:pointer; /* tap to copy the mic diagnostic log */
 }
 </style>
 </head>
@@ -461,7 +462,7 @@ select#providerSelect{
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
   </button>
 </div>
-<div class="mic-status" id="micStatus">mic: idle · err: none · restarts: 0 · last result: never</div>
+<div class="mic-status" id="micStatus" title="Tap to copy mic diagnostic log">mic: idle · err: none · restarts: 0 · last result: never</div>
 
 <script>
 /* ============ SYSTEM PROMPT (Constraint 20 schema, library entry) ============ */
@@ -1081,7 +1082,8 @@ function updateMicStatus(){
       + ' · restarts: ' + restartAttempts
       + ' · fails: ' + micFailCount + '/' + MIC_MAX_FAILURES
       + ' · last result: ' + age
-      + (micStatusMessage ? ' · ' + micStatusMessage : '');
+      + (micStatusMessage ? ' · ' + micStatusMessage : '')
+      + ((typeof micCopiedUntil !== 'undefined' && Date.now() < micCopiedUntil) ? ' · copied' : '');
   }catch(e){}
 }
 
@@ -1091,6 +1093,94 @@ function ensureMicStatusTimer(){
     micStatusTimer = setInterval(() => { if(micHeld) updateMicStatus(); }, 1000);
     if(micStatusTimer && micStatusTimer.unref) micStatusTimer.unref();
   }catch(e){}
+}
+
+/* ============ MIC DIAGNOSTIC LOG (observability only — no lifecycle effect) ============ */
+// Ring buffer of the last MIC_LOG_MAX recognizer lifecycle events. Written by
+// the handlers below, read only by buildMicReport()/copyMicLog(). It NEVER
+// influences restart/cap/stop decisions. It survives hard stops (including the
+// failure cap) so it can be copied after the mic dies; it resets only when the
+// mic is turned on again (see toggleMic fresh-start path).
+const MIC_LOG_MAX = 40;
+let micLog = [];
+let micSessionT0 = 0;
+let micCopiedUntil = 0;
+
+function micLogEvent(name, errorCode, extra){
+  try{
+    const t = micSessionT0 ? (Date.now() - micSessionT0) : 0;
+    micLog.push({ t: t, ev: name, code: errorCode || '', n: (typeof extra === 'number' ? extra : 0) });
+    while(micLog.length > MIC_LOG_MAX) micLog.shift();
+  }catch(e){}
+}
+
+function buildMicReport(){
+  try{
+    const ua = (typeof navigator !== 'undefined' && navigator.userAgent) ? navigator.userAgent : 'unknown';
+    const sc = (typeof window !== 'undefined' && typeof window.isSecureContext !== 'undefined') ? String(window.isSecureContext) : 'unknown';
+    let ctor = 'none';
+    try{
+      if(typeof window !== 'undefined'){
+        if(window.SpeechRecognition) ctor = 'SpeechRecognition';
+        else if(window.webkitSpeechRecognition) ctor = 'webkitSpeechRecognition';
+      }
+    }catch(e){}
+    let lang = '';
+    try{ lang = (typeof recognizer !== 'undefined' && recognizer && recognizer.lang) ? recognizer.lang : ''; }catch(e){}
+    let proto = '';
+    try{ proto = (typeof location !== 'undefined' && location.protocol) ? location.protocol : ''; }catch(e){}
+    const lines = [
+      'mic-diag userAgent=' + ua,
+      'mic-diag isSecureContext=' + sc,
+      'mic-diag constructor=' + ctor,
+      'mic-diag recognizer.lang=' + (lang || 'unknown'),
+      'mic-diag protocol=' + (proto || 'unknown'),
+      'mic-diag events=' + micLog.length
+    ];
+    for(const e of micLog){
+      lines.push('+' + e.t + 'ms ' + e.ev + (e.code ? ' code=' + e.code : '') + (e.n ? ' n=' + e.n : ''));
+    }
+    return lines.join('\n');
+  }catch(e){ return 'mic-diag error building report'; }
+}
+
+function fallbackCopyMicLog(text, done){
+  try{
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.cssText = 'position:fixed;left:-9999px;top:-9999px;opacity:0;';
+    ta.setAttribute('readonly', '');
+    document.body.appendChild(ta);
+    ta.focus(); ta.select();
+    try{ ta.setSelectionRange(0, text.length); }catch(e){}
+    let ok = false;
+    try{ ok = document.execCommand('copy'); }catch(e){}
+    try{ document.body.removeChild(ta); }catch(e){}
+    if(ok){ done(); return; }
+  }catch(e){}
+  try{ console.log('[mic] report (clipboard unavailable):\n' + text); }catch(e2){}
+  done();
+}
+
+// Tap handler for #micStatus: copies the plain-text report. Flashes "copied"
+// on the status line for 1.5s via micCopiedUntil (consumed by updateMicStatus,
+// so the live line keeps working and the flash survives a stopped mic too).
+function copyMicLog(){
+  let report = '';
+  try{ report = buildMicReport(); }catch(e){ report = 'mic-diag error'; }
+  const done = () => {
+    micCopiedUntil = Date.now() + 1500;
+    try{ console.log('[mic] diagnostic report copied (' + micLog.length + ' events)'); }catch(e){}
+    updateMicStatus();
+    setTimeout(() => { updateMicStatus(); }, 1600);
+  };
+  try{
+    if(typeof navigator !== 'undefined' && navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(report).then(done, () => fallbackCopyMicLog(report, done));
+    } else {
+      fallbackCopyMicLog(report, done);
+    }
+  }catch(e){ fallbackCopyMicLog(report, done); }
 }
 
 function attachRecognizerHandlers(){
@@ -1104,6 +1194,7 @@ function attachRecognizerHandlers(){
     cycleError = '';
     if(micState !== 'listening'){ micState = micHeld ? 'listening' : micState; }
     try{ console.log('[mic] onstart (held=' + micHeld + ')'); }catch(e){}
+    micLogEvent('start');
     updateMicStatus();
   };
   recognizer.onresult = (e) => {
@@ -1132,6 +1223,7 @@ function attachRecognizerHandlers(){
     try{ pulseMicPill(); }catch(err){}
     input.value = joinTranscript(joinTranscript(committedText, sessionFinal), interim);
     try{ console.log('[mic] onresult committed="' + sessionFinal + '" interim="' + interim + '"'); }catch(err){}
+    try{ micLogEvent('result', '', (e && e.results) ? e.results.length : 0); }catch(err){}
     updateMicStatus();
   };
   recognizer.onerror = (e) => {
@@ -1139,6 +1231,7 @@ function attachRecognizerHandlers(){
     cycleError = err;
     if(err !== 'no-speech') micLastError = err;
     try{ console.log('[mic] onerror code=' + err + ' (held=' + micHeld + ')'); }catch(e2){}
+    micLogEvent('error', err);
     // 'no-speech' (silence gap) is normal mid-conversation: never a failure,
     // never touches micHeld/UI; onend restarts silently.
     // Other transient mobile conditions (BT hand-off blip, flaky radio, or an
@@ -1166,6 +1259,7 @@ function attachRecognizerHandlers(){
   recognizer.onend = () => {
     isListening = false;
     try{ console.log('[mic] onend (held=' + micHeld + ' hadResult=' + cycleHadResult + ' cycleError=' + cycleError + ')'); }catch(e2){}
+    micLogEvent('end', cycleError || '');
     // Commit ONLY finalized words. Committing input.value (which includes
     // unstable interim) is what used to drop the last spoken word whenever
     // mobile force-stopped mid-utterance.
@@ -1219,6 +1313,7 @@ function scheduleRestart(baseDelay){
   micState = 'restarting';
   updateMicStatus();
   try{ console.log('[mic] scheduleRestart in ' + delay + 'ms (restarts=' + restartAttempts + ' fails=' + micFailCount + ')'); }catch(e){}
+  micLogEvent('restart-scheduled', '', delay);
   restartTimer = setTimeout(() => {
     if(!micHeld) return;
     // Every 4th consecutive restart, rebuild the engine: reusing one
@@ -1271,6 +1366,8 @@ function hardStopMic(message){
   isListening = false;
   sessionFinal = '';
   micState = 'stopped';
+  // Log BEFORE the user-stop path below resets micLastError (observability only).
+  micLogEvent('hard-stop', (message && micLastError && micLastError !== 'none') ? micLastError : '');
   if(message){
     micStatusMessage = message;
     try{ console.log('[mic] hardStop: ' + message); }catch(e){}
@@ -1358,6 +1455,12 @@ function toggleMic(){
     micSessionStartText = input.value || '';
     micHeld = true;
     micState = 'listening';
+    // Fresh mic-on: reset the diagnostic log (it persists across hard stops
+    // until the NEXT turn-on, so it can be copied after the mic dies).
+    micLog = [];
+    micSessionT0 = Date.now();
+    micCopiedUntil = 0;
+    micLogEvent('mic-on');
     ensureMicStatusTimer();
     updateMicStatus();
     try{ console.log('[mic] toggleMic: fresh start, probe ok'); }catch(e){}
@@ -1368,11 +1471,15 @@ function toggleMic(){
   });
 }
 
+// Tap the status line to copy the mic diagnostic report (observability only).
+try{ document.getElementById('micStatus').addEventListener('click', copyMicLog); }catch(e){}
+
 // Mobile backgrounding (screen lock / tab switch) force-ends the engine.
 // When the page becomes visible again, silently resume if still held.
 document.addEventListener('visibilitychange', () => {
   try{ console.log('[mic] visibilitychange hidden=' + document.hidden + ' held=' + micHeld + ' listening=' + isListening); }catch(e){}
   if(!document.hidden && micHeld && !isListening){
+    micLogEvent('visibility-resume');
     scheduleRestart(200);
   }
 });
