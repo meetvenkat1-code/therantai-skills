@@ -1,0 +1,1542 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Easy English — English-Telugu Translation Tutor</title>
+<style>
+:root{
+  --bg-void:#0a0a0f;
+  --bg-panel:#131319;
+  --bg-card:#16161e;
+  --bg-border:#26262f;
+  --accent-main:#7c6ef5;
+  --accent-soft:#9d92ff;
+  --orange-warn:#f97316;
+  --green:#22c55e;
+  --amber:#f5a623;
+  --coral:#f56565;
+  --teal:#38bdf8;
+  --text-primary:#e8e6f0;
+  --text-secondary:#9090a8;
+  --text-muted:#66667a;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{
+  background:var(--bg-void);
+  color:var(--text-primary);
+  font-family:'Segoe UI',system-ui,-apple-system,sans-serif;
+  overflow:hidden;
+  height:100vh;
+}
+
+/* ===== 18A SANDWICH LAYOUT ===== */
+.header{
+  position:fixed;top:0;left:0;right:0;height:56px;z-index:100;
+  background:var(--bg-panel);border-bottom:1px solid var(--bg-border);
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 1.2rem;
+}
+.output-area{
+  position:fixed;top:56px;bottom:88px;left:0;right:0;overflow-y:auto;
+  padding:1.5rem;display:flex;flex-direction:column;align-items:center;
+}
+.input-bar{
+  position:fixed;bottom:0;left:0;right:0;height:88px;z-index:100;
+  background:var(--bg-panel);border-top:1px solid var(--bg-border);
+  display:flex;align-items:center;padding:0 1.2rem;gap:.6rem;
+}
+
+/* ===== 03 OUTPUT WIDTH ===== */
+.canvas-inner{width:85%;display:flex;flex-direction:column;gap:1rem;align-items:center;}
+
+/* ===== HEADER ZONES ===== */
+.zone-a{display:flex;align-items:center;gap:.6rem;}
+.zone-a .name{font-weight:600;font-size:1.05rem;letter-spacing:.02em;}
+.zone-a .badge{
+  font-size:.62rem;background:var(--accent-main);color:#fff;padding:2px 8px;
+  border-radius:20px;text-transform:uppercase;letter-spacing:.05em;
+}
+.zone-b{display:flex;align-items:center;gap:.7rem;}
+.zone-b button.icon-btn{
+  background:none;border:1px solid var(--bg-border);color:var(--text-secondary);
+  width:34px;height:34px;border-radius:8px;cursor:pointer;font-size:1rem;
+  display:flex;align-items:center;justify-content:center;transition:.2s;
+}
+.zone-b button.icon-btn:hover{border-color:var(--accent-main);color:var(--accent-main);}
+.provider-select-wrap{position:relative;display:flex;align-items:center;}
+.provider-dot{
+  width:8px;height:8px;border-radius:50%;position:absolute;left:10px;
+  pointer-events:none;background:var(--text-secondary);
+}
+select#providerSelect{
+  background:var(--bg-card);color:var(--text-primary);border:1px solid var(--bg-border);
+  border-radius:8px;padding:6px 10px 6px 24px;font-size:.75rem;cursor:pointer;
+}
+.zone-c{display:flex;flex-direction:column;align-items:flex-end;line-height:1.3;}
+.zone-c .crafted{font-style:italic;font-size:.72rem;color:var(--text-muted);}
+.zone-c a{font-size:.72rem;color:var(--text-muted);text-decoration:none;}
+.zone-c a:hover{color:var(--accent-soft);}
+
+/* ===== MOBILE HEADER (narrow viewports) ===== */
+@media (max-width:640px){
+  .header{
+    height:auto;min-height:56px;flex-wrap:wrap;
+    padding:.5rem .6rem;row-gap:.4rem;column-gap:.4rem;
+  }
+  .zone-a{gap:.35rem;flex-shrink:1;min-width:0;order:1;}
+  .zone-a .name{font-size:.88rem;}
+  .zone-a .badge{font-size:.54rem;padding:2px 6px;}
+  .zone-b{
+    gap:.35rem;flex-shrink:0;min-width:0;
+    order:3;width:100%;justify-content:flex-start;
+  }
+  .zone-b button.icon-btn{width:32px;height:32px;flex-shrink:0;}
+  select#providerSelect{
+    font-size:.7rem;padding:6px 8px 6px 22px;max-width:none;flex:1;min-width:0;
+    text-overflow:ellipsis;white-space:nowrap;overflow:hidden;
+  }
+  .provider-select-wrap{flex:1;min-width:0;}
+  .zone-c{
+    display:flex;order:2;flex-shrink:0;margin-left:auto;
+  }
+  .zone-c a{font-size:.62rem;}
+  /* header wraps to two rows on mobile, so shift content below it down */
+  .output-area{top:96px;}
+  .panel,#settingsDrawer{top:96px;}
+}
+@media (max-width:400px){
+  .zone-a .name{font-size:.82rem;}
+  .zone-c a{font-size:.56rem;}
+  .zone-b button.icon-btn{width:29px;height:29px;}
+  select#providerSelect{font-size:.65rem;padding:5px 6px 5px 20px;}
+  .output-area{top:100px;}
+  .panel,#settingsDrawer{top:100px;}
+}
+
+/* ===== PANELS (01 DUAL-PANEL LAW) ===== */
+.panel{
+  position:fixed;top:56px;bottom:0;width:340px;background:var(--bg-panel);
+  z-index:200;transition:transform .25s ease;padding:1.2rem;overflow-y:auto;
+  border-color:var(--bg-border);
+}
+#leftPanel{left:0;border-right:1px solid var(--bg-border);transform:translateX(-100%);}
+#leftPanel.open{transform:translateX(0);}
+#rightPanel{right:0;border-left:1px solid var(--bg-border);transform:translateX(100%);}
+#rightPanel.open{transform:translateX(0);}
+@media (max-width:640px){
+  .panel{width:88vw;max-width:340px;}
+  #settingsDrawer{width:88vw;max-width:320px;}
+}
+.panel-backdrop{
+  position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);z-index:150;
+  visibility:hidden;opacity:0;transition:opacity .2s;
+}
+.panel-backdrop.show{visibility:visible;opacity:1;}
+.panel h3{font-size:.9rem;margin-bottom:.9rem;color:var(--text-primary);}
+.panel-item{
+  background:var(--bg-card);border:1px solid var(--bg-border);border-radius:8px;
+  padding:.7rem .8rem;margin-bottom:.6rem;font-size:.78rem;cursor:pointer;transition:.2s;
+}
+.panel-item:hover{border-color:var(--accent-main);}
+.panel-item .pi-eng{color:var(--text-primary);font-weight:600;margin-bottom:.2rem;}
+.panel-item .pi-meaning{color:var(--text-secondary);font-size:.72rem;}
+.panel-item .pi-time{color:var(--text-muted);font-size:.65rem;margin-top:.3rem;}
+.panel-empty{color:var(--text-muted);font-size:.78rem;text-align:center;padding:2rem 0;}
+.panel-actions{display:flex;gap:.5rem;margin-top:1rem;flex-wrap:wrap;}
+.panel-actions button{
+  flex:1;background:none;border:1px solid var(--bg-border);color:var(--text-secondary);
+  padding:6px 8px;border-radius:6px;font-size:.68rem;cursor:pointer;transition:.2s;
+}
+.panel-actions button:hover{border-color:var(--accent-main);color:var(--accent-main);}
+.prompt-body-box{
+  width:100%;min-height:90px;background:var(--bg-void);color:var(--text-secondary);
+  border:1px solid var(--bg-border);border-radius:8px;padding:.5rem;font-size:.68rem;
+  font-family:monospace;resize:vertical;
+}
+
+/* ===== GEAR DRAWER (06) ===== */
+#settingsDrawer{
+  position:fixed;top:56px;right:0;bottom:0;width:320px;background:var(--bg-panel);
+  z-index:200;transition:transform .25s ease;transform:translateX(100%);
+  border-left:1px solid var(--bg-border);padding:1.2rem;overflow-y:auto;
+}
+#settingsDrawer.open{transform:translateX(0);}
+.settings-row{margin-bottom:1.1rem;}
+.settings-row label{font-size:.75rem;color:var(--text-secondary);display:block;margin-bottom:.4rem;}
+.settings-row input[type=password]{
+  width:100%;background:var(--bg-card);border:1px solid var(--bg-border);color:var(--text-primary);
+  padding:7px 9px;border-radius:6px;font-size:.78rem;
+}
+.settings-readonly{
+  font-size:.72rem;color:var(--text-muted);background:var(--bg-card);
+  border:1px solid var(--bg-border);border-radius:6px;padding:8px 9px;
+}
+.settings-note{font-size:.65rem;color:var(--orange-warn);margin-top:.3rem;}
+.save-btn{
+  width:100%;background:var(--accent-main);color:#fff;border:none;padding:9px;
+  border-radius:7px;font-size:.78rem;cursor:pointer;font-weight:600;transition:.2s;
+}
+.save-btn.saved{background:var(--green);}
+
+/* ===== WARNING BANNER ===== */
+.banner{
+  width:85%;background:rgba(249,115,22,.1);border:1px solid var(--orange-warn);
+  color:var(--orange-warn);font-size:.75rem;padding:.6rem .9rem;border-radius:8px;
+  visibility:hidden;pointer-events:none;height:0;overflow:hidden;
+}
+.banner.show{visibility:visible;pointer-events:all;height:auto;margin-bottom:.2rem;padding:.6rem .9rem;}
+
+/* ===== INPUT BAR ===== */
+.input-row{
+  flex:1;display:flex;align-items:center;background:var(--bg-card);
+  border:1px solid var(--bg-border);border-radius:10px;padding:.3rem .3rem .3rem .9rem;
+  gap:.5rem;
+}
+.input-row:focus-within{border-color:var(--accent-main);}
+#teluguInput{
+  flex:1;background:none;border:none;outline:none;color:var(--text-primary);
+  font-size:.95rem;padding:.5rem 0;font-family:'Segoe UI',system-ui,sans-serif;
+}
+#teluguInput::placeholder{color:var(--text-muted);}
+.mic-btn, .send-btn{
+  background:none;border:none;color:var(--text-secondary);cursor:pointer;
+  width:38px;height:38px;border-radius:8px;display:flex;align-items:center;justify-content:center;
+  transition:.2s;flex-shrink:0;
+}
+.mic-btn:hover{color:var(--teal);background:rgba(56,189,248,.1);}
+.mic-btn.listening{color:var(--coral);animation:pulse 1.2s infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.4;}}
+.send-btn{background:var(--accent-main);color:#fff;}
+.send-btn:hover{background:var(--accent-soft);}
+.send-btn:disabled{opacity:.4;cursor:not-allowed;}
+.send-btn svg, .mic-btn svg{width:16px;height:16px;}
+
+/* ===== MIC LISTENING PILL ===== */
+.mic-pill{
+  position:absolute;left:50%;bottom:calc(88px + 14px);transform:translateX(-50%) translateY(6px);
+  display:flex;align-items:center;gap:.6rem;
+  background:#1c1c24;border:1px solid var(--bg-border);border-radius:999px;
+  padding:.5rem .6rem .5rem .6rem;box-shadow:0 8px 24px rgba(0,0,0,.4);
+  opacity:0;pointer-events:none;visibility:hidden;
+  transition:opacity .18s ease, transform .18s ease, visibility .18s;
+  z-index:150;
+}
+.mic-pill.show{opacity:1;transform:translateX(-50%) translateY(0);pointer-events:all;visibility:visible;}
+.mic-pill-btn{
+  background:none;border:none;cursor:pointer;flex-shrink:0;
+  width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  transition:.15s;
+}
+.mic-pill-btn svg{width:15px;height:15px;}
+.mic-pill-cancel{color:var(--text-secondary);background:rgba(255,255,255,.06);}
+.mic-pill-cancel:hover{color:var(--coral);background:rgba(245,101,101,.12);}
+.mic-pill-confirm{color:#0a0a0f;background:#fff;}
+.mic-pill-confirm:hover{background:var(--teal);}
+.mic-pill-wave{
+  display:flex;align-items:center;justify-content:center;gap:2px;
+  height:22px;min-width:60px;padding:0 .3rem;
+}
+.mic-pill-wave .bar{
+  width:2.5px;border-radius:2px;background:#fff;
+  height:5px;transition:height .05s linear;
+}
+
+/* ===== TRANSLATION CARD ===== */
+.t-card{
+  width:100%;background:var(--bg-card);border:1px solid var(--bg-border);
+  border-radius:14px;padding:1.3rem 1.4rem;position:relative;
+  animation:cardIn .3s ease;
+}
+@keyframes cardIn{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+.t-card-header{
+  display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:.9rem;
+  gap:.8rem;
+}
+.t-original{color:var(--text-muted);font-size:.78rem;font-style:italic;}
+.t-card-actions{display:flex;gap:.4rem;flex-shrink:0;}
+.t-eng{
+  font-size:1.25rem;font-weight:600;color:var(--text-primary);line-height:1.4;
+  margin-bottom:.5rem;word-break:break-word;
+}
+.t-pron{
+  color:var(--accent-soft);font-size:1rem;margin-bottom:.6rem;line-height:1.4;
+  word-break:break-word;
+}
+.t-meaning{
+  color:var(--text-secondary);font-size:.82rem;margin-bottom:1rem;
+  padding-bottom:1rem;border-bottom:1px solid var(--bg-border);
+}
+.t-kw{display:flex;flex-wrap:wrap;gap:.5rem;}
+.t-kw-item{
+  background:var(--bg-void);border:1px solid var(--bg-border);border-radius:8px;
+  padding:.45rem .7rem;font-size:.72rem;min-width:120px;
+}
+.t-kw-w{color:var(--teal);font-weight:600;}
+.t-kw-p{color:var(--text-muted);font-style:italic;}
+.t-kw-m{color:var(--text-secondary);}
+
+/* Slide-in details panel: pronunciation, normalized meaning, and keyword
+   gloss all sit behind one toggle, collapsed by default. Only the English
+   translation is always visible. */
+.t-eng{margin-bottom:.2rem;}
+.t-toggle{
+  background:none;border:none;color:var(--text-muted);font-size:.72rem;
+  cursor:pointer;display:flex;align-items:center;gap:.3rem;padding:.4rem 0 0;
+}
+.t-toggle:hover{color:var(--accent-soft);}
+.t-toggle svg{width:11px;height:11px;transition:transform .2s;flex-shrink:0;}
+.t-toggle.open svg{transform:rotate(180deg);}
+.t-details{
+  display:none;margin-top:.8rem;overflow:hidden;
+  animation:detailsIn .2s ease;
+}
+.t-details.open{display:block;}
+@keyframes detailsIn{from{opacity:0;transform:translateY(-4px);}to{opacity:1;transform:translateY(0);}}
+.t-details .t-pron{margin-bottom:.6rem;}
+.t-details .t-meaning{margin-bottom:.8rem;padding-bottom:.8rem;}
+
+.icon-btn-sm{
+  background:none;border:1px solid var(--bg-border);color:var(--text-muted);
+  width:30px;height:30px;border-radius:7px;cursor:pointer;display:flex;
+  align-items:center;justify-content:center;transition:.2s;flex-shrink:0;
+}
+.icon-btn-sm:hover{border-color:var(--accent-main);color:var(--accent-main);}
+.icon-btn-sm.copied{border-color:var(--green);color:var(--green);}
+.icon-btn-sm.speaking{border-color:var(--teal);color:var(--teal);}
+.icon-btn-sm svg{width:13px;height:13px;}
+
+.copy-btn{
+  display:flex;align-items:center;gap:5px;background:none;border:1px solid var(--bg-border);
+  color:var(--text-muted);font-size:.65rem;padding:4px 10px 5px;border-radius:5px;
+  cursor:pointer;transition:all .2s;white-space:nowrap;flex-shrink:0;
+}
+.copy-btn svg{width:11px;height:11px;stroke:currentColor;fill:none;stroke-width:1.8;}
+.copy-btn:hover{border-color:var(--accent-main);color:var(--accent-main);}
+.copy-btn.copied{border-color:var(--green);color:var(--green);}
+
+.empty-state{
+  color:var(--text-muted);text-align:center;padding:3rem 0;font-size:.85rem;
+}
+.loading-dots{display:flex;gap:5px;padding:1rem 0;}
+.loading-dots span{
+  width:7px;height:7px;border-radius:50%;background:var(--accent-main);
+  animation:bounce 1s infinite;
+}
+.loading-dots span:nth-child(2){animation-delay:.15s;}
+.loading-dots span:nth-child(3){animation-delay:.3s;}
+@keyframes bounce{0%,60%,100%{transform:translateY(0);opacity:.5;}30%{transform:translateY(-6px);opacity:1;}}
+
+.error-box{
+  width:100%;background:rgba(245,101,101,.1);border:1px solid var(--coral);color:var(--coral);
+  border-radius:10px;padding:.8rem 1rem;font-size:.8rem;
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="zone-a">
+    <span class="name">Easy English</span>
+    <span class="badge">తెలుగు → English</span>
+  </div>
+  <div class="zone-b">
+    <button class="icon-btn" id="leftToggle" title="Prompt library">☰</button>
+    <div class="provider-select-wrap">
+      <span class="provider-dot" id="providerDot"></span>
+      <select id="providerSelect" onchange="updateProviderDot();updateBanner();">
+        <option value="groq">Groq (gpt-oss-120b)</option>
+        <option value="or-text">OpenRouter (free)</option>
+      </select>
+    </div>
+    <button class="icon-btn" id="rightToggle" title="Saved translations">▤</button>
+    <button class="icon-btn" id="settingsToggle" title="Settings">⚙</button>
+  </div>
+  <div class="zone-c">
+    <a href="mailto:meet.venkat1@gmail.com">meet.venkat1@gmail.com</a>
+  </div>
+</div>
+
+<div class="panel-backdrop" id="leftBackdrop"></div>
+<div class="panel-backdrop" id="rightBackdrop"></div>
+<div class="panel-backdrop" id="settingsBackdrop"></div>
+
+<!-- LEFT PANEL: prompt library -->
+<div class="panel" id="leftPanel">
+  <h3>Prompt Library</h3>
+  <div id="promptList"></div>
+  <div class="panel-actions">
+    <button onclick="exportPrompts()">Export JSON</button>
+    <button onclick="document.getElementById('promptImportFile').click()">Import JSON</button>
+    <button onclick="document.getElementById('promptImportMd').click()">Import .md</button>
+  </div>
+  <input type="file" id="promptImportFile" accept=".json" style="display:none" onchange="importPromptsJson(event)">
+  <input type="file" id="promptImportMd" accept=".md" style="display:none" onchange="importPromptMd(event)">
+</div>
+
+<!-- RIGHT PANEL: response/history library -->
+<div class="panel" id="rightPanel">
+  <h3>Saved Translations</h3>
+  <div id="responseList"></div>
+  <div class="panel-actions">
+    <button onclick="exportResponses()">Export JSON</button>
+    <button onclick="clearHistory()">Clear All</button>
+  </div>
+</div>
+
+<!-- SETTINGS DRAWER -->
+<div id="settingsDrawer">
+  <h3 style="font-size:.9rem;margin-bottom:1rem;">Settings</h3>
+  <div class="settings-row">
+    <label>Groq API Key</label>
+    <input type="password" id="groqKeyInput" placeholder="gsk_..." autocomplete="off">
+    <div class="settings-note" style="color:var(--text-muted);">
+      Free key: <a href="https://console.groq.com/keys" target="_blank" rel="noopener" style="color:var(--text-secondary);">console.groq.com/keys</a>
+    </div>
+  </div>
+  <div class="settings-row">
+    <label>OpenRouter API Key <span style="color:var(--text-muted);font-weight:400;">(fallback)</span></label>
+    <input type="password" id="openrouterKeyInput" placeholder="sk-or-..." autocomplete="off">
+    <div class="settings-note" style="color:var(--text-muted);">
+      Free key: <a href="https://openrouter.ai/keys" target="_blank" rel="noopener" style="color:var(--text-secondary);">openrouter.ai/keys</a>
+    </div>
+  </div>
+  <div class="settings-row">
+    <button class="save-btn" id="saveKeysBtn" type="button">Save Keys</button>
+    <div class="settings-note" id="keysSavedNote" style="color:var(--text-muted);"></div>
+  </div>
+  <div class="settings-note" style="color:var(--text-muted);border-top:1px solid var(--bg-border);padding-top:.8rem;">
+    This standalone build calls Groq/OpenRouter directly from your browser —
+    no server involved. Keys are saved only in this browser's local storage,
+    never sent anywhere except directly to Groq/OpenRouter. This is a local
+    testing build only — don't ship a page like this publicly, since anyone
+    who opens it could read the keys out of local storage. Use the Netlify
+    build (separate zip) for anything public-facing.
+  </div>
+
+  <div class="settings-row" style="margin-top:1.4rem;padding-top:1.2rem;border-top:1px solid var(--bg-border);">
+    <label>Speaker Voice (English)</label>
+    <select id="voiceSelect" style="width:100%;background:var(--bg-card);color:var(--text-primary);border:1px solid var(--bg-border);border-radius:6px;padding:7px 9px;font-size:.75rem;">
+      <option value="">Auto (best available)</option>
+    </select>
+    <div class="settings-note" id="voiceCountNote" style="color:var(--text-muted);"></div>
+    <button class="save-btn" id="testVoiceBtn" style="margin-top:.6rem;background:var(--bg-card);border:1px solid var(--bg-border);color:var(--text-secondary);" type="button">Test Voice</button>
+  </div>
+</div>
+
+<div class="output-area">
+  <div class="canvas-inner" id="canvasInner">
+    <div class="banner" id="providerBanner"></div>
+    <div class="empty-state" id="emptyState">
+      Type or speak a Telugu word, phrase, or question below —<br>
+      I'll show you how to say it in English.
+    </div>
+  </div>
+</div>
+
+<div class="input-bar">
+  <div class="mic-pill" id="micPill">
+    <button class="mic-pill-btn mic-pill-cancel" id="micPillCancel" title="Cancel" onclick="cancelMicSession()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+    </button>
+    <div class="mic-pill-wave" id="micPillWave"></div>
+    <button class="mic-pill-btn mic-pill-confirm" id="micPillConfirm" title="Stop listening" onclick="stopMicKeepText()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+    </button>
+  </div>
+  <div class="input-row">
+    <input type="text" id="teluguInput" placeholder="తెలుగులో టైప్ చేయండి... (Type in Telugu)" onkeydown="if(event.key==='Enter')runTranslate();">
+    <button class="mic-btn" id="micBtn" title="Speak in Telugu" onclick="toggleMic()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
+    </button>
+  </div>
+  <button class="send-btn" id="sendBtn" onclick="runTranslate()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+  </button>
+</div>
+
+<script>
+/* ============ SYSTEM PROMPT (Constraint 20 schema, library entry) ============ */
+const DEFAULT_PROMPT = {
+  name: 'Easy English — Default',
+  triggers: ['telugu-to-english','translate','pronunciation'],
+  description: 'Converts Telugu learner input into an English translation card with pronunciation and keyword gloss. Never answers questions, only translates them.',
+  body: `You are Easy English, an English-Telugu translation tutor for Telugu-speaking learners.
+YOUR ONLY JOB: convert whatever the learner writes in Telugu into how to say that exact same thing in English — never answer it, never chat back, never add opinions or extra facts.
+- If they write a phrase to learn ("నేను స్కూల్‌కి వెళ్తున్నాను") → give the English translation of that phrase.
+- If they write a question ("నేటి క్రికెట్ మ్యాచ్ ఎప్పుడు?") → give the English translation of that question ("When is today's cricket match?") — do NOT answer the question itself. You are not a search engine or trivia source. You only convert language, never supply the actual answer to what was asked.
+- If they write a request like "'థాంక్యూ' ఎలా చెప్పాలి?" (how do I say thank you) → give the English word/phrase itself as the answer.
+- If they write something in English by mistake → still return a card: put their English text in "eng" as-is, and use "meaning" to give the Telugu translation.
+- Whatever they write, in whatever form, always produces a valid translation card. There is no input that should produce plain chat, refusal, or an explanation outside the JSON shape.
+You must respond with STRICT JSON ONLY, no markdown fences, no preamble, no text before or after, matching exactly this shape:
+{"eng":"<the English sentence — no length cap; translate the full input faithfully, don't truncate or simplify to fit a word count>","pron":"<the full English sentence spelled entirely in Telugu script, so a non-English-reading learner can sound it out>","meaning":"<one-line Telugu meaning/gloss of the whole sentence>","kw":[{"w":"<english word>","p":"<telugu-script pronunciation of that word>","m":"<telugu meaning of that word>"}]}
+Include 2-4 key words in kw, chosen for whichever words are most useful for the learner to remember. Keep tone clear, encouraging, and age-appropriate. Never include any text outside the single JSON object — no "Here's the translation:", no follow-up commentary, nothing.`,
+  source: 'manual',
+  imported: new Date().toISOString()
+};
+
+/* ============ CONTEXT / ARTIFACT DETECTION (C12) ============ */
+window.EngineState = { isArtifact: (window.self !== window.top) };
+window.EnginePanels = { library: true, importExport: true, settings: true };
+
+/* ============ STORAGE ABSTRACTION (C21 / C23) ============ */
+function storageSet(key, value){ try{ localStorage.setItem(key, value); return true; }catch(e){ return false; } }
+function storageGet(key){ try{ return localStorage.getItem(key); }catch(e){ return null; } }
+function storageRemove(key){ try{ localStorage.removeItem(key); return true; }catch(e){ return false; } }
+function storageList(prefix){
+  const keys=[];
+  try{ for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i); if(k&&k.startsWith(prefix))keys.push(k);} }catch(e){}
+  return keys;
+}
+
+/* window.storage wrapper (artifact) vs localStorage (standalone) - C23 */
+async function engineStoreGet(key){
+  if(window.EngineState.isArtifact && window.storage){
+    try{ const r = await window.storage.get(key); return r ? r.value : null; }catch(e){ return null; }
+  }
+  return storageGet(key);
+}
+async function engineStoreSet(key, value){
+  if(window.EngineState.isArtifact && window.storage){
+    try{ await window.storage.set(key, value); return true; }catch(e){ return false; }
+  }
+  return storageSet(key, value);
+}
+async function engineStoreList(prefix){
+  if(window.EngineState.isArtifact && window.storage){
+    try{ const r = await window.storage.list(prefix); return r ? r.keys : []; }catch(e){ return []; }
+  }
+  return storageList(prefix);
+}
+async function engineStoreDelete(key){
+  if(window.EngineState.isArtifact && window.storage){
+    try{ await window.storage.delete(key); return true; }catch(e){ return false; }
+  }
+  return storageRemove(key);
+}
+
+/* ============ PROMPT LIBRARY (left panel, C20) ============ */
+let prompts = [];
+let activePromptSlug = 'default';
+
+function slugify(s){ return s.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,''); }
+
+async function loadPrompts(){
+  const keys = await engineStoreList('prompts:');
+  prompts = [];
+  if(keys.length === 0){
+    const entry = { ...DEFAULT_PROMPT, slug: 'default' };
+    await engineStoreSet('prompts:default', JSON.stringify(entry));
+    prompts.push(entry);
+  } else {
+    for(const k of keys){
+      const raw = await engineStoreGet(k);
+      if(raw){ try{ prompts.push(JSON.parse(raw)); }catch(e){} }
+    }
+  }
+  renderPromptList();
+}
+
+function renderPromptList(){
+  const list = document.getElementById('promptList');
+  if(prompts.length === 0){ list.innerHTML = '<div class="panel-empty">No prompts saved yet.</div>'; return; }
+  list.innerHTML = prompts.map(p => `
+    <div class="panel-item" onclick="setActivePrompt('${p.slug}')" style="${p.slug===activePromptSlug ? 'border-color:var(--accent-main)' : ''}">
+      <div class="pi-eng">${escapeHtml(p.name)}</div>
+      <div class="pi-meaning">${escapeHtml(p.description || '')}</div>
+    </div>
+  `).join('');
+}
+
+function setActivePrompt(slug){ activePromptSlug = slug; renderPromptList(); }
+function getActivePromptBody(){
+  const p = prompts.find(p => p.slug === activePromptSlug);
+  return p ? p.body : DEFAULT_PROMPT.body;
+}
+
+async function exportPrompts(){
+  const blob = new Blob([JSON.stringify(prompts, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = 'easy-english-prompts.json'; a.click();
+  URL.revokeObjectURL(url);
+}
+
+async function importPromptsJson(event){
+  const file = event.target.files[0]; if(!file) return;
+  const text = await file.text();
+  try{
+    const arr = JSON.parse(text);
+    for(const entry of arr){
+      const slug = entry.slug || slugify(entry.name || 'imported');
+      const full = { ...entry, slug, source: entry.source || 'manual', imported: new Date().toISOString() };
+      await engineStoreSet('prompts:' + slug, JSON.stringify(full));
+    }
+    await loadPrompts();
+  }catch(e){ alert('Could not parse JSON file.'); }
+  event.target.value = '';
+}
+
+async function importPromptMd(event){
+  const file = event.target.files[0]; if(!file) return;
+  const text = await file.text();
+  const name = file.name.replace(/\.md$/,'');
+  const slug = slugify(name);
+  const entry = { name, slug, triggers: [], description: 'Imported from ' + file.name, body: text, source: 'markdown', imported: new Date().toISOString() };
+  await engineStoreSet('prompts:' + slug, JSON.stringify(entry));
+  await loadPrompts();
+  event.target.value = '';
+}
+
+/* ============ RESPONSE LIBRARY (right panel, C20) ============ */
+let responses = [];
+
+async function loadResponses(){
+  const keys = await engineStoreList('responses:');
+  responses = [];
+  for(const k of keys){
+    const raw = await engineStoreGet(k);
+    if(raw){ try{ responses.push(JSON.parse(raw)); }catch(e){} }
+  }
+  responses.sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp));
+  renderResponseList();
+}
+
+function renderResponseList(){
+  const list = document.getElementById('responseList');
+  const valid = responses.filter(r => r && r.card && typeof r.card.eng === 'string');
+  if(valid.length === 0){ list.innerHTML = '<div class="panel-empty">No translations saved yet.</div>'; return; }
+  list.innerHTML = valid.map((r, i) => `
+    <div class="panel-item" data-response-index="${i}">
+      <div class="pi-eng">${escapeHtml(r.card.eng)}</div>
+      <div class="pi-meaning">${escapeHtml(r.card.meaning || '')}</div>
+      <div class="pi-time">${new Date(r.timestamp).toLocaleString()}</div>
+    </div>
+  `).join('');
+  // Event delegation with data attribute lookup — never inline onclick with interpolated
+  // translation text, since quotes/apostrophes in the text can break the HTML attribute.
+  list.querySelectorAll('.panel-item').forEach((el, i) => {
+    el.addEventListener('click', () => reloadCard(valid[i].card));
+  });
+}
+
+function isValidCard(card){
+  return !!card
+    && typeof card.eng === 'string' && card.eng.trim().length > 0
+    && typeof card.pron === 'string'
+    && typeof card.meaning === 'string'
+    && Array.isArray(card.kw);
+}
+
+async function saveResponse(originalInput, card, provider){
+  if(!isValidCard(card)) return; // never persist a malformed card — it will crash the list on next load
+  const id = 'r' + Date.now();
+  const entry = { id, promptSlug: activePromptSlug, input: originalInput, card, provider, timestamp: new Date().toISOString() };
+  await engineStoreSet('responses:' + id, JSON.stringify(entry));
+  responses.unshift(entry);
+  renderResponseList();
+}
+
+async function exportResponses(){
+  const blob = new Blob([JSON.stringify(responses, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = 'easy-english-history.json'; a.click();
+  URL.revokeObjectURL(url);
+}
+
+async function clearHistory(){
+  if(!confirm('Clear all saved translations?')) return;
+  const keys = await engineStoreList('responses:');
+  for(const k of keys){ await engineStoreDelete(k); }
+  responses = [];
+  renderResponseList();
+}
+
+function reloadCard(card){
+  renderCard(card, '');
+  toggleRightPanel(false);
+}
+
+/* ============ PANEL TOGGLES (C01) ============ */
+function togglePanel(panelId, backdropId, show){
+  const panel = document.getElementById(panelId);
+  const backdrop = document.getElementById(backdropId);
+  if(show === undefined) show = !panel.classList.contains('open');
+  panel.classList.toggle('open', show);
+  backdrop.classList.toggle('show', show);
+}
+function toggleLeftPanel(show){ togglePanel('leftPanel','leftBackdrop',show); }
+function toggleRightPanel(show){ togglePanel('rightPanel','rightBackdrop',show); }
+
+document.getElementById('leftToggle').onclick = () => toggleLeftPanel();
+document.getElementById('rightToggle').onclick = () => toggleRightPanel();
+document.getElementById('leftBackdrop').onclick = () => toggleLeftPanel(false);
+document.getElementById('rightBackdrop').onclick = () => toggleRightPanel(false);
+
+/* ============ SETTINGS DRAWER (C06) ============ */
+document.getElementById('settingsToggle').onclick = () => {
+  document.getElementById('settingsDrawer').classList.toggle('open');
+  document.getElementById('settingsBackdrop').classList.toggle('show');
+};
+document.getElementById('settingsBackdrop').onclick = () => {
+  document.getElementById('settingsDrawer').classList.remove('open');
+  document.getElementById('settingsBackdrop').classList.remove('show');
+};
+
+/* Voice picker: change persists immediately, test button speaks a sample line */
+document.getElementById('voiceSelect').addEventListener('change', (e) => {
+  const uri = e.target.value;
+  if(uri){ storageSet(VOICE_PREF_KEY, uri); } else { storageRemove(VOICE_PREF_KEY); }
+  englishVoice = pickEnglishVoice();
+});
+document.getElementById('testVoiceBtn').addEventListener('click', () => {
+  speakEnglish('This is how your English voice sounds.', document.getElementById('testVoiceBtn'));
+});
+
+/* ============ PROVIDER DOT + DEFAULT (C18B, C12) ============ */
+const DOT_COLORS = { groq: '#22c55e' };
+function updateProviderDot(){
+  const provider = document.getElementById('providerSelect').value;
+  const color = provider.startsWith('or-') ? '#f97316' : (DOT_COLORS[provider] || '#9090a8');
+  document.getElementById('providerDot').style.background = color;
+}
+function isOpenRouterProvider(p){ return p && p.startsWith('or-'); }
+
+function setContextAwareDefault(){
+  const sel = document.getElementById('providerSelect');
+  sel.value = 'groq';
+  updateProviderDot();
+}
+
+function updateBanner(){
+  const banner = document.getElementById('providerBanner');
+  banner.textContent = '';
+  banner.classList.remove('show');
+}
+
+/* ============ STREAMING (C13 four-layer safety) ============ */
+async function readStream(res, format, onChunk){
+  if(!res.ok || !res.body){ onChunk('', true, 'HTTP ' + (res ? res.status : 'error')); return; }
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = '';
+  let done = false;
+  const IDLE_TIMEOUT = 3000, HARD_TIMEOUT = 28000;
+  let idleTimer, hardTimer;
+  function finalize(err){ if(done) return; done = true; clearTimeout(idleTimer); clearTimeout(hardTimer); onChunk('', true, err); }
+  hardTimer = setTimeout(() => finalize(null), HARD_TIMEOUT);
+  idleTimer = setTimeout(() => finalize(null), IDLE_TIMEOUT);
+
+  try{
+    while(!done){
+      const { value, done: streamDone } = await reader.read();
+      if(streamDone){ finalize(null); break; }
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop();
+      for(const line of lines){
+        const trimmed = line.trim();
+        if(!trimmed.startsWith('data:')) continue;
+        const data = trimmed.slice(5).trim();
+        if(data === '[DONE]'){ finalize(null); return; }
+        clearTimeout(idleTimer); idleTimer = setTimeout(() => finalize(null), IDLE_TIMEOUT);
+        try{
+          const chunk = JSON.parse(data);
+          let text = '';
+          if(format === 'anthropic'){
+            if(chunk.type === 'content_block_delta' && chunk.delta && chunk.delta.text) text = chunk.delta.text;
+            if(chunk.type === 'message_stop'){ finalize(null); return; }
+          } else if(format === 'openai'){
+            const c = chunk.choices && chunk.choices[0];
+            if(c && c.delta && c.delta.content) text = c.delta.content;
+            if(c && c.finish_reason){ if(text) onChunk(text, false); finalize(null); return; }
+          }
+          if(text) onChunk(text, false);
+        }catch(e){}
+      }
+    }
+  }catch(e){ finalize(e.message); }
+}
+
+/* ============ API ROUTING — STANDALONE DIRECT-CALL BUILD ============ */
+// This file is the standalone local-test variant: instead of going through
+// the Netlify Functions proxy (/api/groq, /api/openrouter — which hide the
+// key server-side), it calls Groq's and OpenRouter's chat completion APIs
+// directly from the browser using keys typed into Settings and kept in
+// localStorage. Same model fallback chain as netlify/functions/groq.js:
+// Groq gpt-oss-120b -> gpt-oss-20b -> OpenRouter's free router.
+//
+// KNOWN LIMITATION: Groq/OpenRouter's APIs are not guaranteed to send
+// permissive CORS headers for arbitrary browser origins (incl. file://).
+// If a call fails with a generic "Failed to fetch"/network error rather
+// than an HTTP status, that's almost always CORS, not a bad key — the
+// original proxy existed to sidestep exactly this, not only to hide the key.
+const GROQ_MODEL_CHAIN = ['openai/gpt-oss-120b', 'openai/gpt-oss-20b'];
+const KEY_STORAGE = { groq: 'easyEnglish_groqKey', openrouter: 'easyEnglish_openrouterKey' };
+
+function loadSavedKeys(){
+  const groqKey = localStorage.getItem(KEY_STORAGE.groq) || '';
+  const orKey = localStorage.getItem(KEY_STORAGE.openrouter) || '';
+  document.getElementById('groqKeyInput').value = groqKey;
+  document.getElementById('openrouterKeyInput').value = orKey;
+}
+
+function saveKeys(){
+  const groqKey = document.getElementById('groqKeyInput').value.trim();
+  const orKey = document.getElementById('openrouterKeyInput').value.trim();
+  if(groqKey) localStorage.setItem(KEY_STORAGE.groq, groqKey); else localStorage.removeItem(KEY_STORAGE.groq);
+  if(orKey) localStorage.setItem(KEY_STORAGE.openrouter, orKey); else localStorage.removeItem(KEY_STORAGE.openrouter);
+  const note = document.getElementById('keysSavedNote');
+  note.textContent = 'Saved to this browser.';
+  setTimeout(() => { note.textContent = ''; }, 2500);
+}
+
+document.getElementById('saveKeysBtn').addEventListener('click', saveKeys);
+loadSavedKeys();
+
+// Direct call to Groq's chat completions endpoint for a single model.
+// Returns the fetch Response (still streaming) on success, or throws.
+async function fetchGroq(model, messages, groqKey){
+  const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${groqKey}` },
+    body: JSON.stringify({ model, stream: true, messages })
+  });
+  if(res.status === 429 || res.status >= 500 || !res.ok){
+    throw new Error(`groq:${res.status}`);
+  }
+  return res;
+}
+
+async function fetchOpenRouter(messages, orKey){
+  const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${orKey}` },
+    body: JSON.stringify({ model: 'openrouter/free', stream: true, messages })
+  });
+  if(!res.ok){ throw new Error(`openrouter:${res.status}`); }
+  return res;
+}
+
+async function callAI(systemPrompt, userMessage, onChunk){
+  const provider = document.getElementById('providerSelect').value;
+  const groqKey = localStorage.getItem(KEY_STORAGE.groq) || '';
+  const orKey = localStorage.getItem(KEY_STORAGE.openrouter) || '';
+
+  const messages = [
+    ...(systemPrompt ? [{ role: 'system', content: systemPrompt }] : []),
+    { role: 'user', content: userMessage }
+  ];
+
+  const wantsOpenRouterFirst = isOpenRouterProvider(provider);
+
+  try{
+    let res = null;
+    let lastErr = null;
+
+    if(!wantsOpenRouterFirst){
+      if(!groqKey){
+        lastErr = 'No Groq API key set — open Settings (⚙) and add one.';
+      } else {
+        for(const model of GROQ_MODEL_CHAIN){
+          try{ res = await fetchGroq(model, messages, groqKey); break; }
+          catch(e){ lastErr = e.message; }
+        }
+      }
+    }
+
+    if(!res){
+      // Hard fallback to OpenRouter (or primary path, if user selected OpenRouter directly)
+      if(!orKey){
+        onChunk('', true, wantsOpenRouterFirst
+          ? 'No OpenRouter API key set — open Settings (⚙) and add one.'
+          : (lastErr || 'No provider available') + ' — and no OpenRouter fallback key set.');
+        return;
+      }
+      try{ res = await fetchOpenRouter(messages, orKey); }
+      catch(e){ onChunk('', true, e.message); return; }
+    }
+
+    await readStream(res, 'openai', onChunk);
+  }catch(e){
+    // Network-level failure (not an HTTP error status) most often means CORS
+    // blocked the request from this origin — surface that possibility.
+    const hint = (e.message === 'Failed to fetch')
+      ? 'Network/CORS error calling the API directly from the browser. Groq/OpenRouter may not allow this origin — this is the tradeoff of the standalone no-server build.'
+      : e.message;
+    onChunk('', true, hint);
+  }
+}
+
+/* ============ MIC LISTENING PILL (visual "it's actually recording" indicator) ============ */
+// Driven by REAL microphone amplitude via getUserMedia + AnalyserNode, running
+// alongside (separate from) the SpeechRecognition engine used for transcription.
+// Bell-shaped ceiling mask stays (short bars at the edges, tall in the middle,
+// matching the Wispr Flow reference), but each bar's height is now a function
+// of actual live volume instead of Math.random() — so the bars swell when you
+// speak and settle low when you're silent, in sync with your voice.
+const MIC_PILL_BAR_COUNT = 15;
+let micPillAnimId = null;
+let micPillBarEls = [];
+let micPillBarMask = [];
+let micPillSmoothed = []; // per-bar smoothed level, for gentle rise/fall instead of jumpy snapping
+
+// Web Audio pipeline for real amplitude
+let micAudioCtx = null;
+let micAnalyser = null;
+let micStream = null;
+let micSourceNode = null;
+let micFreqData = null;
+
+function buildMicPillBars(){
+  const wave = document.getElementById('micPillWave');
+  if(!wave.childElementCount){
+    wave.innerHTML = '';
+    for(let i = 0; i < MIC_PILL_BAR_COUNT; i++){
+      const bar = document.createElement('div');
+      bar.className = 'bar';
+      wave.appendChild(bar);
+    }
+  }
+  micPillBarEls = Array.from(wave.children);
+  const n = micPillBarEls.length;
+  // Bell curve mask: center bars get a high ceiling, edge bars get a low one.
+  micPillBarMask = micPillBarEls.map((_, i) => {
+    const center = (n - 1) / 2;
+    const dist = Math.abs(i - center) / center; // 0 at center, 1 at edges
+    const bell = Math.cos(dist * Math.PI * 0.5); // 1 at center, 0 at edges
+    return 5 + bell * 17; // px ceiling: ~5px at edges, ~22px at center
+  });
+  micPillSmoothed = micPillBarEls.map(() => 0);
+}
+
+// Starts a getUserMedia stream + AnalyserNode purely for amplitude reading.
+// Independent of SpeechRecognition, so it can't interfere with transcription
+// and keeps working even through SpeechRecognition's silence-gap restarts.
+async function startMicAudioAnalyser(){
+  if(micAudioCtx) return true; // already running
+  try{
+    micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    micAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    micAnalyser = micAudioCtx.createAnalyser();
+    micAnalyser.fftSize = 64; // small = fast, we only need coarse volume
+    micAnalyser.smoothingTimeConstant = 0.4; // node's own light smoothing
+    micSourceNode = micAudioCtx.createMediaStreamSource(micStream);
+    micSourceNode.connect(micAnalyser);
+    micFreqData = new Uint8Array(micAnalyser.frequencyBinCount);
+    return true;
+  }catch(e){
+    // Mic permission denied/unavailable for raw audio (rare if SpeechRecognition
+    // already has it) — fall back to idle-low bars rather than breaking the pill.
+    micAudioCtx = null;
+    micAnalyser = null;
+    return false;
+  }
+}
+
+function stopMicAudioAnalyser(){
+  if(micSourceNode){ try{ micSourceNode.disconnect(); }catch(e){} micSourceNode = null; }
+  if(micStream){ micStream.getTracks().forEach(t => t.stop()); micStream = null; }
+  if(micAudioCtx){ try{ micAudioCtx.close(); }catch(e){} micAudioCtx = null; }
+  micAnalyser = null;
+  micFreqData = null;
+}
+
+// Reads current volume (0..1) from the analyser. Uses average amplitude
+// across the frequency bins as a simple, cheap loudness proxy.
+function readMicVolume(){
+  if(!micAnalyser || !micFreqData) return 0;
+  micAnalyser.getByteFrequencyData(micFreqData);
+  let sum = 0;
+  for(let i = 0; i < micFreqData.length; i++){ sum += micFreqData[i]; }
+  const avg = sum / micFreqData.length; // 0..255
+  return Math.min(1, avg / 90); // normalize; /90 (not /255) so normal speech visibly fills the bars
+}
+
+function animateMicPillWave(){
+  const volume = readMicVolume(); // 0 (silence) .. 1 (loud)
+  micPillBarEls.forEach((bar, i) => {
+    const ceiling = micPillBarMask[i];
+    const floor = 3;
+    // Each bar gets a touch of its own randomness so the bars don't all move
+    // in lockstep like a single pulsing block — but the shared `volume` term
+    // dominates, so the whole cluster clearly swells and settles with speech.
+    const perBarNoise = 0.75 + Math.random() * 0.5; // 0.75x-1.25x variation per bar
+    const target = floor + (ceiling - floor) * volume * perBarNoise;
+    // Smooth toward target: fast rise (attack) so it feels responsive when you
+    // start talking, slower fall (release) so it doesn't flicker to near-zero
+    // between syllables.
+    const prev = micPillSmoothed[i] || floor;
+    const rate = target > prev ? 0.6 : 0.25;
+    const next = prev + (target - prev) * rate;
+    micPillSmoothed[i] = next;
+    bar.style.height = Math.min(ceiling, Math.max(floor, next)).toFixed(1) + 'px';
+  });
+  micPillAnimId = requestAnimationFrame(animateMicPillWave);
+}
+
+async function showMicPill(){
+  buildMicPillBars();
+  document.getElementById('micPill').classList.add('show');
+  await startMicAudioAnalyser(); // no-op if already running; safe if it fails
+  if(!micPillAnimId) animateMicPillWave();
+}
+
+function hideMicPill(){
+  document.getElementById('micPill').classList.remove('show');
+  if(micPillAnimId){ cancelAnimationFrame(micPillAnimId); micPillAnimId = null; }
+  stopMicAudioAnalyser();
+}
+
+// X button: discard everything transcribed during this mic-held session and stop.
+function cancelMicSession(){
+  const input = document.getElementById('teluguInput');
+  input.value = micSessionStartText;
+  committedText = micSessionStartText;
+  sessionFinal = '';
+  restartAttempts = 0;
+  micHeld = false;
+  clearTimeout(restartTimer);
+  document.getElementById('micBtn').classList.remove('listening');
+  hideMicPill();
+  if(isListening && recognizer){ try{ recognizer.stop(); }catch(e){} }
+}
+
+// Checkmark: stop listening but keep whatever was transcribed (same as clicking mic again).
+function stopMicKeepText(){
+  toggleMic();
+}
+
+/* ============ SPEECH: MIC INPUT (Telugu STT) — mobile-hardened lifecycle ============ */
+let recognizer = null, isListening = false;
+// micHeld: true while the mic is "on" from the user's perspective (between the
+// click that starts it and the click/Send that stops it). Mobile browsers
+// (esp. Android Chrome) force-stop the SpeechRecognition engine on silence
+// gaps or after ~5-10s even with continuous=true, so while micHeld is true we
+// silently auto-restart it so it feels continuous. UI (.listening class +
+// .mic-pill) stays on for the whole held period and is NEVER toggled by
+// onend/onerror silent restarts — only by explicit user stop or hard denial.
+let micHeld = false;
+// committedText: finalized text from previous sessions that must be preserved.
+// sessionFinal: finalized (isFinal=true) text from the CURRENT engine session.
+// Interim results are rendered but never committed, so a forced mobile restart
+// can neither drop the last word nor duplicate phrases.
+let committedText = '';
+let sessionFinal = '';
+let restartTimer = null;
+let restartAttempts = 0;
+let lastStartTime = 0;
+let lastResultTime = 0;
+// Snapshot of the input's text at the moment the mic was turned on, so
+// "cancel" can restore exactly this and discard only what voice added.
+let micSessionStartText = '';
+
+// Secure-context check: used only to pick which error message to show if the
+// browser actually refuses mic access — NOT to pre-block the attempt. Chrome
+// desktop grants getUserMedia on file:// (with a permission prompt) even
+// though file:// isn't a formally "secure context"; only Android Chrome
+// enforces the stricter rule. So toggleMic() always tries first now, and
+// falls back to alerting with the right explanation only on real failure.
+function isSecureContextForSpeech(){
+  if(window.isSecureContext === false) return false;
+  const proto = window.location.protocol;
+  if(proto === 'https:') return true;
+  if(proto === 'http:' && (location.hostname === 'localhost' || location.hostname === '127.0.0.1')) return true;
+  return false; // file:// and everything else
+}
+
+// Tries getUserMedia directly, regardless of protocol, and reports whether
+// the browser actually granted it. This is the real test — isSecureContextForSpeech()
+// is just used afterward to choose a more accurate error message if it fails.
+async function canActuallyUseMic(){
+  if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return false;
+  try{
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    stream.getTracks().forEach(t => t.stop()); // just probing; release immediately
+    return true;
+  }catch(e){
+    return false;
+  }
+}
+
+function initSpeechRecognition(){
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if(!SR) return null;
+  const r = new SR();
+  r.lang = 'te-IN';
+  // continuous=true is required for mobile dictation: with false, Android
+  // Chrome stops after the first utterance and every restart loses ~250ms+
+  // of speech. With true the engine still auto-stops on silence, but far
+  // less aggressively, and our onend restart covers the gaps.
+  r.continuous = true;
+  r.interimResults = true;
+  try{ r.maxAlternatives = 1; }catch(e){}
+  return r;
+}
+
+// Joins committed (prior) text with the current session's live transcript,
+// keeping a single space between them so words don't run together.
+function joinTranscript(base, current){
+  if(!base) return current;
+  if(!current) return base;
+  return base.replace(/\s+$/, '') + ' ' + current.replace(/^\s+/, '');
+}
+
+function attachRecognizerHandlers(){
+  const micBtn = document.getElementById('micBtn');
+  const input = document.getElementById('teluguInput');
+
+  recognizer.onstart = () => {
+    isListening = true;
+    lastStartTime = Date.now();
+  };
+  recognizer.onresult = (e) => {
+    lastResultTime = Date.now();
+    restartAttempts = 0; // healthy speech resets backoff
+    // Rebuild session text from resultIndex forward, splitting final vs
+    // interim so only stabilized words are ever committed. This prevents
+    // both duplication (re-appending the same final twice) and drops
+    // (committing unstable interim that later changes) across restarts.
+    let interim = '';
+    try{
+      for(let i = e.resultIndex; i < e.results.length; i++){
+        const res = e.results[i];
+        if(!res || !res[0]) continue;
+        const text = res[0].transcript || '';
+        if(res.isFinal){
+          sessionFinal = joinTranscript(sessionFinal, text);
+        } else {
+          interim += text;
+        }
+      }
+    }catch(err){}
+    input.value = joinTranscript(joinTranscript(committedText, sessionFinal), interim);
+  };
+  recognizer.onerror = (e) => {
+    const err = (e && e.error) || '';
+    // Transient mobile conditions: silence gap, BT/hand-off blip, flaky
+    // radio, or an abort from a restart race. Keep micHeld + UI untouched
+    // and let onend (which always follows onerror) do the silent restart.
+    if(err === 'no-speech' || err === 'audio-capture' || err === 'network'
+       || err === 'aborted' || err === 'audio-busy' || err === 'bad-grammar'){
+      isListening = false;
+      return;
+    }
+    // Genuine hard failures only: user denied permission, engine missing,
+    // or language unsupported. Anything else falls through to silent retry
+    // so one stray error can never kill a held session on mobile.
+    if(err === 'not-allowed' || err === 'service-not-allowed'
+       || err === 'permission-denied' || err === 'not-supported'
+       || err === 'language-not-supported'){
+      hardStopMic();
+      return;
+    }
+    isListening = false;
+    if(micHeld) scheduleRestart(150);
+  };
+  recognizer.onend = () => {
+    isListening = false;
+    // Commit ONLY finalized words. The old code committed input.value
+    // (which includes unstable interim) — that is what dropped the last
+    // spoken word whenever mobile force-stopped mid-utterance.
+    if(sessionFinal && sessionFinal.trim()){
+      committedText = joinTranscript(committedText, sessionFinal);
+      sessionFinal = '';
+      input.value = committedText;
+    }
+
+    if(micHeld){
+      // Still "on" from the user's point of view — silent restart.
+      // micBtn keeps 'listening' and the pill stays .show: no flicker.
+      scheduleRestart();
+    } else if(input.value.trim()){
+      try{ input.focus(); }catch(err){}
+    }
+  };
+}
+
+// Adaptive silent-restart scheduler. Short gap (~90ms) keeps dictation
+// feeling continuous; exponential backoff avoids hot-looping when the
+// engine is repeatedly refused (e.g. mic busy), and a full recognizer
+// rebuild every few attempts un-sticks Android Chrome's wedged state.
+function scheduleRestart(baseDelay){
+  if(!micHeld) return;
+  clearTimeout(restartTimer);
+  let delay = (typeof baseDelay === 'number') ? baseDelay : 90;
+  if(restartAttempts >= 6) delay = Math.max(delay, 800);
+  else if(restartAttempts >= 3) delay = Math.max(delay, 300);
+  delay = Math.min(delay, 1500);
+  restartAttempts++;
+  restartTimer = setTimeout(() => {
+    if(!micHeld) return;
+    // Every 4th consecutive restart, rebuild the engine: reusing one
+    // SpeechRecognition instance across dozens of mobile restarts is a
+    // known wedge vector on Android Chrome.
+    if(restartAttempts % 4 === 0){
+      try{ if(recognizer){ recognizer.abort(); } }catch(err){}
+      const fresh = initSpeechRecognition();
+      if(fresh){ recognizer = fresh; attachRecognizerHandlers(); }
+    }
+    safeStart();
+  }, delay);
+}
+
+function safeStart(){
+  if(!micHeld || !recognizer) return;
+  if(isListening) return;
+  try{
+    recognizer.start();
+  }catch(err){
+    const msg = String((err && err.message) || err);
+    // InvalidStateError = start() called while already started or too
+    // soon after stop() — rebuild once and retry instead of dropping.
+    if(/InvalidState/i.test(msg)){
+      try{ recognizer.abort(); }catch(e2){}
+      const fresh = initSpeechRecognition();
+      if(fresh){
+        recognizer = fresh;
+        attachRecognizerHandlers();
+        clearTimeout(restartTimer);
+        restartTimer = setTimeout(() => { if(micHeld) safeStart(); }, 250);
+      } else {
+        scheduleRestart(400);
+      }
+    } else {
+      scheduleRestart(300);
+    }
+  }
+}
+
+// Hard stop: only for genuine permission denial / unsupported engine.
+// This is the ONLY path that clears micHeld + UI outside explicit user stop.
+function hardStopMic(){
+  micHeld = false;
+  clearTimeout(restartTimer);
+  restartAttempts = 0;
+  sessionFinal = '';
+  isListening = false;
+  const micBtn = document.getElementById('micBtn');
+  if(micBtn) micBtn.classList.remove('listening');
+  try{ hideMicPill(); }catch(e){}
+  try{ if(recognizer) recognizer.abort(); }catch(e){}
+}
+
+function startRecognitionSession(){
+  if(!recognizer){ recognizer = initSpeechRecognition(); }
+  if(!recognizer) return;
+  sessionFinal = '';
+  attachRecognizerHandlers();
+  safeStart();
+}
+
+function toggleMic(){
+  const micBtn = document.getElementById('micBtn');
+
+  if(!recognizer){ recognizer = initSpeechRecognition(); }
+  if(!recognizer){
+    alert('Voice input is not supported in this browser. Please type instead, or try Chrome.');
+    return;
+  }
+
+  if(micHeld){
+    // User is manually turning the mic off — fold any finalized session
+    // text in, keep UI teardown only here (never in onend/onerror).
+    if(sessionFinal && sessionFinal.trim()){
+      const input = document.getElementById('teluguInput');
+      committedText = joinTranscript(committedText, sessionFinal);
+      sessionFinal = '';
+      if(input) input.value = committedText;
+    }
+    micHeld = false;
+    clearTimeout(restartTimer);
+    restartAttempts = 0;
+    micBtn.classList.remove('listening');
+    hideMicPill();
+    try{ if(isListening && recognizer){ recognizer.stop(); } }catch(e){}
+    return;
+  }
+
+  // Starting a fresh mic-on period. Attempt the mic first (this is what
+  // actually triggers Chrome's permission prompt on file://), and only show
+  // an explanatory alert if the browser genuinely refuses. This replaces the
+  // old pre-emptive protocol check, which blocked file:// on desktop even
+  // though Chrome desktop grants getUserMedia there just fine.
+  canActuallyUseMic().then((ok) => {
+    if(!ok){
+      if(isSecureContextForSpeech()){
+        // Secure context but still failed — real permission denial or no mic hardware.
+        alert('Microphone access was denied or unavailable. Please allow microphone access in your browser settings, or type instead.');
+      } else {
+        alert('Voice input needs a secure connection (HTTPS) to work on mobile Chrome.\n\nOpening this file directly (file://) blocks the microphone on Android by design — it works fine on desktop but not on phones.\n\nTo use voice mode on Android: host this file (e.g. GitHub Pages, Netlify) and open it via https://, or serve it from a local server and reach it over localhost.\n\nTyping still works normally.');
+      }
+      return;
+    }
+
+    // Starting a fresh mic-on period. Seed committedText from whatever's
+    // currently in the box (e.g. typed text, or text left from before) so we
+    // append to it rather than erase it. Small delay lets Android release
+    // the getUserMedia probe stream before SpeechRecognition claims the mic,
+    // avoiding spurious audio-capture/busy errors on mobile.
+    const input = document.getElementById('teluguInput');
+    committedText = input.value || '';
+    sessionFinal = '';
+    restartAttempts = 0;
+    micSessionStartText = input.value || '';
+    micHeld = true;
+    micBtn.classList.add('listening'); // stays on for the whole held period, no flicker between restarts
+    showMicPill();
+    clearTimeout(restartTimer);
+    restartTimer = setTimeout(() => { if(micHeld) startRecognitionSession(); }, 150);
+  });
+}
+
+// Mobile backgrounding (screen lock / tab switch) force-ends the engine.
+// When the page becomes visible again, silently resume if still held.
+document.addEventListener('visibilitychange', () => {
+  if(!document.hidden && micHeld && !isListening){
+    scheduleRestart(200);
+  }
+});
+
+// If the user sends the message while the mic is still on, stop listening
+// and reset the continuous-transcript state so the next mic-on starts clean.
+function stopMicForSend(){
+  micHeld = false;
+  clearTimeout(restartTimer);
+  restartAttempts = 0;
+  sessionFinal = '';
+  document.getElementById('micBtn').classList.remove('listening');
+  hideMicPill();
+  if(isListening && recognizer){ try{ recognizer.stop(); }catch(e){} }
+  committedText = '';
+}
+
+/* ============ SPEECH: TTS OUTPUT (English playback) ============ */
+let englishVoice = null;
+let allVoices = [];
+const VOICE_PREF_KEY = 'hek_ttsVoiceURI';
+
+// Some Android/Chrome builds label Indian English voices inconsistently —
+// "en-IN", "en_IN", vendor names like Veena/Rishi/Priya, or a plain "India" in the name.
+function isIndianEnglishVoice(v){
+  return /en[-_]in/i.test(v.lang) || /india/i.test(v.name) || /\b(veena|rishi|priya|neel)\b/i.test(v.name);
+}
+function pickEnglishVoice(){
+  const voices = speechSynthesis.getVoices();
+  if(!voices.length) return null;
+
+  // Manual override from Settings takes priority if it still exists in this browser's voice list
+  const savedURI = storageGet(VOICE_PREF_KEY);
+  if(savedURI){
+    const saved = voices.find(v => v.voiceURI === savedURI);
+    if(saved) return saved;
+  }
+
+  return voices.find(isIndianEnglishVoice)
+      || voices.find(v => /^en/i.test(v.lang))
+      || voices[0];
+}
+function refreshVoiceUI(){
+  allVoices = speechSynthesis.getVoices();
+  const sel = document.getElementById('voiceSelect');
+  const note = document.getElementById('voiceCountNote');
+  if(!sel) return;
+
+  const englishOnly = allVoices.filter(v => /^en/i.test(v.lang));
+  const savedURI = storageGet(VOICE_PREF_KEY);
+  sel.innerHTML = '<option value="">Auto (best available)</option>' +
+    englishOnly.map(v => {
+      const tag = isIndianEnglishVoice(v) ? ' — Indian English' : '';
+      const selected = v.voiceURI === savedURI ? ' selected' : '';
+      return `<option value="${escapeHtml(v.voiceURI)}"${selected}>${escapeHtml(v.name)} (${escapeHtml(v.lang)})${tag}</option>`;
+    }).join('');
+
+  if(note){
+    const hasIndian = englishOnly.some(isIndianEnglishVoice);
+    note.textContent = hasIndian
+      ? `${englishOnly.length} English voices found, including Indian English.`
+      : `${englishOnly.length} English voices found — no Indian English voice detected on this device/browser.`;
+  }
+}
+if('speechSynthesis' in window){
+  speechSynthesis.onvoiceschanged = () => { englishVoice = pickEnglishVoice(); refreshVoiceUI(); };
+  englishVoice = pickEnglishVoice();
+  refreshVoiceUI();
+}
+function speakEnglish(text, btn){
+  if(!('speechSynthesis' in window)){ alert('ఈ బ్రౌజర్‌లో వాయిస్ సదుపాయం లేదు.'); return; }
+  speechSynthesis.cancel();
+  const utter = new SpeechSynthesisUtterance(text);
+  utter.lang = englishVoice ? englishVoice.lang : 'en-US';
+  if(englishVoice) utter.voice = englishVoice;
+  utter.rate = 0.85; utter.pitch = 1.05;
+  if(btn) btn.classList.add('speaking');
+  utter.onend = () => { if(btn) btn.classList.remove('speaking'); };
+  utter.onerror = () => { if(btn) btn.classList.remove('speaking'); };
+  speechSynthesis.speak(utter);
+}
+
+/* ============ CANONICAL COPY (C05) ============ */
+function copyToClipboard(text, btn){
+  if(!text || !text.trim()) return;
+  const origHTML = btn.innerHTML;
+  const ICON_CHECK = '<svg viewBox="0 0 24 24" style="width:11px;height:11px;stroke:currentColor;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+  function onSuccess(){ btn.innerHTML = ICON_CHECK + ' Copied'; btn.classList.add('copied'); setTimeout(() => { btn.innerHTML = origHTML; btn.classList.remove('copied'); }, 2000); }
+  function onFail(){ btn.textContent = '✗ Failed'; setTimeout(() => { btn.innerHTML = origHTML; }, 2000); }
+  function execCopy(){
+    const ta = document.createElement('textarea'); ta.value = text;
+    ta.style.cssText = 'position:fixed;left:-9999px;top:-9999px;opacity:0;font-size:12px;pointer-events:none;';
+    ta.setAttribute('readonly', '');
+    document.body.appendChild(ta); ta.focus(); ta.select(); ta.setSelectionRange(0, text.length);
+    let ok = false; try{ ok = document.execCommand('copy'); }catch(e){}
+    document.body.removeChild(ta); ok ? onSuccess() : onFail();
+  }
+  if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(text).then(onSuccess).catch(execCopy); }
+  else{ execCopy(); }
+}
+
+/* ============ CARD RENDERING ============ */
+function escapeHtml(s){ return (s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function cardToPlainText(card){
+  let out = card.eng + '\n' + card.pron + '\n' + card.meaning;
+  if(card.kw && card.kw.length){
+    out += '\n\n' + card.kw.map(k => `${k.w} (${k.p}) — ${k.m}`).join('\n');
+  }
+  return out;
+}
+
+function renderCard(card, originalInput){
+  document.getElementById('emptyState').style.display = 'none';
+  const canvas = document.getElementById('canvasInner');
+  const cardId = 'card' + Date.now();
+
+  const kwHtml = (card.kw || []).map(k => `
+    <div class="t-kw-item">
+      <div class="t-kw-w">${escapeHtml(k.w)}</div>
+      <div class="t-kw-p">${escapeHtml(k.p)}</div>
+      <div class="t-kw-m">${escapeHtml(k.m)}</div>
+    </div>
+  `).join('');
+
+  const el = document.createElement('div');
+  el.className = 't-card';
+  el.id = cardId;
+  el.innerHTML = `
+    <div class="t-card-header">
+      <div class="t-original">${escapeHtml(originalInput)}</div>
+      <div class="t-card-actions">
+        <button class="icon-btn-sm speak-icon-btn" type="button" title="Listen">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
+        </button>
+        <button class="copy-btn" type="button">
+          <svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+          Copy
+        </button>
+      </div>
+    </div>
+    <div class="t-eng">${escapeHtml(card.eng)}</div>
+    <button class="t-toggle" type="button" aria-expanded="false">
+      <span class="t-toggle-label">Show pronunciation, meaning &amp; words</span>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+    </button>
+    <div class="t-details">
+      <div class="t-pron">${escapeHtml(card.pron)}</div>
+      <div class="t-meaning">${escapeHtml(card.meaning)}</div>
+      <div class="t-kw">${kwHtml}</div>
+    </div>
+  `;
+  // Bound with addEventListener + closure, not an inline onclick string — avoids
+  // any chance of card.eng's own text (quotes, apostrophes) breaking the HTML attribute.
+  const speakBtn = el.querySelector('.speak-icon-btn');
+  speakBtn.addEventListener('click', () => speakEnglish(card.eng, speakBtn));
+  const copyBtn = el.querySelector('.copy-btn');
+  copyBtn.addEventListener('click', () => copyToClipboard(cardToPlainText(card), copyBtn));
+  const toggleBtn = el.querySelector('.t-toggle');
+  const detailsPanel = el.querySelector('.t-details');
+  const toggleLabel = el.querySelector('.t-toggle-label');
+  toggleBtn.addEventListener('click', () => {
+    const open = detailsPanel.classList.toggle('open');
+    toggleBtn.classList.toggle('open', open);
+    toggleBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+    toggleLabel.textContent = open ? 'Hide pronunciation, meaning & words' : 'Show pronunciation, meaning & words';
+  });
+  canvas.insertBefore(el, canvas.children[1]);
+}
+
+function renderLoading(){
+  document.getElementById('emptyState').style.display = 'none';
+  const canvas = document.getElementById('canvasInner');
+  const el = document.createElement('div');
+  el.className = 't-card'; el.id = 'loadingCard';
+  el.innerHTML = `<div class="loading-dots"><span></span><span></span><span></span></div>`;
+  canvas.insertBefore(el, canvas.children[1]);
+}
+function removeLoading(){ const el = document.getElementById('loadingCard'); if(el) el.remove(); }
+
+function renderError(msg){
+  removeLoading();
+  const canvas = document.getElementById('canvasInner');
+  const el = document.createElement('div');
+  el.className = 'error-box';
+  el.textContent = 'Could not get a translation: ' + msg;
+  canvas.insertBefore(el, canvas.children[1]);
+}
+
+/* ============ MAIN TRANSLATE FLOW ============ */
+let isRunning = false;
+async function runTranslate(){
+  if(isRunning) return;
+  const input = document.getElementById('teluguInput');
+  const text = input.value.trim();
+  if(!text) return;
+
+  stopMicForSend(); // if mic is still on, stop it and reset for the next round
+  isRunning = true;
+  document.getElementById('sendBtn').disabled = true;
+  input.value = '';
+  renderLoading();
+
+  const provider = document.getElementById('providerSelect').value;
+  const systemPrompt = getActivePromptBody();
+  let accumulated = '';
+
+  await callAI(systemPrompt, text, (chunk, done, err) => {
+    if(err){ renderError(err); isRunning = false; document.getElementById('sendBtn').disabled = false; return; }
+    accumulated += chunk;
+    if(done){
+      try{
+        removeLoading();
+        let card;
+        try{
+          const cleaned = accumulated.trim().replace(/^```json\s*/, '').replace(/```\s*$/, '');
+          card = JSON.parse(cleaned);
+        }catch(e){
+          renderError('Response was not valid JSON.');
+          return;
+        }
+        if(!isValidCard(card)){
+          renderError('Response JSON was missing required fields (eng/pron/meaning/kw).');
+          return;
+        }
+        renderCard(card, text);
+        saveResponse(text, card, provider);
+      }catch(e){
+        renderError('Something went wrong rendering the response: ' + e.message);
+      }finally{
+        isRunning = false;
+        document.getElementById('sendBtn').disabled = false;
+      }
+    }
+  });
+}
+
+/* ============ INIT ============ */
+(async function init(){
+  setContextAwareDefault();
+  updateBanner();
+  await loadPrompts();
+  await loadResponses();
+})();
+</script>
+</body>
+</html>
