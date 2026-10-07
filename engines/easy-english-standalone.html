@@ -1400,6 +1400,31 @@ function startRecognitionSession(){
   safeStart();
 }
 
+// Focus the text box with the soft keyboard suppressed: interim/final
+// transcripts land in a focused field (mobile IME friendly) without the
+// keyboard popping up over the mic UI. Called synchronously inside the tap
+// handler (user activation) AND again after the async probe resolves.
+// Observability/focus only — no lifecycle effect.
+function focusInputForMic(){
+  try{
+    const input = document.getElementById('teluguInput');
+    if(!input) return;
+    try{ input.setAttribute('inputmode', 'none'); }catch(e){}
+    try{ input.focus({ preventScroll: true }); }catch(e){ try{ input.focus(); }catch(e2){} }
+  }catch(e){}
+}
+
+// Undo of focusInputForMic(): used when the mic probe fails so a denied tap
+// leaves the field exactly as it was (keyboard behavior restored).
+function unfocusInputForMic(){
+  try{
+    const input = document.getElementById('teluguInput');
+    if(!input) return;
+    try{ input.removeAttribute('inputmode'); }catch(e){}
+    try{ if(document.activeElement === input && input.blur) input.blur(); }catch(e){}
+  }catch(e){}
+}
+
 function toggleMic(){
   const micBtn = document.getElementById('micBtn');
 
@@ -1428,8 +1453,12 @@ function toggleMic(){
   // an explanatory alert if the browser genuinely refuses. This replaces the
   // old pre-emptive protocol check, which blocked file:// on desktop even
   // though Chrome desktop grants getUserMedia there just fine.
+  // Focus synchronously inside the user tap (keeps user activation on mobile;
+  // the async probe below would otherwise lose it). Undone if the probe fails.
+  focusInputForMic();
   canActuallyUseMic().then((ok) => {
     if(!ok){
+      unfocusInputForMic();
       if(isSecureContextForSpeech()){
         // Secure context but still failed — real permission denial or no mic hardware.
         alert('Microphone access was denied or unavailable. Please allow microphone access in your browser settings, or type instead.');
@@ -1469,12 +1498,7 @@ function toggleMic(){
     try{ console.log('[mic] toggleMic: fresh start, probe ok'); }catch(e){}
     micBtn.classList.add('listening'); // stays on for the whole held period, no flicker between restarts
     showMicPill();
-    // Focus the text box with the soft keyboard suppressed: interim/final
-    // transcripts land in a focused field (mobile IME friendly) without the
-    // keyboard popping up over the mic UI. Removed again on every stop path
-    // in hardStopMic(). Observability/focus only — no lifecycle effect.
-    try{ input.setAttribute('inputmode', 'none'); }catch(e){}
-    try{ input.focus({ preventScroll: true }); }catch(e){ try{ input.focus(); }catch(e2){} }
+    focusInputForMic(); // re-assert after the async probe (idempotent)
     clearTimeout(restartTimer);
     restartTimer = setTimeout(() => { if(micHeld) startRecognitionSession(); }, 150);
   });
@@ -1483,13 +1507,26 @@ function toggleMic(){
 // Tap the status line to copy the mic diagnostic report (observability only).
 try{ document.getElementById('micStatus').addEventListener('click', copyMicLog); }catch(e){}
 
+// mousedown preventDefault on mic buttons: on mobile, pressing a button would
+// otherwise steal/blur the text-box focus (and pop the keyboard) before the
+// click handler runs. Preventing the default keeps focus stable. Focus only.
+try{
+  ['micBtn', 'micPillCancel', 'micPillConfirm'].forEach((id) => {
+    const b = document.getElementById(id);
+    if(b && b.addEventListener) b.addEventListener('mousedown', (e) => { try{ if(e && e.preventDefault) e.preventDefault(); }catch(err){} });
+  });
+}catch(e){}
+
 // Mobile backgrounding (screen lock / tab switch) force-ends the engine.
 // When the page becomes visible again, silently resume if still held.
 document.addEventListener('visibilitychange', () => {
   try{ console.log('[mic] visibilitychange hidden=' + document.hidden + ' held=' + micHeld + ' listening=' + isListening); }catch(e){}
-  if(!document.hidden && micHeld && !isListening){
-    micLogEvent('visibility-resume');
-    scheduleRestart(200);
+  if(!document.hidden && micHeld){
+    try{ focusInputForMic(); }catch(e){} // re-assert focus lost while hidden
+    if(!isListening){
+      micLogEvent('visibility-resume');
+      scheduleRestart(200);
+    }
   }
 });
 
