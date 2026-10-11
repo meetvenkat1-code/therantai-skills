@@ -1,8 +1,8 @@
 {
   "engine": "12-auto-loop-engine-v15-full-per-role-decompressor-plus-mix-chip",
-  "source_file": "engines/incoming_batch/12-auto-loop-engine-v15-full-per-role-decompressor plus mix chip.html",
-  "archetype": "Unclassified (auto-draft)",
-  "review_required": true,
+  "source_file": "engines/incoming_batch/archive/12-auto-loop-engine-v15-full-per-role-decompressor plus mix chip.html",
+  "archetype": "Multi-Step-Bespoke",
+  "review_required": false,
   "provider_config": {
     "engine_name": "12 Auto Loop Engine V15 Full Per Role Decompressor Plus Mix Chip",
     "model_core": "v2"
@@ -12,7 +12,7 @@
       "id": "main-input",
       "kind": "textarea",
       "label": "main-input",
-      "placeholder": "Drop your raw idea, question, or charge here. Vague is fine \u2014 the engine will reconstruct and sharpen it."
+      "placeholder": "Drop your raw idea, question, or charge here. Vague is fine — the engine will reconstruct and sharpen it."
     },
     {
       "id": "hint-input",
@@ -25,14 +25,14 @@
       "id": "librarySearch",
       "kind": "text",
       "label": "librarySearch",
-      "placeholder": "Search saved runs by title, mode, or input\u2026",
+      "placeholder": "Search saved runs by title, mode, or input…",
       "default": ""
     },
     {
       "id": "archiveSearch",
       "kind": "text",
       "label": "archiveSearch",
-      "placeholder": "Search archived runs by title, mode, or input\u2026",
+      "placeholder": "Search archived runs by title, mode, or input…",
       "default": ""
     },
     {
@@ -76,32 +76,32 @@
     {
       "id": "promptLibBtn",
       "kind": "button",
-      "label": "\u2630"
+      "label": "☰"
     },
     {
       "id": "gearBtn",
       "kind": "button",
-      "label": "\u2699"
+      "label": "⚙"
     },
     {
       "id": "runBtn",
       "kind": "button",
-      "label": "\u25b6 Run Loop"
+      "label": "▶ Run Loop"
     },
     {
       "id": "copyAllBtn",
       "kind": "button",
-      "label": "\ud83d\udccb Copy Input + Winning Prompt + Response"
+      "label": "📋 Copy Input + Winning Prompt + Response"
     },
     {
       "id": "copyHistoryBtn",
       "kind": "button",
-      "label": "\ud83d\uddc2 Copy Full Iteration History"
+      "label": "🗂 Copy Full Iteration History"
     },
     {
       "id": "copyPromptsBtn",
       "kind": "button",
-      "label": "\ud83d\udcdd Copy All Iteration Prompts (MD)"
+      "label": "📝 Copy All Iteration Prompts (MD)"
     },
     {
       "id": "copyResponseBtn",
@@ -121,22 +121,22 @@
     {
       "id": "libraryMasterArchiveBtn",
       "kind": "button",
-      "label": "\ud83d\udcda Copy Master Archive (MD)"
+      "label": "📚 Copy Master Archive (MD)"
     },
     {
       "id": "libraryExportBtn",
       "kind": "button",
-      "label": "\u2b07 Export"
+      "label": "⬇ Export"
     },
     {
       "id": "libraryImportBtn",
       "kind": "button",
-      "label": "\u2b06 Import"
+      "label": "⬆ Import"
     },
     {
       "id": "libraryClearBtn",
       "kind": "button",
-      "label": "\ud83d\uddd1 Clear All"
+      "label": "🗑 Clear All"
     },
     {
       "id": "folderConnectBtnArchive",
@@ -146,27 +146,47 @@
     {
       "id": "archiveExportBtn",
       "kind": "button",
-      "label": "\u2b07 Export"
+      "label": "⬇ Export"
     },
     {
       "id": "archiveImportBtn",
       "kind": "button",
-      "label": "\u2b06 Import"
+      "label": "⬆ Import"
     },
     {
       "id": "archiveClearBtn",
       "kind": "button",
-      "label": "\ud83d\uddd1 Clear All"
+      "label": "🗑 Clear All"
     },
     {
       "id": "drawerClose",
       "kind": "button",
-      "label": "\u2715"
+      "label": "✕"
     },
     {
       "id": "copyRunPrompts_' + e.runId + '",
       "kind": "button",
-      "label": "\ud83d\udcdd Copy All Prompts (MD)"
+      "label": "📝 Copy All Prompts (MD)"
     }
+  ],
+  "roles": [
+    "architect",
+    "executor",
+    "evaluator",
+    "rearchitect"
+  ],
+  "versions": [
+    "original",
+    "reforged",
+    "decompressor"
+  ],
+  "playbooks": [
+    "reframe",
+    "analytical",
+    "generative",
+    "exploratory",
+    "diagnostic",
+    "synthesis",
+    "critical"
   ]
 }

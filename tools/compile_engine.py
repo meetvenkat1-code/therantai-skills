@@ -863,15 +863,14 @@ def chassis_generic(engine, T, params, runner):
     Used by the incoming-batch pipeline for engines with no bespoke chassis yet.
     Requires one prompt:* block in system.md (auto-triage always emits prompt:default).
     """
-    pick = T.get("default")
-    if pick is None:
-        for k in sorted(T):
-            if T[k][0] == "prompt":
-                pick = T[k]
-                break
-    if pick is None or pick[0] != "prompt":
+    picks = [(k, T[k][1]) for k in sorted(T) if T[k][0] == "prompt"]
+    if not picks:
+        if "default" in T and T["default"][0] == "prompt":
+            picks = [("default", T["default"][1])]
+    if not picks:
         sys.exit(engine + ": generic chassis needs a prompt:* block in system.md")
-    sys_text = js_escape_template(pick[1])
+    sys_text = js_escape_template(
+        "\n\n".join("--- " + k + " ---\n" + text for k, text in picks))
     label = params.get("provider_config", {}).get("engine_name", engine)
     fallback = runner.get("model_core", {}).get("fallback", {})
     core = core_block(label, fallback)
