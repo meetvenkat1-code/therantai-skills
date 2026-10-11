@@ -1,0 +1,18 @@
+{
+  "skill": "forge-pipeline",
+  "skill_name": "forge-pipeline",
+  "description": "\"The self-executing engine-building chain for any Therantai session. Discriminates input type (bare theme vs loaded fragments), routes to the correct spine-forging organ, enforces assay as a mandatory non-skippable gate, loads the full build contract, then enters the build. Claude drives the chain; assay failure routes back to the forge organ with the named re-entry constraint \u2014 it cannot route forward. The practitioner never names the next stage. Invoke with /forge-pipe, 'build an engine', 'I have a theme', 'forge an engine', 'I want to build something', 'spine then build', or any phrase signaling intent to move from idea to engine. Voice-tolerant \u2014 loose trigger matching.\"",
+  "source_file": "skills/forge-pipeline/SKILL.md",
+  "source_sha": "6371683fd8a67613a288a2cc3a641fcfea27e7cfa5c4284afce4453aa4a2442c",
+  "resources": [],
+  "provider_config": {
+    "model_core": "v2"
+  },
+  "inputs": [
+    {
+      "id": "chatInput",
+      "kind": "textarea",
+      "label": "Invoke the skill"
+    }
+  ]
+}

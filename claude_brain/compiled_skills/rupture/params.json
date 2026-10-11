@@ -1,0 +1,18 @@
+{
+  "skill": "rupture",
+  "skill_name": "rupture",
+  "description": ">",
+  "source_file": "skills/rupture/SKILL.md",
+  "source_sha": "d593ec3c4a3841463ab815337718ab693f74ca663b242379b5c0ed1e56183380",
+  "resources": [],
+  "provider_config": {
+    "model_core": "v2"
+  },
+  "inputs": [
+    {
+      "id": "chatInput",
+      "kind": "textarea",
+      "label": "Invoke the skill"
+    }
+  ]
+}

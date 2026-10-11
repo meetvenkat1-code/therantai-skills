@@ -1,0 +1,4064 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Auto-Loop Prompt Engine v10</title>
+<style>
+  :root {
+    --bg:          #0a0a0f;
+    --surface:     #111118;
+    --surface2:    #16161f;
+    --surface3:    #1c1c28;
+    --border:      #2a2a3a;
+    --border2:     #3a3a50;
+    --accent:      #7c6af7;
+    --accent2:     #a594f9;
+    --accent-glow: rgba(124,106,247,0.15);
+    --green:       #4ade80;
+    --green-dim:   rgba(74,222,128,0.12);
+    --amber:       #fbbf24;
+    --amber-dim:   rgba(251,191,36,0.12);
+    --red:         #f87171;
+    --red-dim:     rgba(248,113,113,0.12);
+    --orange-warn: #f97316;
+    --teal:        #38bdf8;
+    --teal-dim:    rgba(56,189,248,0.10);
+    --violet:      #c084fc;
+    --violet-dim:  rgba(192,132,252,0.12);
+    --text:        #e8e8f0;
+    --text2:       #9898b0;
+    --text3:       #5a5a75;
+    --font-display:'system-ui', 'Segoe UI', sans-serif;
+    --font-body:   'system-ui', 'Segoe UI', sans-serif;
+    --font-mono:   'Fira Code','Courier New', monospace;
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-body);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  /* ── HEADER (Constraint 07 — Zone A / B / C) ── */
+  header {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    height: 52px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 1.5rem;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    z-index: 100;
+    gap: 12px;
+    flex-shrink: 0;
+  }
+
+  /* Zone A */
+  .zone-a {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    color: var(--text);
+    white-space: nowrap;
+  }
+  .zone-a span { color: var(--accent2); }
+  .zone-a .v-tag {
+    font-size: 10px;
+    color: var(--text3);
+    font-family: var(--font-mono);
+    font-weight: 400;
+  }
+  .header-divider {
+    width: 1px; height: 16px;
+    background: var(--border);
+    margin: 0 4px;
+  }
+  .config-badge {
+    font-size: 9px;
+    font-family: var(--font-mono);
+    color: var(--text3);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 1px 5px;
+    letter-spacing: 0.02em;
+    flex-shrink: 0;
+  }
+  .config-badge.live {
+    color: var(--green);
+    border-color: var(--green);
+  }
+  .status-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--text3);
+    transition: background 0.3s;
+    flex-shrink: 0;
+  }
+  .status-dot.active { background: var(--green); box-shadow: 0 0 6px var(--green); }
+  .status-dot.error  { background: var(--red); }
+  #statusText {
+    font-size: 11px;
+    font-family: var(--font-mono);
+    color: var(--text3);
+  }
+
+  /* Zone B */
+  .zone-b {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+    justify-content: flex-end;
+  }
+
+  /* Provider dot + selector (Constraint 18B) */
+  .provider-selector {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--surface3);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0 8px;
+    height: 30px;
+  }
+  .provider-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    background: #22c55e;
+    transition: background 0.2s;
+  }
+  select#providerSelect {
+    background: transparent;
+    border: none;
+    color: var(--text2);
+    font-size: 11px;
+    font-family: var(--font-mono);
+    cursor: pointer;
+    outline: none;
+  }
+
+  .gear-btn {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--text2);
+    width: 30px; height: 30px;
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px;
+    transition: all 0.2s;
+  }
+  .gear-btn:hover { border-color: var(--accent); color: var(--accent2); }
+
+  /* Zone C — stacked maker's mark (Constraint 07) */
+  .zone-c {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    flex-shrink: 0;
+    gap: 1px;
+  }
+  .zone-c span, .zone-c a {
+    font-size: 0.72rem;
+    color: var(--text3);
+    font-family: var(--font-mono);
+    text-decoration: none;
+    line-height: 1.3;
+  }
+  .zone-c a:hover { color: var(--accent2); }
+
+  /* ── WARN BANNER ── */
+  .warn-banner {
+    position: fixed;
+    top: 52px; left: 0; right: 0;
+    background: rgba(249,115,22,0.12);
+    border-bottom: 1px solid rgba(249,115,22,0.3);
+    color: var(--orange-warn);
+    font-size: 0.78rem;
+    padding: 0.45rem 1.5rem;
+    text-align: center;
+    z-index: 99;
+    display: none;
+  }
+  .warn-banner.visible { display: block; }
+
+  /* ── PROGRESS BAR ── */
+  .progress-bar-wrap {
+    position: fixed;
+    top: 52px; left: 0; right: 0;
+    height: 2px;
+    background: var(--surface3);
+    z-index: 98;
+  }
+  .warn-banner.visible ~ .progress-bar-wrap,
+  #progressWrap { top: 52px; }
+
+  .progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    width: 0%;
+    transition: width 0.5s ease;
+    box-shadow: 0 0 8px var(--accent);
+  }
+
+  /* ── MAIN SCROLL AREA (Constraint 18A — Sandwich) ── */
+  .scroll-area {
+    position: fixed;
+    top: 54px; /* header + progress bar */
+    bottom: 0;
+    left: 0; right: 0;
+    overflow-y: auto;
+    padding: 20px 1.5rem 40px;
+  }
+  .scroll-area::-webkit-scrollbar { width: 4px; }
+  .scroll-area::-webkit-scrollbar-track { background: transparent; }
+  .scroll-area::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+  .main-content {
+    max-width: 900px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding-top: 8px;
+  }
+
+  /* ── INPUT ZONE ── */
+  .input-zone {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .zone-label {
+    font-size: 10px;
+    font-family: var(--font-mono);
+    color: var(--text3);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .input-row {
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+  }
+
+  .input-col {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .input-col-label {
+    font-size: 10px;
+    font-family: var(--font-mono);
+    color: var(--text3);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  textarea, input[type="text"], input[type="number"] {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 14px;
+    padding: 12px 14px;
+    resize: none;
+    outline: none;
+    transition: border-color 0.2s;
+    width: 100%;
+  }
+  textarea:focus, input[type="text"]:focus, input[type="number"]:focus { border-color: var(--accent); }
+  textarea::placeholder, input::placeholder { color: var(--text3); }
+
+  #main-input { height: 80px; }
+  #hint-input { height: 44px; }
+
+  /* ── PROMPT TYPE CHIPS ── */
+  .prompt-type-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .pt-label {
+    font-size: 10px;
+    font-family: var(--font-mono);
+    color: var(--text3);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  .pt-chip {
+    font-size: 10px;
+    font-family: var(--font-mono);
+    padding: 3px 10px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    color: var(--text3);
+    background: var(--surface2);
+    cursor: pointer;
+    transition: all 0.2s;
+    user-select: none;
+  }
+  .pt-chip:hover { border-color: var(--accent); color: var(--text2); }
+  .pt-chip.active { border-color: var(--accent); color: var(--accent2); background: var(--accent-glow); }
+  .pt-chip.auto   { border-color: var(--teal); color: var(--teal); background: var(--teal-dim); }
+
+  .run-btn {
+    background: linear-gradient(135deg, var(--accent), #9b8bf5);
+    border: none;
+    border-radius: 8px;
+    color: #fff;
+    font-family: var(--font-display);
+    font-size: 13px;
+    font-weight: 700;
+    padding: 0 22px;
+    height: 44px;
+    cursor: pointer;
+    letter-spacing: 0.04em;
+    transition: all 0.2s;
+    white-space: nowrap;
+    align-self: flex-end;
+  }
+  .run-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 20px rgba(124,106,247,0.4); }
+  .run-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+  /* ── OUTPUT ZONE ── */
+  .output-zone {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ── UNIVERSAL COPY BAR ── */
+  .universal-copy-bar {
+    display: flex;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 14px 18px 0;
+    background: var(--surface);
+    flex-shrink: 0;
+  }
+  .universal-copy-btn {
+    background: var(--accent-glow);
+    border-color: var(--accent);
+    color: var(--accent2);
+    font-weight: 600;
+    padding: 7px 14px;
+  }
+  .universal-copy-btn:hover { background: var(--accent); color: #fff; }
+  .universal-copy-btn.copied { background: var(--green-dim); border-color: var(--green); color: var(--green); }
+
+  /* ── TAB BAR ── */
+  .tab-bar {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 14px 18px 0;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+    flex-shrink: 0;
+    flex-wrap: wrap;
+  }
+
+  .tab-chip {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 7px 14px;
+    border-radius: 8px 8px 0 0;
+    border: 1px solid transparent;
+    border-bottom: none;
+    font-size: 11px;
+    font-family: var(--font-mono);
+    color: var(--text3);
+    cursor: pointer;
+    transition: all 0.18s;
+    user-select: none;
+    position: relative;
+    bottom: -1px;
+    background: transparent;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .tab-chip:hover { color: var(--text2); }
+  .tab-chip.active {
+    color: var(--text);
+    background: var(--surface2);
+    border-color: var(--border);
+    border-bottom-color: var(--surface2);
+  }
+  .tab-chip.active-response { color: var(--accent2); }
+  .tab-chip.active-prompt   { color: var(--green); }
+  .tab-chip.active-log      { color: var(--amber); }
+  .tab-chip.active-library  { color: var(--teal); }
+  .tab-chip.active-archive  { color: var(--violet); }
+
+  .tab-badge {
+    font-size: 9px;
+    font-family: var(--font-mono);
+    padding: 1px 6px;
+    border-radius: 20px;
+    background: var(--surface3);
+    color: var(--text3);
+    border: 1px solid var(--border);
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+  .tab-badge.pass { background: var(--green-dim); color: var(--green); border-color: var(--green); }
+  .tab-badge.fail { background: var(--amber-dim); color: var(--amber); border-color: var(--amber); }
+  .tab-badge.live { background: var(--accent-glow); color: var(--accent2); border-color: var(--accent); }
+
+  /* ── TAB PANEL ── */
+  .tab-panel {
+    display: none;
+    flex-direction: column;
+    flex: 1;
+    min-height: 520px;
+  }
+  .tab-panel.active { display: flex; }
+
+  /* ── PANEL TOOLBAR ── */
+  .panel-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding: 10px 18px;
+    border-bottom: 1px solid var(--border);
+    gap: 8px;
+    flex-shrink: 0;
+    background: var(--surface2);
+    min-height: 44px;
+    flex-wrap: wrap;
+  }
+
+  .copy-btn {
+    background: var(--surface3);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text2);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    padding: 5px 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+  .copy-btn:hover { border-color: var(--accent); color: var(--accent2); }
+  .copy-btn.copied { border-color: var(--green); color: var(--green); }
+
+  /* ── PANEL BODY ── */
+  .panel-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 28px 32px;
+  }
+  .panel-body::-webkit-scrollbar { width: 4px; }
+  .panel-body::-webkit-scrollbar-track { background: transparent; }
+  .panel-body::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+  /* ── RESPONSE CONTENT (Constraint 02 — markdown via innerHTML) ── */
+  .response-content {
+    color: var(--text);
+    font-size: 15px;
+    line-height: 1.85;
+    word-break: break-word;
+    width: 100%;
+  }
+  .response-content h1 { font-size: 1.4em; font-weight: 700; margin: 1em 0 0.5em; color: var(--text); }
+  .response-content h2 { font-size: 1.2em; font-weight: 600; margin: 0.9em 0 0.4em; color: var(--text); }
+  .response-content h3 { font-size: 1.05em; font-weight: 600; margin: 0.8em 0 0.35em; color: var(--text2); }
+  .response-content p  { margin: 0.5em 0; }
+  .response-content ul, .response-content ol { margin: 0.5em 0 0.5em 1.5em; }
+  .response-content li { margin: 0.25em 0; }
+  .response-content strong { font-weight: 700; color: var(--text); }
+  .response-content em { font-style: italic; color: var(--text2); }
+  .response-content code {
+    font-family: var(--font-mono);
+    font-size: 0.88em;
+    background: var(--surface3);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 0.1em 0.4em;
+    color: var(--accent2);
+  }
+  .response-content hr { border: none; border-top: 1px solid var(--border); margin: 1em 0; }
+  .response-content blockquote {
+    border-left: 3px solid var(--accent);
+    padding-left: 1em;
+    margin: 0.5em 0;
+    color: var(--text2);
+    font-style: italic;
+  }
+
+  .streaming-cursor::after {
+    content: '▌';
+    color: var(--accent2);
+    animation: blink 0.7s step-end infinite;
+  }
+  @keyframes blink { 50% { opacity: 0; } }
+
+  /* ── WINNING PROMPT CONTENT ── */
+  .prompt-artifact {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text2);
+    line-height: 1.75;
+    white-space: pre-wrap;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px;
+    word-break: break-word;
+    width: 100%;
+  }
+
+  /* ── LOOP LOG ── */
+  .log-entries {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .iter-station-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 0 14px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 4px;
+    flex-wrap: wrap;
+    width: 100%;
+  }
+  .iter-dot {
+    width: 26px; height: 26px;
+    border-radius: 50%;
+    border: 1.5px solid var(--border2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px; font-family: var(--font-mono); color: var(--text3);
+    transition: all 0.3s; flex-shrink: 0;
+  }
+  .iter-dot.active    { border-color: var(--accent); color: var(--accent2); background: var(--accent-glow); }
+  .iter-dot.done-pass { border-color: var(--green); color: var(--green); background: var(--green-dim); }
+  .iter-dot.done-fail { border-color: var(--amber); color: var(--amber); background: var(--amber-dim); }
+  .iter-line { flex: 1; height: 1px; background: var(--border); min-width: 12px; max-width: 32px; }
+  .iter-label { font-size: 10px; font-family: var(--font-mono); color: var(--text3); }
+
+  .station-flow {
+    display: flex; align-items: center; gap: 5px;
+    margin-left: auto;
+  }
+  .station-chip {
+    font-size: 9px; font-family: var(--font-mono);
+    padding: 2px 8px; border-radius: 20px;
+    border: 1px solid var(--border);
+    color: var(--text3); background: var(--surface2);
+    transition: all 0.3s;
+  }
+  .station-chip.active { border-color: var(--accent); color: var(--accent2); background: var(--accent-glow); box-shadow: 0 0 6px var(--accent-glow); }
+  .station-chip.done   { border-color: var(--green); color: var(--green); background: var(--green-dim); }
+  .station-arrow { color: var(--text3); font-size: 9px; }
+
+  .log-entry {
+    display: flex; flex-direction: column; gap: 4px;
+    padding: 10px 12px; border-radius: 8px;
+    border: 1px solid var(--border); background: var(--surface2);
+    font-size: 12px; animation: fadeIn 0.3s ease;
+  }
+  .log-entry.iter-start     { border-color: var(--accent); background: var(--accent-glow); }
+  .log-entry.score-pass     { border-color: var(--green); background: var(--green-dim); }
+  .log-entry.score-fail     { border-color: var(--amber); background: var(--amber-dim); }
+  .log-entry.converged      { border-color: var(--green); background: var(--green-dim); }
+  .log-entry.best-available { border-color: var(--amber); background: var(--amber-dim); }
+  .log-entry.type-detected  { border-color: var(--teal); background: var(--teal-dim); }
+
+  .log-label { font-family: var(--font-mono); font-size: 10px; color: var(--text3); letter-spacing: 0.06em; text-transform: uppercase; }
+  .log-text  { color: var(--text2); line-height: 1.5; font-size: 12px; word-break: break-word; white-space: pre-wrap; }
+  .log-score { font-weight: 700; font-size: 20px; }
+  .log-score.high { color: var(--green); }
+  .log-score.mid  { color: var(--amber); }
+  .log-score.low  { color: var(--red); }
+
+  /* ── EMPTY STATE ── */
+  .empty-state {
+    display: flex; flex-direction: column; align-items: center;
+    justify-content: center; flex: 1; gap: 10px;
+    color: var(--text3); text-align: center; padding: 48px 24px;
+  }
+  .empty-icon  { font-size: 32px; opacity: 0.3; }
+  .empty-label { font-size: 12px; font-family: var(--font-mono); letter-spacing: 0.06em; }
+
+  /* ── LIBRARY / ARCHIVE SHARED STYLES ── */
+  .library-toolbar-inner {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+  }
+  .library-search {
+    flex: 1;
+    background: var(--surface3);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    padding: 6px 10px;
+    outline: none;
+  }
+  .library-search:focus { border-color: var(--accent); }
+  .library-clear-btn {
+    background: var(--red-dim);
+    border: 1px solid var(--red);
+    color: var(--red);
+    border-radius: 6px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    padding: 5px 12px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: opacity 0.2s;
+  }
+  .library-clear-btn:hover { opacity: 0.8; }
+  .library-io-btn {
+    background: var(--surface3);
+    border: 1px solid var(--border);
+    color: var(--text2);
+    border-radius: 6px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    padding: 5px 12px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.2s;
+  }
+  .library-io-btn:hover { border-color: var(--accent); color: var(--accent2); }
+  .fc-btn.fc-connected { background: var(--green-dim); border-color: var(--green); color: var(--green); }
+  .fc-btn.fc-connected:hover { color: var(--green); border-color: var(--green); opacity: 0.85; }
+  .fc-btn.fc-reconnect { background: var(--amber-dim); border-color: var(--amber); color: var(--amber); }
+  .library-stats-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 0 4px;
+    font-size: 10px;
+    font-family: var(--font-mono);
+    color: var(--text3);
+    letter-spacing: 0.04em;
+  }
+  .library-stats-row.warn-stats { color: var(--orange-warn); }
+  .library-save-warning {
+    display: none;
+    background: rgba(249,115,22,0.12);
+    border: 1px solid rgba(249,115,22,0.3);
+    color: var(--orange-warn);
+    font-size: 11px;
+    font-family: var(--font-mono);
+    padding: 8px 12px;
+    border-radius: 8px;
+    margin-bottom: 12px;
+  }
+  .library-save-warning.visible { display: block; }
+
+  .library-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .library-card {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 14px 16px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    cursor: pointer;
+    transition: all 0.18s;
+  }
+  .library-card:hover { border-color: var(--accent); background: var(--surface3); }
+  .library-run-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 4px 2px 2px;
+    margin-top: 6px;
+  }
+  .library-run-header:first-child { margin-top: 0; }
+  .library-run-header-title {
+    font-size: 11px;
+    font-family: var(--font-mono);
+    color: var(--text3);
+    letter-spacing: 0.02em;
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .library-run-header-count {
+    font-size: 10px;
+    font-family: var(--font-mono);
+    color: var(--violet);
+    flex-shrink: 0;
+  }
+  .library-run-copy-btn {
+    font-size: 10px;
+    padding: 3px 9px;
+    flex-shrink: 0;
+  }
+  .library-card-winner { border-color: var(--green); box-shadow: 0 0 0 1px var(--green) inset; }
+  .library-card-winner-tag {
+    padding: 1px 7px;
+    border-radius: 20px;
+    background: var(--green-dim);
+    color: var(--green);
+    border: 1px solid var(--green);
+    font-weight: 600;
+  }
+  .library-card-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 10px;
+  }
+  .library-card-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    line-height: 1.4;
+    flex: 1;
+  }
+  .library-card-score {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 20px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .library-card-score.pass { background: var(--green-dim); color: var(--green); border: 1px solid var(--green); }
+  .library-card-score.fail { background: var(--amber-dim); color: var(--amber); border: 1px solid var(--amber); }
+  .library-card-meta {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 10px;
+    font-family: var(--font-mono);
+    color: var(--text3);
+    flex-wrap: wrap;
+  }
+  .library-card-mode {
+    padding: 1px 7px;
+    border-radius: 20px;
+    background: var(--teal-dim);
+    color: var(--teal);
+    border: 1px solid var(--teal);
+  }
+  .library-card-itercount {
+    padding: 1px 7px;
+    border-radius: 20px;
+    background: var(--violet-dim);
+    color: var(--violet);
+    border: 1px solid var(--violet);
+  }
+  .library-card-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 4px;
+    flex-wrap: wrap;
+  }
+  .library-card-actions button {
+    background: var(--surface3);
+    border: 1px solid var(--border);
+    color: var(--text2);
+    font-family: var(--font-mono);
+    font-size: 10px;
+    padding: 4px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+  .library-card-actions button:hover { border-color: var(--accent); color: var(--accent2); }
+  .library-card-actions .delete-entry-btn:hover,
+  .library-card-actions .delete-entry-btn-detail:hover { border-color: var(--red); color: var(--red); }
+  .library-card-actions .archive-link-btn:hover { border-color: var(--violet); color: var(--violet); }
+
+  .library-detail-back {
+    background: var(--surface3);
+    border: 1px solid var(--border);
+    color: var(--text2);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    align-self: flex-start;
+    margin-bottom: 16px;
+  }
+  .library-detail-back:hover { border-color: var(--accent); color: var(--accent2); }
+  .library-detail-section {
+    margin-bottom: 20px;
+  }
+  .library-detail-label {
+    font-size: 10px;
+    font-family: var(--font-mono);
+    color: var(--text3);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .library-detail-text {
+    font-size: 13px;
+    color: var(--text2);
+    line-height: 1.7;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  /* ── ARCHIVE-SPECIFIC: iteration accordion ── */
+  .archive-iter-block {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    margin-bottom: 12px;
+    overflow: hidden;
+    background: var(--surface2);
+  }
+  .archive-iter-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    cursor: pointer;
+    background: var(--surface3);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text2);
+  }
+  .archive-iter-header:hover { color: var(--text); }
+  .archive-iter-header .iter-badge {
+    font-size: 10px;
+    padding: 1px 8px;
+    border-radius: 20px;
+  }
+  .archive-iter-header .iter-badge.pass { background: var(--green-dim); color: var(--green); border: 1px solid var(--green); }
+  .archive-iter-header .iter-badge.fail { background: var(--amber-dim); color: var(--amber); border: 1px solid var(--amber); }
+  .archive-iter-body {
+    display: none;
+    padding: 16px;
+  }
+  .archive-iter-body.open { display: block; }
+  .archive-iter-caret { transition: transform 0.2s; }
+  .archive-iter-caret.open { transform: rotate(90deg); }
+
+  /* ── PROMPT LIBRARY PANEL (Constraint 01 — left overlay) ── */
+  .plib-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.6);
+    z-index: 200;
+    display: none;
+    backdrop-filter: blur(2px);
+  }
+  .plib-overlay.open { display: block; }
+
+  .plib-panel {
+    position: fixed;
+    top: 0; left: 0;
+    width: 420px; max-width: 92vw; height: 100vh;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    z-index: 201;
+    transform: translateX(-100%);
+    transition: transform 0.25s ease;
+    display: flex; flex-direction: column;
+    overflow-y: auto;
+  }
+  #promptLibraryPanel.open { transform: translateX(0); }
+
+  .plib-inner { padding: 20px; display: flex; flex-direction: column; gap: 18px; flex: 1; }
+  .plib-header-row { display: flex; align-items: center; justify-content: space-between; }
+  .plib-title { font-size: 16px; font-weight: 700; color: var(--text); }
+  .plib-close { background: none; border: none; color: var(--text3); font-size: 1.2rem; cursor: pointer; line-height: 1; }
+  .plib-close:hover { color: var(--text); }
+
+  .plib-role-block { display: flex; flex-direction: column; gap: 8px; border: 1px solid var(--border); border-radius: 10px; padding: 12px; }
+  .plib-role-title { font-size: 11px; font-family: var(--font-mono); color: var(--text3); letter-spacing: 0.08em; text-transform: uppercase; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
+
+  .plib-version-row { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-radius: 8px; background: var(--surface2); cursor: pointer; transition: background 0.15s; }
+  .plib-version-row:hover { background: var(--surface3); }
+  .plib-version-row.active { border: 1px solid var(--accent); background: var(--surface3); }
+  .plib-radio { width: 13px; height: 13px; border-radius: 50%; border: 1.5px solid var(--border2); flex-shrink: 0; position: relative; }
+  .plib-radio.checked::after { content:''; position:absolute; inset:2px; border-radius:50%; background: var(--accent); }
+  .plib-version-name { font-family: var(--font-mono); font-size: 12.5px; color: var(--text); flex: 1; }
+  .plib-active-tag { font-size: 9.5px; font-family: var(--font-mono); color: var(--accent); text-transform: uppercase; letter-spacing: 0.05em; }
+  .plib-edit-btn { background: none; border: 1px solid var(--bg-border, var(--border)); color: var(--text3); font-size: 10.5px; padding: 3px 8px; border-radius: 5px; cursor: pointer; font-family: var(--font-mono); }
+  .plib-edit-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  .plib-editor { display: none; flex-direction: column; gap: 8px; margin-top: 4px; }
+  .plib-editor.open { display: flex; }
+  .plib-editor label { font-size: 10.5px; font-family: var(--font-mono); color: var(--text3); letter-spacing: 0.06em; text-transform: uppercase; }
+  .plib-editor input[type="text"] {
+    background: var(--surface2); border: 1px solid var(--border); border-radius: 6px;
+    color: var(--text); font-family: var(--font-mono); font-size: 12.5px; padding: 8px 10px; outline: none; width: 100%;
+  }
+  .plib-editor textarea {
+    background: var(--surface2); border: 1px solid var(--border); border-radius: 8px;
+    color: var(--text); font-family: var(--font-mono); font-size: 12px; padding: 10px 12px;
+    outline: none; resize: vertical; min-height: 180px; width: 100%; line-height: 1.5;
+  }
+  .plib-editor input:focus, .plib-editor textarea:focus { border-color: var(--accent); }
+  .plib-editor-actions { display: flex; gap: 8px; align-items: center; }
+  .plib-save-btn {
+    background: var(--accent); border: none; border-radius: 6px; color: #fff;
+    font-family: var(--font-body); font-size: 12px; font-weight: 600; padding: 7px 14px; cursor: pointer; transition: opacity 0.2s;
+  }
+  .plib-save-btn:hover { opacity: 0.85; }
+  .plib-new-btn {
+    background: none; border: 1px dashed var(--border2); border-radius: 6px; color: var(--text3);
+    font-family: var(--font-mono); font-size: 11px; padding: 6px 10px; cursor: pointer; align-self: flex-start;
+  }
+  .plib-new-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .plib-delete-btn {
+    background: none; border: none; color: var(--text3); font-size: 11px; font-family: var(--font-mono); cursor: pointer; padding: 6px 8px;
+  }
+  .plib-delete-btn:hover { color: var(--coral, #f56565); }
+  .plib-save-confirm { font-size: 0.72rem; color: var(--green); font-family: var(--font-mono); display: none; }
+  .plib-reset-note { font-size: 10px; font-family: var(--font-mono); color: var(--text3); font-style: italic; }
+  .plib-preset-row { display: flex; gap: 8px; flex-wrap: wrap; }
+  .plib-preset-btn {
+    flex: 1 1 0; min-width: 0; background: var(--surface2); border: 1px solid var(--border2); border-radius: 6px;
+    color: var(--text2); font-family: var(--font-mono); font-size: 11px; padding: 8px 6px; cursor: pointer;
+    transition: border-color 0.2s, color 0.2s; text-align: center; line-height: 1.3;
+  }
+  .plib-preset-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .plib-preset-btn.recommended { border-color: var(--accent); color: var(--accent2); }
+  .plib-preset-confirm { font-size: 10px; color: var(--green); font-family: var(--font-mono); display: none; text-align: center; }
+
+  /* ── GEAR DRAWER (Constraint 06) ── */
+  .drawer-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.6);
+    z-index: 200;
+    display: none;
+    backdrop-filter: blur(2px);
+  }
+  .drawer-overlay.open { display: block; }
+
+  .drawer {
+    position: fixed;
+    top: 0; right: 0;
+    width: 340px; height: 100vh;
+    background: var(--surface);
+    border-left: 1px solid var(--border);
+    z-index: 201;
+    transform: translateX(100%);
+    transition: transform 0.3s ease;
+    display: flex; flex-direction: column;
+    overflow-y: auto;
+  }
+  .drawer.open { transform: translateX(0); }
+
+  .drawer-inner {
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    flex: 1;
+  }
+  .drawer-header-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .drawer-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text);
+  }
+  .drawer-close {
+    background: none; border: none;
+    color: var(--text3); font-size: 1.2rem;
+    cursor: pointer; line-height: 1;
+  }
+  .drawer-close:hover { color: var(--text); }
+
+  .drawer-section-label {
+    font-size: 10px;
+    font-family: var(--font-mono);
+    color: var(--text3);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding-bottom: 4px;
+    border-bottom: 1px solid var(--border);
+  }
+  .drawer-field {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .drawer-field label {
+    font-size: 11px;
+    font-family: var(--font-mono);
+    color: var(--text3);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .drawer-field input {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: var(--font-mono);
+    font-size: 13px;
+    padding: 10px 12px;
+    outline: none;
+    transition: border-color 0.2s;
+    width: 100%;
+  }
+  .drawer-field input:focus { border-color: var(--accent); }
+
+  .provider-native-note {
+    font-size: 0.75rem;
+    color: var(--text3);
+    font-style: italic;
+    padding: 0.5rem 0.7rem;
+    background: var(--surface3);
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    font-family: var(--font-mono);
+  }
+  .key-row { display: flex; gap: 0.5rem; }
+  .key-pool-hint {
+    text-transform: none;
+    letter-spacing: normal;
+    color: var(--text3);
+    font-style: italic;
+    opacity: 0.75;
+  }
+  .key-pool-textarea {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    padding: 10px 12px;
+    outline: none;
+    resize: vertical;
+    min-height: 64px;
+    width: 100%;
+    transition: border-color 0.2s;
+    margin-bottom: 6px;
+  }
+  .key-pool-textarea:focus { border-color: var(--accent); }
+  .keypool-status {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 6px;
+  }
+  .keypool-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    color: var(--text3);
+    background: var(--surface3);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 3px 9px;
+  }
+  .keypool-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    background: #22c55e;
+  }
+  .keypool-dot.cooling { background: var(--orange-warn); }
+  .keypool-empty { font-size: 10.5px; color: var(--text3); font-style: italic; font-family: var(--font-mono); }
+  .save-key-btn {
+    background: var(--accent);
+    border: none; border-radius: 6px;
+    color: #fff;
+    font-family: var(--font-body);
+    font-size: 12px; font-weight: 600;
+    padding: 0 12px; cursor: pointer;
+    white-space: nowrap; transition: opacity 0.2s;
+    height: 40px;
+  }
+  .save-key-btn:hover { opacity: 0.85; }
+  .save-confirm { font-size: 0.72rem; color: var(--green); margin-top: 2px; display: none; font-family: var(--font-mono); }
+
+  .threshold-row { display: flex; align-items: center; gap: 12px; }
+  .threshold-row input[type="range"] { flex: 1; accent-color: var(--accent); }
+  .threshold-val { font-family: var(--font-mono); font-size: 13px; color: var(--accent2); min-width: 24px; }
+
+  .drawer-save-btn {
+    background: var(--accent);
+    border: none; border-radius: 8px;
+    color: #fff;
+    font-family: var(--font-body);
+    font-size: 13px; font-weight: 600;
+    padding: 10px 20px; cursor: pointer;
+    align-self: flex-start; transition: opacity 0.2s;
+  }
+  .drawer-save-btn:hover { opacity: 0.85; }
+
+  /* ── ANIMATIONS ── */
+  @keyframes spin   { to { transform: rotate(360deg); } }
+  @keyframes fadeIn { from { opacity:0; transform:translateY(4px); } to { opacity:1; transform:translateY(0); } }
+  @keyframes pulse  { 0%,100% { opacity:0.5; } 50% { opacity:1; } }
+
+  .spinner {
+    width: 12px; height: 12px;
+    border: 1.5px solid var(--border2);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    display: inline-block;
+  }
+  .thinking-tag {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 11px; font-family: var(--font-mono);
+    color: var(--text3); animation: pulse 1.5s ease infinite;
+  }
+
+  @media (max-width: 640px) {
+    .input-row { flex-direction: column; }
+    .panel-body { padding: 20px 18px; }
+    .tab-chip { font-size: 10px; padding: 6px 10px; }
+    .zone-c { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ── HEADER ── -->
+<header>
+  <!-- Zone A -->
+  <div class="zone-a">
+    Auto-Loop <span>Prompt Engine</span>
+    <span class="v-tag">v10</span>
+    <div class="header-divider"></div>
+    <div class="status-dot" id="statusDot"></div>
+    <span id="statusText">idle</span>
+    <span class="config-badge" id="configBadge">Config: Local Fallback</span>
+  </div>
+
+  <!-- Zone B -->
+  <div class="zone-b">
+    <button class="gear-btn" id="promptLibBtn" title="Prompt Library" onclick="openPromptLibrary()">☰</button>
+    <div class="provider-selector">
+      <span class="provider-dot" id="providerDot"></span>
+      <select id="providerSelect" onchange="updateProviderDot(); updateWarning();"></select>
+    </div>
+    <button class="gear-btn" id="gearBtn" title="Settings">⚙</button>
+  </div>
+
+  <!-- Zone C — stacked maker's mark -->
+  <div class="zone-c">
+    <span>Crafted by</span>
+    <a href="mailto:meet.venkat1@gmail.com">meet.venkat1@gmail.com</a>
+  </div>
+</header>
+
+<!-- ── WARN BANNER ── -->
+<div class="warn-banner" id="keyWarn">⚠ No API key configured. Open ⚙ Settings to add one.</div>
+
+<!-- ── PROGRESS BAR ── -->
+<div class="progress-bar-wrap" id="progressWrap">
+  <div class="progress-bar-fill" id="progressBar"></div>
+</div>
+
+<!-- ── MAIN SCROLL AREA ── -->
+<div class="scroll-area">
+<div class="main-content">
+
+  <!-- INPUT ZONE -->
+  <div class="input-zone">
+    <div class="zone-label">Input</div>
+    <div class="input-row">
+      <div class="input-col">
+        <div class="input-col-label">Intuition / Intent</div>
+        <textarea id="main-input" placeholder="Drop your raw idea, question, or charge here. Vague is fine — the engine will reconstruct and sharpen it."></textarea>
+      </div>
+      <div class="input-col">
+        <div class="input-col-label">Success Criterion (optional)</div>
+        <input type="text" id="hint-input" placeholder="What does a good response look like? This becomes the evaluator's contract.">
+      </div>
+      <button class="run-btn" id="runBtn" onclick="runLoop()">▶ Run Loop</button>
+    </div>
+    <div class="prompt-type-row">
+      <span class="pt-label">Prompt type:</span>
+      <div class="pt-chip auto active" data-type="auto" onclick="selectType(this)">auto-detect</div>
+      <div class="pt-chip" data-type="reframe" onclick="selectType(this)">reframe</div>
+      <div class="pt-chip" data-type="analytical" onclick="selectType(this)">analytical</div>
+      <div class="pt-chip" data-type="generative" onclick="selectType(this)">generative</div>
+      <div class="pt-chip" data-type="exploratory" onclick="selectType(this)">exploratory</div>
+      <div class="pt-chip" data-type="diagnostic" onclick="selectType(this)">diagnostic</div>
+      <div class="pt-chip" data-type="synthesis" onclick="selectType(this)">synthesis</div>
+      <div class="pt-chip" data-type="critical" onclick="selectType(this)">critical</div>
+    </div>
+  </div>
+
+  <!-- OUTPUT ZONE -->
+  <div class="output-zone" id="outputZone">
+
+    <!-- UNIVERSAL COPY BAR -->
+    <div class="universal-copy-bar" id="universalCopyBar" style="visibility:hidden;pointer-events:none;height:0;overflow:hidden;">
+      <button class="copy-btn universal-copy-btn" id="copyAllBtn" onclick="copyWinningPair('copyAllBtn')">📋 Copy Input + Winning Prompt + Response</button>
+      <button class="copy-btn universal-copy-btn" id="copyHistoryBtn" onclick="copyFullHistory('copyHistoryBtn')">🗂 Copy Full Iteration History</button>
+      <button class="copy-btn universal-copy-btn" id="copyPromptsBtn" onclick="copyAllIterationPrompts('copyPromptsBtn')">📝 Copy All Iteration Prompts (MD)</button>
+    </div>
+
+    <!-- TAB BAR -->
+    <div class="tab-bar">
+      <div class="tab-chip active active-response" data-tab="response" onclick="switchTab('response')">
+        Final Response
+        <span class="tab-badge" id="badge-response">—</span>
+      </div>
+      <div class="tab-chip" data-tab="prompt" onclick="switchTab('prompt')">
+        Winning Prompt
+        <span class="tab-badge" id="badge-prompt">—</span>
+      </div>
+      <div class="tab-chip" data-tab="log" onclick="switchTab('log')">
+        Loop Log
+        <span class="tab-badge" id="badge-log">—</span>
+      </div>
+      <div class="tab-chip active-library" data-tab="library" onclick="switchTab('library')">
+        Library
+        <span class="tab-badge" id="badge-library">0</span>
+      </div>
+      <div class="tab-chip active-archive" data-tab="archive" onclick="switchTab('archive')">
+        Iteration Archive
+        <span class="tab-badge" id="badge-archive">0</span>
+      </div>
+    </div>
+
+    <!-- TAB: FINAL RESPONSE -->
+    <div class="tab-panel active" id="panel-response">
+      <div class="panel-toolbar">
+        <button class="copy-btn" id="copyResponseBtn" onclick="copyEl('responseContent','copyResponseBtn')" style="visibility:hidden;pointer-events:none;">Copy</button>
+      </div>
+      <div class="panel-body">
+        <div class="empty-state" id="responseEmpty">
+          <div class="empty-icon">◈</div>
+          <div class="empty-label">Response streams here when the loop runs</div>
+        </div>
+        <!-- Constraint 02: innerHTML markdown rendering, not textContent -->
+        <div class="response-content" id="responseContent" style="visibility:hidden;pointer-events:none;height:0;overflow:hidden;"></div>
+      </div>
+    </div>
+
+    <!-- TAB: WINNING PROMPT -->
+    <div class="tab-panel" id="panel-prompt">
+      <div class="panel-toolbar">
+        <button class="copy-btn" id="copyPromptBtn" onclick="copyEl('promptArtifact','copyPromptBtn')" style="visibility:hidden;pointer-events:none;">Copy</button>
+      </div>
+      <div class="panel-body">
+        <div class="empty-state" id="promptEmpty">
+          <div class="empty-icon">◇</div>
+          <div class="empty-label">Best prompt artifact surfaces here after first iteration</div>
+        </div>
+        <div class="prompt-artifact" id="promptArtifact" style="visibility:hidden;pointer-events:none;height:0;overflow:hidden;"></div>
+      </div>
+    </div>
+
+    <!-- TAB: LOOP LOG -->
+    <div class="tab-panel" id="panel-log">
+      <div class="panel-toolbar">
+        <div class="iter-station-row" id="iterStationRow">
+          <span class="iter-label">iter</span>
+          <div class="iter-dot" id="dot1">1</div>
+          <div class="iter-line"></div>
+          <div class="iter-dot" id="dot2">2</div>
+          <div class="iter-line"></div>
+          <div class="iter-dot" id="dot3">3</div>
+          <div class="station-flow">
+            <span class="station-chip" id="chip-architect">architect</span>
+            <span class="station-arrow">→</span>
+            <span class="station-chip" id="chip-executor">executor</span>
+            <span class="station-arrow">→</span>
+            <span class="station-chip" id="chip-evaluator">evaluator</span>
+            <span class="station-arrow">→</span>
+            <span class="station-chip" id="chip-loop">loop?</span>
+          </div>
+        </div>
+      </div>
+      <div class="panel-body">
+        <div class="log-entries" id="logEntries">
+          <div class="empty-state">
+            <div class="empty-icon">◎</div>
+            <div class="empty-label">Process log appears here during run</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB: LIBRARY (winning prompt + response only) -->
+    <div class="tab-panel" id="panel-library">
+      <div class="panel-toolbar">
+        <div class="library-toolbar-inner">
+          <input type="text" class="library-search" id="librarySearch" placeholder="Search saved runs by title, mode, or input…" oninput="renderLibraryList()">
+        </div>
+        <button class="library-io-btn fc-btn" id="folderConnectBtn" onclick="onFolderConnectClick()"><span id="folderConnectLabel">📁 Connect Folder</span></button>
+        <button class="library-io-btn" id="libraryMasterArchiveBtn" onclick="copyMasterPromptArchive(this)">📚 Copy Master Archive (MD)</button>
+        <button class="library-io-btn" id="libraryExportBtn" onclick="exportLibrary()">⬇ Export</button>
+        <button class="library-io-btn" id="libraryImportBtn" onclick="document.getElementById('libraryImportFile').click()">⬆ Import</button>
+        <input type="file" id="libraryImportFile" accept="application/json" style="display:none;" onchange="importLibrary(this.files[0])">
+        <button class="library-clear-btn" id="libraryClearBtn" onclick="clearLibraryAll()">🗑 Clear All</button>
+      </div>
+      <div class="panel-body" id="libraryPanelBody">
+        <div class="library-save-warning" id="librarySaveWarning">⚠ Last run could not be saved to the library — storage may be full. Try exporting and clearing old entries.</div>
+        <div class="library-stats-row" id="libraryStatsRow"></div>
+        <div class="empty-state" id="libraryEmpty">
+          <div class="empty-icon">🗂</div>
+          <div class="empty-label">Every iteration's prompt is saved here automatically as its own entry, winning prompt marked ★</div>
+        </div>
+        <div class="library-list" id="libraryList" style="display:none;"></div>
+        <div id="libraryDetail" style="display:none;"></div>
+      </div>
+    </div>
+
+    <!-- TAB: ITERATION ARCHIVE (full per-run iteration trail) -->
+    <div class="tab-panel" id="panel-archive">
+      <div class="panel-toolbar">
+        <div class="library-toolbar-inner">
+          <input type="text" class="library-search" id="archiveSearch" placeholder="Search archived runs by title, mode, or input…" oninput="renderArchiveList()">
+        </div>
+        <button class="library-io-btn fc-btn" id="folderConnectBtnArchive" onclick="onFolderConnectClick()"><span id="folderConnectLabelArchive">📁 Connect Folder</span></button>
+        <button class="library-io-btn" id="archiveExportBtn" onclick="exportArchive()">⬇ Export</button>
+        <button class="library-io-btn" id="archiveImportBtn" onclick="document.getElementById('archiveImportFile').click()">⬆ Import</button>
+        <input type="file" id="archiveImportFile" accept="application/json" style="display:none;" onchange="importArchive(this.files[0])">
+        <button class="library-clear-btn" id="archiveClearBtn" onclick="clearArchiveAll()">🗑 Clear All</button>
+      </div>
+      <div class="panel-body" id="archivePanelBody">
+        <div class="library-save-warning" id="archiveSaveWarning">⚠ Last run's iteration trail could not be saved — storage may be full. Export and clear old archive entries to free space.</div>
+        <div class="library-stats-row" id="archiveStatsRow"></div>
+        <div class="empty-state" id="archiveEmpty">
+          <div class="empty-icon">🧬</div>
+          <div class="empty-label">Full iteration trails (every prompt + response per run) are archived here — a secondary, exploratory backup alongside the Library</div>
+        </div>
+        <div class="library-list" id="archiveList" style="display:none;"></div>
+        <div id="archiveDetail" style="display:none;"></div>
+      </div>
+    </div>
+
+  </div><!-- /output-zone -->
+
+</div><!-- /main-content -->
+</div><!-- /scroll-area -->
+
+<!-- ── PROMPT LIBRARY PANEL (Constraint 01 — left overlay) ── -->
+<div class="plib-overlay" id="plibOverlay" onclick="closePromptLibrary()"></div>
+<div class="plib-panel" id="promptLibraryPanel">
+  <div class="plib-inner">
+    <div class="plib-header-row">
+      <div class="plib-title">Prompt Library</div>
+      <button class="plib-close" onclick="closePromptLibrary()">✕</button>
+    </div>
+    <div class="plib-reset-note">Each role has an Original, a Re-forged, and a Decompressor version. Pick the active one per role — edits save in place, in the browser, and never touch the file.</div>
+    <div class="plib-preset-row">
+      <button class="plib-preset-btn" onclick="applyGlobalPreset('original')">All Original</button>
+      <button class="plib-preset-btn" onclick="applyGlobalPreset('reforged')">All Reforged</button>
+      <button class="plib-preset-btn" onclick="applyGlobalPreset('decompressor')">All Decompressor</button>
+      <button class="plib-preset-btn recommended" onclick="applyGlobalPreset('recommended')">Recommended Starting Mix</button>
+    </div>
+    <div class="plib-preset-confirm" id="plibPresetConfirm">✓ Applied</div>
+    <div id="plibRoleList"></div>
+  </div>
+</div>
+
+<!-- ── GEAR DRAWER ── -->
+<div class="drawer-overlay" id="drawerOverlay"></div>
+<div class="drawer" id="configDrawer">
+  <div class="drawer-inner">
+    <div class="drawer-header-row">
+      <div class="drawer-title">⚙ Settings</div>
+      <button class="drawer-close" id="drawerClose">✕</button>
+    </div>
+
+    <div class="drawer-section-label">Provider API Keys</div>
+
+    <div id="drawerKeyRows"></div>
+
+    <div class="drawer-section-label">Loop Configuration</div>
+
+    <div class="drawer-field">
+      <label>Pass Threshold (score ≥ X to converge)</label>
+      <div class="threshold-row">
+        <input type="range" id="thresholdSlider" min="5" max="9" value="7"
+               oninput="document.getElementById('thresholdVal').textContent=this.value">
+        <span class="threshold-val" id="thresholdVal">7</span>
+      </div>
+    </div>
+    <div class="drawer-field">
+      <label>Max Iterations</label>
+      <input type="number" id="maxIter" value="3" min="1" max="5">
+    </div>
+    <button class="drawer-save-btn" onclick="saveLoopConfig()">Save Loop Config</button>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+// ENGINE STATE (Constraint 12/23 — single isArtifact check, reused everywhere)
+// ═══════════════════════════════════════════════════════════
+var ENGINE_ID = 'auto-loop-prompt-engine';
+var SCHEMA_VERSION = 1;
+window.EngineState = {
+  isArtifact: (window.self !== window.top)
+};
+// Constraint 22 — Universal Optional Panel Architecture. `library` gates the
+// left overlay Prompt Library (Constraint 01/20) added in this retrofit.
+window.EnginePanels = { library: true, importExport: true, settings: true };
+
+// ═══════════════════════════════════════════════════════════
+// STORAGE
+// ═══════════════════════════════════════════════════════════
+function getKey(p)      { return localStorage.getItem('hek_' + p) || ''; }
+function storeKey(p, v) { localStorage.setItem('hek_' + p, v); }
+function getSelectedProvider() { return document.getElementById('providerSelect').value || 'claude'; }
+
+// ═══════════════════════════════════════════════════════════
+// KEY POOL — multi-key rotation with cooldown-aware fallback
+// Fused in from the Rotate engine variant. Pool-enabled providers:
+// groq, openrouter. getKey()/storeKey() above remain the legacy
+// single-key path and stay wired to presence-check UI (warning
+// banner, folder-connect gate) — pool storage is a superset layered
+// alongside, never a replacement for those call sites.
+// ═══════════════════════════════════════════════════════════
+var _rotationIndex = {}; // in-memory round-robin cursor per provider, resets on reload — harmless
+
+function _poolStorageKey(p) { return 'hek_pool_' + p; }
+
+function getPool(p) {
+  var raw = localStorage.getItem(_poolStorageKey(p));
+  var pool = [];
+  if (raw) {
+    try { pool = JSON.parse(raw); } catch (e) { pool = []; }
+  } else {
+    // One-time migration: absorb a pre-existing single key into the new pool.
+    var legacy = getKey(p);
+    if (legacy) pool = [{ key: legacy, cooldownUntil: 0 }];
+  }
+  if (!Array.isArray(pool)) pool = [];
+  return pool;
+}
+
+function savePool(p, pool) {
+  localStorage.setItem(_poolStorageKey(p), JSON.stringify(pool));
+}
+
+// Replace the pool wholesale with a fresh list of key strings (from the textarea),
+// preserving any live cooldown on keys that survive the edit.
+function setPoolKeys(p, keyStrings) {
+  var existing = getPool(p);
+  var byKey = {};
+  existing.forEach(function(e) { byKey[e.key] = e.cooldownUntil || 0; });
+  var pool = keyStrings.map(function(k) { return { key: k, cooldownUntil: byKey[k] || 0 }; });
+  savePool(p, pool);
+  // Keep legacy single-key storage in sync with the first pool key so presence-check
+  // call sites (updateWarning, folder-connect gate) keep working without modification.
+  storeKey(p, pool.length ? pool[0].key : '');
+  return pool;
+}
+
+// Round-robin across non-cooling keys. If every key is cooling, return the
+// soonest-to-clear key with a waitMs so the caller can sleep and retry.
+function pickPoolKey(p) {
+  var pool = getPool(p);
+  if (!pool.length) return null;
+  var now = Date.now();
+  var start = _rotationIndex[p] || 0;
+  for (var i = 0; i < pool.length; i++) {
+    var idx = (start + i) % pool.length;
+    var entry = pool[idx];
+    if (!entry.cooldownUntil || entry.cooldownUntil <= now) {
+      _rotationIndex[p] = (idx + 1) % pool.length;
+      return { key: entry.key, waitMs: 0 };
+    }
+  }
+  var soonest = pool.reduce(function(a, b) { return (a.cooldownUntil || 0) <= (b.cooldownUntil || 0) ? a : b; });
+  return { key: null, waitMs: Math.max(250, soonest.cooldownUntil - now) };
+}
+
+function markKeyCooldown(p, key, untilTs) {
+  var pool = getPool(p);
+  pool.forEach(function(e) { if (e.key === key) e.cooldownUntil = untilTs; });
+  savePool(p, pool);
+  renderPoolStatus(p);
+}
+
+function markKeySuccess(p, key) {
+  var pool = getPool(p);
+  var touched = false;
+  pool.forEach(function(e) { if (e.key === key && e.cooldownUntil) { e.cooldownUntil = 0; touched = true; } });
+  if (touched) savePool(p, pool);
+}
+
+function sleep(ms) { return new Promise(function(res) { setTimeout(res, ms); }); }
+
+function _retryAfterMs(res) {
+  var header = res.headers && res.headers.get ? res.headers.get('retry-after') : null;
+  if (header) {
+    var secs = parseFloat(header);
+    if (!isNaN(secs) && secs > 0) return secs * 1000;
+  }
+  return 20000; // Groq/OpenRouter free-tier windows typically clear well inside this
+}
+
+function _maskKey(k) { return k && k.length > 10 ? (k.slice(0, 6) + '…' + k.slice(-4)) : '••••'; }
+
+// Core rotation wrapper. urlFn() and optionsFn(key) build the request per attempt.
+// Only HTTP 429 triggers rotation/cooldown — every other status (ok or otherwise)
+// is returned as-is so existing !res.ok handling downstream is untouched.
+async function fetchWithRotation(provider, urlFn, optionsFn) {
+  var guardAttempts = 0;
+  while (true) {
+    var picked = pickPoolKey(provider);
+    if (!picked) throw new Error('No ' + provider + ' API key configured. Open ⚙ Settings and paste at least one key.');
+    if (picked.waitMs > 0) {
+      setRotationStatus('cooldown', picked.waitMs, provider);
+      await sleep(picked.waitMs);
+      continue;
+    }
+    var key = picked.key;
+    var res = await fetch(urlFn(key), optionsFn(key));
+    if (res.status === 429) {
+      markKeyCooldown(provider, key, Date.now() + _retryAfterMs(res));
+      guardAttempts++;
+      setRotationStatus('rotate', key, provider);
+      if (guardAttempts > 200) throw new Error('Every key in the ' + provider + ' pool is rate-limited and not clearing. Add more keys or wait.');
+      continue;
+    }
+    markKeySuccess(provider, key);
+    setRotationStatus('clear', key, provider);
+    return res;
+  }
+}
+
+// Transient status surfaced on the existing status readout — never blocks, purely informational.
+// Routes through the canonical setStatus() writer (not a second direct write to
+// statusText) so the status dot and text never fall out of sync with the rotation
+// state — a run mid-cooldown now shows an amber "waiting" dot instead of a stale
+// green "running" dot next to text that says otherwise.
+function setRotationStatus(kind, payload, provider) {
+  if (typeof setStatus !== 'function') return; // defined later in file; guards load order
+  if (kind === 'rotate') {
+    setStatus(provider + ': rate-limited on ' + _maskKey(payload) + ' — rotating key…', true, false);
+  } else if (kind === 'cooldown') {
+    setStatus(provider + ': all keys cooling — retrying in ' + Math.ceil(payload / 1000) + 's…', true, false);
+  } else if (kind === 'clear') {
+    setStatus('running', true, false);
+  }
+}
+
+// Renders the live per-key dot status under each pool textarea in the Settings drawer.
+function renderPoolStatus(p) {
+  var host = document.getElementById(p + 'PoolStatus');
+  if (!host) return;
+  var pool = getPool(p);
+  if (!pool.length) { host.innerHTML = '<span class="keypool-empty">No keys saved yet.</span>'; return; }
+  var now = Date.now();
+  host.innerHTML = pool.map(function(e, i) {
+    var cooling = e.cooldownUntil && e.cooldownUntil > now;
+    var label = 'key ' + (i + 1) + ' · ' + _maskKey(e.key);
+    if (cooling) label += ' · ' + Math.ceil((e.cooldownUntil - now) / 1000) + 's';
+    return '<span class="keypool-chip"><span class="keypool-dot' + (cooling ? ' cooling' : '') + '"></span>' + label + '</span>';
+  }).join('');
+}
+
+var _poolStatusInterval = null;
+function startPoolStatusRefresh() {
+  stopPoolStatusRefresh();
+  poolProviders().forEach(renderPoolStatus);
+  if (typeof updateWarning === 'function') updateWarning();
+  _poolStatusInterval = setInterval(function() {
+    poolProviders().forEach(renderPoolStatus);
+    if (typeof updateWarning === 'function') updateWarning();
+  }, 2000);
+}
+function stopPoolStatusRefresh() {
+  if (_poolStatusInterval) { clearInterval(_poolStatusInterval); _poolStatusInterval = null; }
+}
+
+function saveKeyPool(p) {
+  var el = document.getElementById(p + 'KeyPool');
+  if (!el) return;
+  var keys = el.value.split(/[\n,]+/).map(function(s) { return s.trim(); }).filter(Boolean);
+  // dedupe while preserving order
+  var seen = {};
+  keys = keys.filter(function(k) { return seen[k] ? false : (seen[k] = true); });
+  setPoolKeys(p, keys);
+  el.value = keys.join('\n');
+  var c = document.getElementById(p + 'Saved');
+  if (c) { c.style.display = 'block'; setTimeout(function() { c.style.display = 'none'; }, 1500); }
+  renderPoolStatus(p);
+  updateWarning();
+}
+
+// ── Live model config (model-config-contract v1) — fetched from therantai-config
+// on load, hard-fallback to this local copy if unreachable or malformed ──
+var CANONICAL_CONFIG_URL = 'https://raw.githubusercontent.com/meetvenkat1-code/therantai-config/refs/heads/main/model.json';
+var LOCAL_FALLBACK_CONFIG = {
+  native_model: 'claude-sonnet-4-6',
+  providers: [
+    { id: 'claude', native: true, label: 'Claude · Native', dotColor: '#ef4444', requiresKey: false, defaultFor: ['artifact'] },
+    { id: 'groq', native: false, label: 'Groq', dotColor: '#22c55e', requiresKey: true, keyStorageName: 'groq', keyLabel: 'Groq API Keys', keyPlaceholder: 'gsk_…', defaultFor: ['standalone'], endpoint: 'https://api.groq.com/openai/v1/chat/completions', authHeader: 'Authorization', authPrefix: 'Bearer ', requestFormat: 'openai-chat', streamFormat: 'openai', modelChain: ['openai/gpt-oss-120b', 'openai/gpt-oss-20b'], hardFallback: 'or-auto' },
+    { id: 'or-auto', native: false, label: 'OR · Free Router (auto)', dotColor: '#f97316', requiresKey: true, keyStorageName: 'openrouter', keyLabel: 'OpenRouter API Keys', keyPlaceholder: 'sk-or-…', standaloneOnly: true, keyNote: 'Standalone only — OpenRouter has no CORS proxy inside claude.ai', endpoint: 'https://openrouter.ai/api/v1/chat/completions', authHeader: 'Authorization', authPrefix: 'Bearer ', requestFormat: 'openai-chat', streamFormat: 'openai', modelChain: ['openrouter/free'] }
+  ],
+  or_specific_models: []
+};
+var liveModelConfig = LOCAL_FALLBACK_CONFIG;
+
+function findProvider(id) {
+  return liveModelConfig.providers.filter(function(p) { return p.id === id; })[0];
+}
+
+// ── DYNAMIC PROVIDER SELECTOR — replaces hardcoded <option> list ──
+function renderProviderSelector() {
+  var select = document.getElementById('providerSelect');
+  if (!select) return;
+  var current = select.value;
+  select.innerHTML = '';
+  liveModelConfig.providers.forEach(function(p) {
+    var opt = document.createElement('option');
+    opt.value = p.id;
+    opt.textContent = p.label;
+    select.appendChild(opt);
+  });
+  // or_specific_models is deprecated and confirmed empty in the live config — named
+  // OR models now live inside or-auto's own modelChain, not as separate selector entries.
+  if (findProvider(current)) {
+    select.value = current;
+  } else {
+    var ctx = window.EngineState.isArtifact ? 'artifact' : 'standalone';
+    var match = liveModelConfig.providers.filter(function(p) {
+      return p.defaultFor && p.defaultFor.indexOf(ctx) !== -1;
+    })[0];
+    select.value = (match || liveModelConfig.providers[0]).id;
+  }
+}
+
+// ── DYNAMIC DRAWER KEY ROWS — replaces hardcoded Claude/Groq/OpenRouter drawer-field blocks ──
+// This engine stores keys as a rotating pool (textarea, one key per line), not a
+// single input — that storage mechanism is engine-specific per the contract and
+// stays as-is. Only whether a row exists, and what it says, is config-driven now.
+function buildNativeNoteRow(p) {
+  var div = document.createElement('div');
+  div.className = 'drawer-field';
+  div.innerHTML = '<label>' + p.label + '</label>' +
+    '<div class="provider-native-note">No key needed — platform routes natively via claude.ai</div>';
+  return div;
+}
+function buildKeyInputRow(p) {
+  var div = document.createElement('div');
+  div.className = 'drawer-field';
+  var noteHtml = p.keyNote ? '<div class="provider-native-note" style="color:var(--orange-warn);border-color:var(--orange-warn);">' + p.keyNote + '</div>' : '';
+  div.innerHTML =
+    '<label>' + (p.keyLabel || p.label + ' API Keys') + ' <span class="key-pool-hint">(one per line — auto-rotates on rate limit)</span></label>' +
+    '<textarea class="key-pool-textarea" id="' + p.keyStorageName + 'KeyPool" rows="3" placeholder="' + (p.keyPlaceholder || '') + '"></textarea>' +
+    '<div class="key-row"><button class="save-key-btn" onclick="saveKeyPool(\'' + p.keyStorageName + '\')">Save Pool</button></div>' +
+    '<div class="save-confirm" id="' + p.keyStorageName + 'Saved">✓ Saved</div>' +
+    '<div class="keypool-status" id="' + p.keyStorageName + 'PoolStatus"></div>' + noteHtml;
+  return div;
+}
+function renderDrawerKeyRows() {
+  var container = document.getElementById('drawerKeyRows');
+  if (!container) return;
+  container.innerHTML = '';
+  liveModelConfig.providers.forEach(function(p) {
+    container.appendChild(p.requiresKey ? buildKeyInputRow(p) : buildNativeNoteRow(p));
+  });
+}
+
+// Providers eligible for key-pool rotation — derived from config, not hardcoded.
+function poolProviders() {
+  return liveModelConfig.providers.filter(function(p) { return p.requiresKey; }).map(function(p) { return p.keyStorageName; });
+}
+
+function setConfigBadge(isLive) {
+  var b = document.getElementById('configBadge');
+  if (!b) return;
+  b.textContent = isLive ? 'Config: Live' : 'Config: Local Fallback';
+  b.classList.toggle('live', !!isLive);
+}
+
+function isValidModelConfig(cfg) {
+  if (!cfg || !Array.isArray(cfg.providers) || !cfg.providers.length) return false;
+  var natives = cfg.providers.filter(function(p) { return p.native === true; });
+  if (natives.length !== 1) return false;
+  return cfg.providers.every(function(p) { return p && p.id && p.label; });
+}
+
+async function fetchModelConfig() {
+  try {
+    var res = await fetch(CANONICAL_CONFIG_URL + '?v=' + Date.now());
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    var cfg = await res.json();
+    if (!isValidModelConfig(cfg)) throw new Error('malformed config');
+    liveModelConfig = cfg;
+    setConfigBadge(true);
+  } catch (e) {
+    liveModelConfig = LOCAL_FALLBACK_CONFIG;
+    setConfigBadge(false);
+  }
+  renderProviderSelector();
+  renderDrawerKeyRows();
+  updateProviderDot();
+  updateWarning();
+}
+
+function saveKey(p) {
+  var el = document.getElementById(p + 'Key');
+  if (!el) return;
+  storeKey(p, el.value.trim());
+  var c = document.getElementById(p + 'Saved');
+  if (c) {
+    c.style.display = 'block';
+    setTimeout(function() { c.style.display = 'none'; }, 1500);
+  }
+  updateWarning();
+}
+
+function getLoopConfig() {
+  return {
+    threshold: parseInt(localStorage.getItem('alpe_threshold') || '7'),
+    maxIter:   parseInt(localStorage.getItem('alpe_max_iter')  || '3')
+  };
+}
+function saveLoopConfig() {
+  localStorage.setItem('alpe_threshold', document.getElementById('thresholdSlider').value);
+  localStorage.setItem('alpe_max_iter',  document.getElementById('maxIter').value);
+  closeDrawer();
+}
+
+// ═══════════════════════════════════════════════════════════
+// SHARED HELPERS: byte size / formatting (used by both Library and Archive)
+// ═══════════════════════════════════════════════════════════
+function formatBytes(bytes) {
+  if (bytes < 1024) return bytes + ' B';
+  if (bytes < 1024*1024) return (bytes/1024).toFixed(1) + ' KB';
+  return (bytes/(1024*1024)).toFixed(2) + ' MB';
+}
+function makeEntryTitle(userInput) {
+  var clean = (userInput || '').trim().replace(/\s+/g, ' ');
+  if (!clean) return 'Untitled run';
+  var words = clean.split(' ');
+  var title = words.slice(0, 8).join(' ');
+  if (words.length > 8) title += '…';
+  return title;
+}
+
+// ═══════════════════════════════════════════════════════════
+// LIBRARY STORAGE — winning prompt + response only (primary, lean)
+// ═══════════════════════════════════════════════════════════
+var LIBRARY_KEY = 'alpe_library_v1';
+
+function loadLibraryEntries() {
+  try {
+    var raw = localStorage.getItem(LIBRARY_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch(e) { return []; }
+}
+function saveLibraryEntries(entries) {
+  try {
+    localStorage.setItem(LIBRARY_KEY, JSON.stringify(entries));
+    setSaveWarning('library', false);
+    return true;
+  } catch(e) {
+    setSaveWarning('library', true);
+    return false;
+  }
+}
+function setSaveWarning(scope, show) {
+  var el = document.getElementById(scope === 'library' ? 'librarySaveWarning' : 'archiveSaveWarning');
+  if (el) el.classList.toggle('visible', !!show);
+}
+function getLibraryByteSize() {
+  var raw = localStorage.getItem(LIBRARY_KEY) || '';
+  return raw.length * 2;
+}
+function addLibraryEntry(entry) {
+  var entries = loadLibraryEntries();
+  entries.unshift(entry);
+  saveLibraryEntries(entries); // localStorage write — unconditional, fires first
+  renderLibraryList();
+  if (libraryDirHandle) fcWriteEntryFile(entry); // additive mirror — best effort, never blocks
+}
+function deleteLibraryEntry(id) {
+  var entries = loadLibraryEntries().filter(function(e) { return e.id !== id; });
+  saveLibraryEntries(entries);
+  renderLibraryList();
+  if (libraryDirHandle) fcDeleteEntryFile(id);
+}
+function clearLibraryAll() {
+  var wipeDisk = false;
+  if (libraryDirHandle) {
+    wipeDisk = confirm(
+      'Clear the entire Library (all saved iteration prompts + responses)?\n\n' +
+      'A folder is connected. Click OK to also erase the disk backup, or Cancel to keep the browser-only clear ' +
+      '(the connected folder — including _master-prompt-archive.md — stays intact, and reconnecting will pull everything back in).'
+    );
+    if (!confirm('Clear the browser Library now? This cannot be undone in the browser.')) return;
+  } else {
+    if (!confirm('Clear the entire Library (all saved iteration prompts + responses)? This cannot be undone.')) return;
+  }
+  var ids = loadLibraryEntries().map(function(e) { return e.id; });
+  saveLibraryEntries([]);
+  renderLibraryList();
+  // Disk files (including the master archive) are the continuous backup —
+  // only touched here if the user explicitly opted into wiping them too.
+  if (libraryDirHandle && wipeDisk) ids.forEach(function(id) { fcDeleteEntryFile(id); });
+}
+function renderLibraryStats() {
+  var el = document.getElementById('libraryStatsRow');
+  if (!el) return;
+  var entries = loadLibraryEntries();
+  var bytes = getLibraryByteSize();
+  var approxQuota = 5 * 1024 * 1024;
+  var pct = Math.min(100, Math.round((bytes / approxQuota) * 100));
+  el.classList.toggle('warn-stats', pct >= 70);
+  el.textContent = entries.length + ' entries · ' + formatBytes(bytes) + ' (~' + pct + '% of typical ~5MB browser limit)';
+}
+function exportLibrary() {
+  var entries = loadLibraryEntries();
+  var blob = new Blob([JSON.stringify(entries, null, 2)], { type: 'application/json' });
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = 'auto-loop-library-' + new Date().toISOString().slice(0,10) + '.json';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+function importLibrary(file) {
+  if (!file) return;
+  var reader = new FileReader();
+  reader.onload = function() {
+    try {
+      var imported = JSON.parse(reader.result);
+      if (!Array.isArray(imported)) throw new Error('File is not a library array');
+      var existing = loadLibraryEntries();
+      var existingIds = new Set(existing.map(function(e){ return e.id; }));
+      var merged = existing.slice();
+      var added = 0;
+      imported.forEach(function(e) {
+        if (e && e.id && !existingIds.has(e.id)) { merged.push(e); added++; }
+      });
+      merged.sort(function(a,b){ return b.timestamp - a.timestamp; });
+      var ok = saveLibraryEntries(merged);
+      renderLibraryList();
+      if (ok) alert('Imported ' + added + ' new entr' + (added===1?'y':'ies') + ' (' + (imported.length - added) + ' duplicate' + ((imported.length-added)===1?'':'s') + ' skipped).');
+    } catch(e) {
+      alert('Import failed: ' + e.message);
+    }
+  };
+  reader.readAsText(file);
+  document.getElementById('libraryImportFile').value = '';
+}
+
+// ═══════════════════════════════════════════════════════════
+// FOLDER-CONNECT (Constraint 23 / 23B) — additive disk mirror of Library.
+// localStorage remains the primary write path and always fires first;
+// everything below is a best-effort secondary mirror keyed by the same id.
+// ═══════════════════════════════════════════════════════════
+var FC_DB_NAME   = 'alpe_fs_handles';
+var FC_STORE     = 'handles';
+var FC_HANDLE_KEY = 'libraryDirHandle';
+var FC_MANIFEST_FILE = 'index.json';
+
+var libraryDirHandle = null;
+var folderConnectStatus = 'disconnected'; // 'disconnected' | 'connected' | 'reconnect-required'
+
+// ── tiny IndexedDB wrapper (no external deps — a FileSystemDirectoryHandle
+//    can be structured-cloned into IndexedDB but NOT into localStorage) ──
+function fcDbOpen() {
+  return new Promise(function(resolve, reject) {
+    var req = indexedDB.open(FC_DB_NAME, 1);
+    req.onupgradeneeded = function() {
+      req.result.createObjectStore(FC_STORE);
+    };
+    req.onsuccess = function() { resolve(req.result); };
+    req.onerror   = function() { reject(req.error); };
+  });
+}
+async function fcIdbSet(key, val) {
+  try {
+    var db = await fcDbOpen();
+    return new Promise(function(resolve, reject) {
+      var tx = db.transaction(FC_STORE, 'readwrite');
+      tx.objectStore(FC_STORE).put(val, key);
+      tx.oncomplete = function() { resolve(true); };
+      tx.onerror    = function() { reject(tx.error); };
+    });
+  } catch(e) { return false; }
+}
+async function fcIdbGet(key) {
+  try {
+    var db = await fcDbOpen();
+    return new Promise(function(resolve, reject) {
+      var tx = db.transaction(FC_STORE, 'readonly');
+      var req = tx.objectStore(FC_STORE).get(key);
+      req.onsuccess = function() { resolve(req.result || null); };
+      req.onerror   = function() { reject(req.error); };
+    });
+  } catch(e) { return null; }
+}
+async function fcIdbDelete(key) {
+  try {
+    var db = await fcDbOpen();
+    return new Promise(function(resolve) {
+      var tx = db.transaction(FC_STORE, 'readwrite');
+      tx.objectStore(FC_STORE).delete(key);
+      tx.oncomplete = function() { resolve(true); };
+      tx.onerror    = function() { resolve(false); };
+    });
+  } catch(e) { return false; }
+}
+
+async function fcVerifyPermission(handle, requestIfNeeded) {
+  var opts = { mode: 'readwrite' };
+  try {
+    var q = await handle.queryPermission(opts);
+    if (q === 'granted') return true;
+    if (!requestIfNeeded) return false; // never call requestPermission outside a user gesture
+    var r = await handle.requestPermission(opts);
+    return r === 'granted';
+  } catch(e) { return false; }
+}
+
+function fcSetStatus(status, folderName) {
+  folderConnectStatus = status;
+  var pairs = [
+    ['folderConnectBtn', 'folderConnectLabel'],
+    ['folderConnectBtnArchive', 'folderConnectLabelArchive']
+  ];
+  pairs.forEach(function(p) {
+    var btn = document.getElementById(p[0]);
+    var label = document.getElementById(p[1]);
+    if (!btn || !label) return;
+    btn.classList.remove('fc-connected','fc-reconnect');
+    if (status === 'connected') {
+      btn.classList.add('fc-connected');
+      label.textContent = '📁 Connected: ' + (folderName || '(folder)');
+    } else if (status === 'reconnect-required') {
+      btn.classList.add('fc-reconnect');
+      label.textContent = '📁 Reconnect folder…';
+    } else {
+      label.textContent = '📁 Connect Folder';
+    }
+  });
+}
+
+// ── manifest (index.json) — fast-path cache; disk scan would be source of
+//    truth on conflict, but for this engine's own writes the manifest we
+//    maintain is authoritative since we're the only writer of our tag ──
+async function fcReadManifest() {
+  if (!libraryDirHandle) return { entries: {} };
+  try {
+    var fh = await libraryDirHandle.getFileHandle(FC_MANIFEST_FILE, { create: false });
+    var file = await fh.getFile();
+    var text = await file.text();
+    var parsed = JSON.parse(text);
+    if (!parsed || typeof parsed !== 'object' || !parsed.entries) return { entries: {} };
+    return parsed;
+  } catch(e) {
+    return { entries: {} }; // no manifest yet — first connect, or file missing
+  }
+}
+async function fcWriteManifest(manifest) {
+  if (!libraryDirHandle) return false;
+  try {
+    var fh = await libraryDirHandle.getFileHandle(FC_MANIFEST_FILE, { create: true });
+    var w = await fh.createWritable();
+    await w.write(JSON.stringify(manifest, null, 2));
+    await w.close();
+    return true;
+  } catch(e) { return false; }
+}
+
+async function fcWriteJsonFile(id, payload) {
+  if (!libraryDirHandle) return false;
+  try {
+    var fh = await libraryDirHandle.getFileHandle(id + '.json', { create: true });
+    var w = await fh.createWritable();
+    await w.write(JSON.stringify(payload, null, 2));
+    await w.close();
+
+    var manifest = await fcReadManifest();
+    manifest.entries[id] = { filename: id + '.json', engine: ENGINE_ID, schemaVersion: SCHEMA_VERSION, kind: payload.kind, modified: payload.modified };
+    await fcWriteManifest(manifest);
+    return true;
+  } catch(e) {
+    return false; // folder write failure must never roll back the localStorage write that already succeeded
+  }
+}
+
+async function fcWriteEntryFile(entry) {
+  var payload = {
+    id: entry.id,
+    name: entry.title || 'untitled',
+    kind: 'library',
+    content: {
+      input: entry.input, hint: entry.hint, cognitiveMode: entry.cognitiveMode,
+      score: entry.score, isPass: entry.isPass, isWinner: entry.isWinner,
+      converged: entry.converged, iter: entry.iter, iterationCount: entry.iterationCount,
+      densePrompt: entry.densePrompt, response: entry.response,
+      operationPerformed: entry.operationPerformed, weaknesses: entry.weaknesses,
+      revisionGuidance: entry.revisionGuidance, runId: entry.runId, timestamp: entry.timestamp
+    },
+    tags: [entry.isWinner ? 'winner' : 'iteration', entry.cognitiveMode].filter(Boolean),
+    provider_preference: getSelectedProvider(),
+    engine: ENGINE_ID,
+    schemaVersion: SCHEMA_VERSION,
+    created: entry.timestamp ? new Date(entry.timestamp).toISOString() : new Date().toISOString(),
+    modified: new Date().toISOString()
+  };
+  return fcWriteJsonFile(entry.id, payload);
+}
+
+async function fcWriteArchiveEntryFile(entry) {
+  var payload = {
+    id: entry.id,
+    name: entry.title || 'untitled',
+    kind: 'archive',
+    content: {
+      input: entry.input, hint: entry.hint, cognitiveMode: entry.cognitiveMode,
+      score: entry.score, converged: entry.converged, winningIter: entry.winningIter,
+      densePrompt: entry.densePrompt, response: entry.response,
+      runId: entry.runId, timestamp: entry.timestamp,
+      iterations: entry.iterations || [] // full per-iteration prompts + responses + evaluator notes
+    },
+    tags: ['archive-trail', entry.cognitiveMode].filter(Boolean),
+    provider_preference: getSelectedProvider(),
+    engine: ENGINE_ID,
+    schemaVersion: SCHEMA_VERSION,
+    created: entry.timestamp ? new Date(entry.timestamp).toISOString() : new Date().toISOString(),
+    modified: new Date().toISOString()
+  };
+  return fcWriteJsonFile(entry.id, payload);
+}
+
+function fcReconstructLibraryEntry(payload) {
+  var c = payload.content || {};
+  return {
+    id: payload.id, runId: c.runId, timestamp: c.timestamp, title: payload.name,
+    input: c.input, hint: c.hint, cognitiveMode: c.cognitiveMode, score: c.score,
+    isPass: c.isPass, isWinner: c.isWinner, converged: c.converged, iter: c.iter,
+    iterationCount: c.iterationCount, densePrompt: c.densePrompt, response: c.response,
+    operationPerformed: c.operationPerformed, weaknesses: c.weaknesses, revisionGuidance: c.revisionGuidance
+  };
+}
+function fcReconstructArchiveEntry(payload) {
+  var c = payload.content || {};
+  return {
+    id: payload.id, runId: c.runId, timestamp: c.timestamp, title: payload.name,
+    input: c.input, hint: c.hint, cognitiveMode: c.cognitiveMode, score: c.score,
+    converged: c.converged, winningIter: c.winningIter, densePrompt: c.densePrompt,
+    response: c.response, iterations: c.iterations || []
+  };
+}
+
+// ── Copy All Prompts (MD) — the exact markdown that button copies to the
+//    clipboard, also written to disk as its own .md file per run, so it's
+//    a real backup and not something you have to remember to paste anywhere.
+//    buildIterationPromptsMarkdown() is declared further down (hoisted). ──
+function fcSlugForFilename(title) {
+  var s = (title || 'untitled').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+  return s.slice(0, 60) || 'untitled';
+}
+async function fcWriteMdFile(id, filename, mdText) {
+  if (!libraryDirHandle) return false;
+  try {
+    var fh = await libraryDirHandle.getFileHandle(filename, { create: true });
+    var w = await fh.createWritable();
+    await w.write(mdText);
+    await w.close();
+    var manifest = await fcReadManifest();
+    manifest.entries[id] = { filename: filename, engine: ENGINE_ID, schemaVersion: SCHEMA_VERSION, kind: 'prompts-md', modified: new Date().toISOString() };
+    await fcWriteManifest(manifest);
+    return true;
+  } catch(e) { return false; }
+}
+// Sourced from saved Library entries for a run — same data
+// copyAllIterationPromptsForRun() copies to the clipboard, written to disk instead.
+async function fcWriteRunPromptsMd(runId) {
+  if (!libraryDirHandle || !runId) return false;
+  var entries = loadLibraryEntries().filter(function(e) { return e.runId === runId; });
+  if (!entries.length) return false;
+  entries.sort(function(a, b) { return (a.iter||0) - (b.iter||0); });
+  var winner = entries.find(function(e) { return e.isWinner; });
+  var recs = entries.map(function(e) {
+    return { iter: e.iter, score: e.score, isPass: e.isPass, cognitiveMode: e.cognitiveMode, densePrompt: e.densePrompt };
+  });
+  var md = buildIterationPromptsMarkdown(entries[0].title, entries[0].input, entries[0].hint, recs, winner ? winner.iter : null);
+  var filename = runId + '__' + fcSlugForFilename(entries[0].title) + '.md';
+  return fcWriteMdFile(runId, filename, md);
+}
+
+async function fcDeleteEntryFile(id) {
+  if (!libraryDirHandle) return false;
+  try {
+    var manifest = await fcReadManifest();
+    var meta = manifest.entries[id];
+    var filename = meta ? meta.filename : (id + '.json'); // fallback for pre-manifest records
+    try { await libraryDirHandle.removeEntry(filename); } catch(e) { /* already gone — fine */ }
+    if (meta) { delete manifest.entries[id]; await fcWriteManifest(manifest); }
+  } catch(e) {}
+  return true;
+}
+
+// ── backfill-on-connect: push any entries (Library + Archive) that predate
+//    this connection out to disk, batched so we never freeze the UI ──
+async function fcBackfillToDisk() {
+  var manifest = await fcReadManifest();
+  var onDisk = manifest.entries || {};
+
+  var missingLib = loadLibraryEntries().filter(function(e) { return !onDisk[e.id]; });
+  var missingArch = loadArchiveEntries().filter(function(e) { return !onDisk[e.id]; });
+  var localRunIds = Array.from(new Set(loadLibraryEntries().map(function(e) { return e.runId; }).filter(Boolean)));
+  var missingRunMd = localRunIds.filter(function(rid) { return !onDisk[rid]; });
+
+  var jobs = missingLib.map(function(e) { return function() { return fcWriteEntryFile(e); }; })
+    .concat(missingArch.map(function(e) { return function() { return fcWriteArchiveEntryFile(e); }; }))
+    .concat(missingRunMd.map(function(rid) { return function() { return fcWriteRunPromptsMd(rid); }; }));
+  if (!jobs.length) return;
+
+  var i = 0;
+  function nextBatch() {
+    var batch = jobs.slice(i, i + 5);
+    if (!batch.length) return;
+    Promise.all(batch.map(function(fn) { return fn(); })).then(function() {
+      i += 5;
+      if (i < jobs.length) (window.requestIdleCallback || function(cb){ setTimeout(cb,0); })(nextBatch);
+    });
+  }
+  nextBatch();
+}
+
+// ── pull-from-disk: the other direction — entries written from a DIFFERENT
+//    browser/profile that connected the same folder show up here too, so
+//    "connect this folder" is a real cross-browser catch-up, not just backup ──
+async function fcSyncFromDisk() {
+  if (!libraryDirHandle) return;
+  var manifest = await fcReadManifest();
+  var entries = manifest.entries || {};
+  var localLibIds = new Set(loadLibraryEntries().map(function(e) { return e.id; }));
+  var localArchIds = new Set(loadArchiveEntries().map(function(e) { return e.id; }));
+
+  var ids = Object.keys(entries);
+  var pulledLib = [], pulledArch = [];
+  for (var i = 0; i < ids.length; i++) {
+    var id = ids[i];
+    var meta = entries[id];
+    if (meta.engine !== ENGINE_ID) continue; // skip foreign-engine-tagged records
+    if (meta.kind === 'library' && localLibIds.has(id)) continue;
+    if (meta.kind === 'archive' && localArchIds.has(id)) continue;
+    if (meta.kind !== 'library' && meta.kind !== 'archive') continue;
+    try {
+      var fh = await libraryDirHandle.getFileHandle(meta.filename, { create: false });
+      var file = await fh.getFile();
+      var payload = JSON.parse(await file.text());
+      if (meta.kind === 'library') pulledLib.push(fcReconstructLibraryEntry(payload));
+      else pulledArch.push(fcReconstructArchiveEntry(payload));
+    } catch(e) { /* file missing/corrupt — skip, don't block the rest */ }
+    if (i % 8 === 7) await new Promise(function(r) { setTimeout(r, 0); }); // yield periodically
+  }
+
+  if (pulledLib.length) {
+    var mergedLib = loadLibraryEntries().concat(pulledLib);
+    mergedLib.sort(function(a, b) { return (b.timestamp||0) - (a.timestamp||0); });
+    saveLibraryEntries(mergedLib);
+    renderLibraryList();
+  }
+  if (pulledArch.length) {
+    var mergedArch = loadArchiveEntries().concat(pulledArch);
+    mergedArch.sort(function(a, b) { return (b.timestamp||0) - (a.timestamp||0); });
+    saveArchiveEntries(mergedArch);
+    renderArchiveList();
+  }
+}
+
+// One connection transition (connect / reconnect / auto-reconnect) always
+// does both directions: push whatever's local-only up, then pull whatever's
+// disk-only down — this is what makes "connect the same folder from a
+// different browser" actually catch you up, not just start backing up.
+async function fcSyncBothDirections() {
+  await fcBackfillToDisk();
+  await fcSyncFromDisk();
+  // Rebuild AFTER both directions settle, so the archive reflects the
+  // union of browser + disk history — never a thinner one-sided view.
+  // This is what makes reconnecting weekly a continuous, growing backup
+  // instead of a snapshot that can shrink if this browser's Library
+  // happens to be behind the folder (or vice versa).
+  if (libraryDirHandle) fcWriteMasterPromptArchive(buildMasterPromptArchiveMarkdown());
+}
+
+async function connectLibraryFolder() {
+  try {
+    var handle = await window.showDirectoryPicker({ mode: 'readwrite' });
+    var ok = await fcVerifyPermission(handle, true);
+    if (!ok) { alert('Folder permission was not granted.'); return; }
+    libraryDirHandle = handle;
+    await fcIdbSet(FC_HANDLE_KEY, handle);
+    fcSetStatus('connected', handle.name);
+    await fcSyncBothDirections();
+  } catch(e) {
+    if (e.name !== 'AbortError') alert('Could not connect folder: ' + e.message);
+  }
+}
+
+async function forgetLibraryFolder() {
+  if (!confirm('Disconnect this folder? Your Library and Archive stay intact in the browser — this only stops the disk mirror.')) return;
+  libraryDirHandle = null;
+  await fcIdbDelete(FC_HANDLE_KEY);
+  fcSetStatus('disconnected');
+}
+
+function onFolderConnectClick() {
+  if (folderConnectStatus === 'connected') { forgetLibraryFolder(); return; }
+  if (folderConnectStatus === 'reconnect-required') { reconnectLibraryFolder(); return; }
+  connectLibraryFolder();
+}
+
+async function reconnectLibraryFolder() {
+  var handle = await fcIdbGet(FC_HANDLE_KEY);
+  if (!handle) { fcSetStatus('disconnected'); return; }
+  var ok = await fcVerifyPermission(handle, true); // user click → gesture present, OK to prompt
+  if (!ok) { fcSetStatus('reconnect-required'); return; }
+  libraryDirHandle = handle;
+  fcSetStatus('connected', handle.name);
+  await fcSyncBothDirections();
+}
+
+// Silent auto-reconnect attempt on load — no prompt (no user gesture yet),
+// just queryPermission. If it's not already 'granted' we surface
+// "Reconnect required" rather than guessing or nagging with a popup.
+async function fcAutoReconnectOnLoad() {
+  if (window.EngineState.isArtifact) return; // Constraint 23: never from artifact context
+  var handle = await fcIdbGet(FC_HANDLE_KEY);
+  if (!handle) { fcSetStatus('disconnected'); return; }
+  var granted = await fcVerifyPermission(handle, false);
+  if (granted) {
+    libraryDirHandle = handle;
+    fcSetStatus('connected', handle.name);
+    await fcSyncBothDirections();
+  } else {
+    fcSetStatus('reconnect-required', handle.name);
+  }
+}
+
+function renderLibraryList() {
+  var entries = loadLibraryEntries();
+  var query = (document.getElementById('librarySearch').value || '').toLowerCase().trim();
+  if (query) {
+    entries = entries.filter(function(e) {
+      return (e.title + ' ' + (e.cognitiveMode||'') + ' ' + (e.input||'')).toLowerCase().indexOf(query) !== -1;
+    });
+  }
+
+  document.getElementById('libraryDetail').style.display = 'none';
+  var listEl = document.getElementById('libraryList');
+  var emptyEl = document.getElementById('libraryEmpty');
+  setBadge('library', String(loadLibraryEntries().length), '');
+  renderLibraryStats();
+
+  if (!entries.length) {
+    listEl.style.display = 'none';
+    emptyEl.style.display = 'flex';
+    return;
+  }
+  emptyEl.style.display = 'none';
+  listEl.style.display = 'flex';
+  listEl.innerHTML = '';
+
+  // Winner-first, then by iter ascending within the same run (runId+timestamp)
+  entries.sort(function(a, b) {
+    if (a.timestamp !== b.timestamp) return b.timestamp - a.timestamp;
+    if (!!b.isWinner !== !!a.isWinner) return b.isWinner ? 1 : -1;
+    return (a.iter||0) - (b.iter||0);
+  });
+
+  var lastRunId = null;
+  entries.forEach(function(e) {
+    // One run-header per distinct run, holding the "copy all prompts for
+    // this run" action — avoids repeating the button on every iteration card.
+    if (e.runId !== lastRunId) {
+      lastRunId = e.runId;
+      var header = document.createElement('div');
+      header.className = 'library-run-header';
+      var runCount = entries.filter(function(x){ return x.runId === e.runId; }).length;
+      header.innerHTML =
+        '<span class="library-run-header-title"></span>' +
+        '<span class="library-run-header-count">' + runCount + ' iteration' + (runCount===1?'':'s') + '</span>' +
+        '<button class="copy-btn library-run-copy-btn" id="copyRunPrompts_' + e.runId + '">📝 Copy All Prompts (MD)</button>';
+      header.querySelector('.library-run-header-title').textContent = e.title;
+      listEl.appendChild(header);
+      var copyBtn = header.querySelector('.library-run-copy-btn');
+      copyBtn.addEventListener('click', function(evt) {
+        evt.stopPropagation();
+        copyAllIterationPromptsForRun(e.runId, copyBtn);
+      });
+    }
+
+    var card = document.createElement('div');
+    card.className = 'library-card' + (e.isWinner ? ' library-card-winner' : '');
+    var scoreCls = e.isPass ? 'pass' : 'fail';
+    var dateStr = new Date(e.timestamp).toLocaleString();
+    var hasArchive = !!findArchiveEntry(e.runId);
+    var iterTag = e.iter ? ('Iter ' + e.iter + (e.iterationCount ? ' / ' + e.iterationCount : '')) : '';
+    card.innerHTML =
+      '<div class="library-card-top">' +
+        '<div class="library-card-title"></div>' +
+        '<div class="library-card-score ' + scoreCls + '">' + e.score + '/10</div>' +
+      '</div>' +
+      '<div class="library-card-meta">' +
+        (e.isWinner ? '<span class="library-card-winner-tag">★ Winning Prompt</span>' : '<span class="library-card-itercount">' + iterTag + '</span>') +
+        '<span class="library-card-mode"></span>' +
+        '<span></span>' +
+      '</div>' +
+      '<div class="library-card-actions">' +
+        '<button class="view-entry-btn">View</button>' +
+        (hasArchive ? '<button class="archive-link-btn">🧬 View Full Iteration Trail</button>' : '') +
+        '<button class="delete-entry-btn">Delete</button>' +
+      '</div>';
+    card.querySelector('.library-card-title').textContent = e.title;
+    card.querySelector('.library-card-mode').textContent = e.cognitiveMode || '—';
+    card.querySelector('.library-card-meta span:last-child').textContent = dateStr;
+    card.querySelector('.view-entry-btn').addEventListener('click', function(evt) {
+      evt.stopPropagation();
+      viewLibraryEntry(e.id);
+    });
+    var archBtn = card.querySelector('.archive-link-btn');
+    if (archBtn) archBtn.addEventListener('click', function(evt) {
+      evt.stopPropagation();
+      switchTab('archive');
+      viewArchiveEntryByRunId(e.runId);
+    });
+    card.querySelector('.delete-entry-btn').addEventListener('click', function(evt) {
+      evt.stopPropagation();
+      deleteLibraryEntry(e.id);
+    });
+    card.addEventListener('click', function() { viewLibraryEntry(e.id); });
+    listEl.appendChild(card);
+  });
+}
+
+function viewLibraryEntry(id) {
+  var entries = loadLibraryEntries();
+  var e = entries.find(function(x) { return x.id === id; });
+  if (!e) return;
+
+  document.getElementById('libraryList').style.display = 'none';
+  document.getElementById('libraryEmpty').style.display = 'none';
+  var detail = document.getElementById('libraryDetail');
+  detail.style.display = 'block';
+
+  function section(label, text, key) {
+    return '<div class="library-detail-section">' +
+      '<div class="library-detail-label">' + label + '</div>' +
+      '<div class="library-detail-text" data-key="' + key + '"></div>' +
+    '</div>';
+  }
+
+  var hasArchive = !!findArchiveEntry(e.runId);
+  var iterLabel = e.iter ? ('Iteration ' + e.iter + (e.iterationCount ? ' of ' + e.iterationCount : '')) : '';
+  var statusLabel = e.isWinner ? (e.converged ? 'converged — winning prompt' : 'best available — winning prompt') : (e.isPass ? 'passed threshold' : 'below threshold');
+  var promptLabel = e.isWinner ? 'Winning Prompt' : 'Iteration ' + e.iter + ' Prompt (not selected)';
+
+  detail.innerHTML =
+    '<button class="library-detail-back">← Back to Library</button>' +
+    section('Title', e.title, 'title') +
+    section('Original Input', e.input, 'input') +
+    (e.hint ? section('Success Criterion', e.hint, 'hint') : '') +
+    (iterLabel ? section('Iteration', iterLabel, 'iterLabel') : '') +
+    section('Cognitive Mode · Score', e.cognitiveMode + ' · ' + e.score + '/10 (' + statusLabel + ')', 'modeScore') +
+    section(promptLabel, e.densePrompt, 'prompt') +
+    '<div class="library-detail-section">' +
+      '<div class="library-detail-label">Response</div>' +
+      '<div class="response-content library-response-render"></div>' +
+    '</div>' +
+    '<div class="library-card-actions">' +
+      '<button class="reload-entry-btn">↺ Reload into Input</button>' +
+      (hasArchive ? '<button class="archive-link-btn">🧬 View Full Iteration Trail (' + e.iterationCount + ' iterations)</button>' : '') +
+      '<button class="delete-entry-btn-detail">🗑 Delete This Entry</button>' +
+    '</div>';
+
+  detail.querySelector('[data-key="title"]').textContent = e.title;
+  detail.querySelector('[data-key="input"]').textContent = e.input;
+  if (e.hint) detail.querySelector('[data-key="hint"]').textContent = e.hint;
+  if (iterLabel) detail.querySelector('[data-key="iterLabel"]').textContent = iterLabel;
+  detail.querySelector('[data-key="modeScore"]').textContent = e.cognitiveMode + ' · ' + e.score + '/10 (' + statusLabel + ')';
+  detail.querySelector('[data-key="prompt"]').textContent = e.densePrompt;
+  detail.querySelector('.library-response-render').innerHTML = renderMarkdown(e.response || '');
+
+  detail.querySelector('.library-detail-back').addEventListener('click', renderLibraryList);
+  detail.querySelector('.reload-entry-btn').addEventListener('click', function() {
+    document.getElementById('main-input').value = e.input;
+    document.getElementById('hint-input').value = e.hint || '';
+    switchTab('response');
+  });
+  var archBtn = detail.querySelector('.archive-link-btn');
+  if (archBtn) archBtn.addEventListener('click', function() {
+    switchTab('archive');
+    viewArchiveEntryByRunId(e.runId);
+  });
+  detail.querySelector('.delete-entry-btn-detail').addEventListener('click', function() {
+    deleteLibraryEntry(e.id);
+  });
+}
+
+// ═══════════════════════════════════════════════════════════
+// ITERATION ARCHIVE STORAGE — full per-run iteration trail (secondary, exploratory)
+// ═══════════════════════════════════════════════════════════
+var ARCHIVE_KEY = 'alpe_archive_v1';
+
+function loadArchiveEntries() {
+  try {
+    var raw = localStorage.getItem(ARCHIVE_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch(e) { return []; }
+}
+function saveArchiveEntries(entries) {
+  try {
+    localStorage.setItem(ARCHIVE_KEY, JSON.stringify(entries));
+    setSaveWarning('archive', false);
+    return true;
+  } catch(e) {
+    setSaveWarning('archive', true);
+    return false;
+  }
+}
+function getArchiveByteSize() {
+  var raw = localStorage.getItem(ARCHIVE_KEY) || '';
+  return raw.length * 2;
+}
+function addArchiveEntry(entry) {
+  var entries = loadArchiveEntries();
+  entries.unshift(entry);
+  saveArchiveEntries(entries); // localStorage write — unconditional, fires first
+  renderArchiveList();
+  if (libraryDirHandle) fcWriteArchiveEntryFile(entry); // additive mirror — best effort, never blocks
+}
+function deleteArchiveEntry(id) {
+  var entries = loadArchiveEntries().filter(function(e) { return e.id !== id; });
+  saveArchiveEntries(entries);
+  renderArchiveList();
+  if (libraryDirHandle) fcDeleteEntryFile(id);
+}
+function clearArchiveAll() {
+  if (!confirm('Clear the entire Iteration Archive (full per-run exploration trails)? This cannot be undone. Your Library of winning prompts/responses is not affected.')) return;
+  var ids = loadArchiveEntries().map(function(e) { return e.id; });
+  saveArchiveEntries([]);
+  renderArchiveList();
+  if (libraryDirHandle) ids.forEach(function(id) { fcDeleteEntryFile(id); });
+}
+function findArchiveEntry(runId) {
+  if (!runId) return null;
+  return loadArchiveEntries().find(function(e) { return e.runId === runId; }) || null;
+}
+function renderArchiveStats() {
+  var el = document.getElementById('archiveStatsRow');
+  if (!el) return;
+  var entries = loadArchiveEntries();
+  var bytes = getArchiveByteSize();
+  var approxQuota = 5 * 1024 * 1024;
+  var pct = Math.min(100, Math.round((bytes / approxQuota) * 100));
+  el.classList.toggle('warn-stats', pct >= 70);
+  el.textContent = entries.length + ' archived runs · ' + formatBytes(bytes) + ' (~' + pct + '% of typical ~5MB browser limit) — export + clear independently of the Library';
+}
+function exportArchive() {
+  var entries = loadArchiveEntries();
+  var blob = new Blob([JSON.stringify(entries, null, 2)], { type: 'application/json' });
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = 'auto-loop-iteration-archive-' + new Date().toISOString().slice(0,10) + '.json';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+function importArchive(file) {
+  if (!file) return;
+  var reader = new FileReader();
+  reader.onload = function() {
+    try {
+      var imported = JSON.parse(reader.result);
+      if (!Array.isArray(imported)) throw new Error('File is not an archive array');
+      var existing = loadArchiveEntries();
+      var existingIds = new Set(existing.map(function(e){ return e.id; }));
+      var merged = existing.slice();
+      var added = 0;
+      imported.forEach(function(e) {
+        if (e && e.id && !existingIds.has(e.id)) { merged.push(e); added++; }
+      });
+      merged.sort(function(a,b){ return b.timestamp - a.timestamp; });
+      var ok = saveArchiveEntries(merged);
+      renderArchiveList();
+      if (ok) alert('Imported ' + added + ' new archived run' + (added===1?'':'s') + ' (' + (imported.length - added) + ' duplicate' + ((imported.length-added)===1?'':'s') + ' skipped).');
+    } catch(e) {
+      alert('Import failed: ' + e.message);
+    }
+  };
+  reader.readAsText(file);
+  document.getElementById('archiveImportFile').value = '';
+}
+
+function renderArchiveList() {
+  var entries = loadArchiveEntries();
+  var query = (document.getElementById('archiveSearch').value || '').toLowerCase().trim();
+  if (query) {
+    entries = entries.filter(function(e) {
+      return (e.title + ' ' + (e.cognitiveMode||'') + ' ' + (e.input||'')).toLowerCase().indexOf(query) !== -1;
+    });
+  }
+
+  document.getElementById('archiveDetail').style.display = 'none';
+  var listEl = document.getElementById('archiveList');
+  var emptyEl = document.getElementById('archiveEmpty');
+  setBadge('archive', String(loadArchiveEntries().length), '');
+  renderArchiveStats();
+
+  if (!entries.length) {
+    listEl.style.display = 'none';
+    emptyEl.style.display = 'flex';
+    return;
+  }
+  emptyEl.style.display = 'none';
+  listEl.style.display = 'flex';
+  listEl.innerHTML = '';
+
+  entries.forEach(function(e) {
+    var card = document.createElement('div');
+    card.className = 'library-card';
+    var scoreCls = e.converged ? 'pass' : 'fail';
+    var dateStr = new Date(e.timestamp).toLocaleString();
+    card.innerHTML =
+      '<div class="library-card-top">' +
+        '<div class="library-card-title"></div>' +
+        '<div class="library-card-score ' + scoreCls + '">' + e.score + '/10</div>' +
+      '</div>' +
+      '<div class="library-card-meta">' +
+        '<span class="library-card-mode"></span>' +
+        '<span class="library-card-itercount">' + e.iterations.length + ' iter' + (e.iterations.length===1?'':'s') + '</span>' +
+        '<span></span>' +
+      '</div>' +
+      '<div class="library-card-actions">' +
+        '<button class="view-entry-btn">View Full Trail</button>' +
+        '<button class="delete-entry-btn">Delete</button>' +
+      '</div>';
+    card.querySelector('.library-card-title').textContent = e.title;
+    card.querySelector('.library-card-mode').textContent = e.cognitiveMode || '—';
+    card.querySelector('.library-card-meta span:last-child').textContent = dateStr;
+    card.querySelector('.view-entry-btn').addEventListener('click', function(evt) {
+      evt.stopPropagation();
+      viewArchiveEntry(e.id);
+    });
+    card.querySelector('.delete-entry-btn').addEventListener('click', function(evt) {
+      evt.stopPropagation();
+      deleteArchiveEntry(e.id);
+    });
+    card.addEventListener('click', function() { viewArchiveEntry(e.id); });
+    listEl.appendChild(card);
+  });
+}
+
+function viewArchiveEntryByRunId(runId) {
+  var e = findArchiveEntry(runId);
+  if (e) viewArchiveEntry(e.id);
+  else renderArchiveList();
+}
+
+function viewArchiveEntry(id) {
+  var entries = loadArchiveEntries();
+  var e = entries.find(function(x) { return x.id === id; });
+  if (!e) return;
+
+  document.getElementById('archiveList').style.display = 'none';
+  document.getElementById('archiveEmpty').style.display = 'none';
+  var detail = document.getElementById('archiveDetail');
+  detail.style.display = 'block';
+
+  function section(label, text) {
+    return '<div class="library-detail-section">' +
+      '<div class="library-detail-label">' + label + '</div>' +
+      '<div class="library-detail-text"></div>' +
+    '</div>';
+  }
+
+  var html =
+    '<button class="library-detail-back">← Back to Archive</button>' +
+    section('Title', e.title) +
+    section('Original Input', e.input) +
+    (e.hint ? section('Success Criterion', e.hint) : '') +
+    '<div class="library-detail-section">' +
+      '<div class="library-detail-label">Winning Response (Iteration ' + e.winningIter + ', score ' + e.score + '/10)</div>' +
+      '<div class="response-content" id="archiveWinnerResponse"></div>' +
+    '</div>' +
+    '<div class="library-detail-section">' +
+      '<div class="library-detail-label">Full Iteration Trail (' + e.iterations.length + ' iteration' + (e.iterations.length===1?'':'s') + ')</div>' +
+      '<div id="archiveIterList"></div>' +
+    '</div>' +
+    '<div class="library-card-actions">' +
+      '<button class="reload-entry-btn">↺ Reload Input into Main Panel</button>' +
+      '<button class="delete-entry-btn-detail">🗑 Delete This Archived Run</button>' +
+    '</div>';
+
+  detail.innerHTML = html;
+
+  var sections = detail.querySelectorAll('.library-detail-text');
+  sections[0].textContent = e.input;
+  var idx = 1;
+  if (e.hint) { sections[idx].textContent = e.hint; }
+
+  document.getElementById('archiveWinnerResponse').innerHTML = renderMarkdown(e.response || '');
+
+  var iterListEl = document.getElementById('archiveIterList');
+  e.iterations.forEach(function(rec, i) {
+    var block = document.createElement('div');
+    block.className = 'archive-iter-block';
+    var passCls = rec.isPass ? 'pass' : 'fail';
+    block.innerHTML =
+      '<div class="archive-iter-header">' +
+        '<span><span class="archive-iter-caret">▶</span> Iteration ' + rec.iter + ' — ' + rec.cognitiveMode + '</span>' +
+        '<span class="iter-badge ' + passCls + '">' + rec.score + '/10 ' + (rec.isPass ? 'PASS' : 'FAIL') + '</span>' +
+      '</div>' +
+      '<div class="archive-iter-body">' +
+        '<div class="library-detail-section"><div class="library-detail-label">Reconstructed Intent</div><div class="library-detail-text"></div></div>' +
+        '<div class="library-detail-section"><div class="library-detail-label">Escape Hatch Closed / Restructure Strategy</div><div class="library-detail-text"></div></div>' +
+        (rec.gapAnalysis ? '<div class="library-detail-section"><div class="library-detail-label">Gap Analysis vs. Previous</div><div class="library-detail-text"></div></div>' : '') +
+        '<div class="library-detail-section"><div class="library-detail-label">Prompt Used</div><div class="prompt-artifact"></div></div>' +
+        '<div class="library-detail-section"><div class="library-detail-label">Response</div><div class="response-content"></div></div>' +
+        '<div class="library-detail-section"><div class="library-detail-label">Evaluator Notes</div><div class="library-detail-text"></div></div>' +
+      '</div>';
+
+    var texts = block.querySelectorAll('.archive-iter-body .library-detail-text');
+    var ti = 0;
+    texts[ti].textContent = rec.reconstructedIntent || '—'; ti++;
+    texts[ti].textContent = rec.escapeHatchClosed || '—'; ti++;
+    if (rec.gapAnalysis) { texts[ti].textContent = rec.gapAnalysis; ti++; }
+    var evalNotes = 'Operation performed: ' + (rec.operationPerformed || '—') +
+      '\nEscape hatch used: ' + (rec.escapeHatchUsed || '—') +
+      (rec.weaknesses && rec.weaknesses.length ? '\nWeaknesses: ' + rec.weaknesses.join('; ') : '') +
+      (rec.revisionGuidance ? '\nRevision guidance: ' + rec.revisionGuidance : '');
+    texts[ti].textContent = evalNotes;
+
+    block.querySelector('.prompt-artifact').textContent = rec.densePrompt || '';
+    block.querySelector('.response-content').innerHTML = renderMarkdown(rec.response || '');
+
+    var header = block.querySelector('.archive-iter-header');
+    var body = block.querySelector('.archive-iter-body');
+    var caret = block.querySelector('.archive-iter-caret');
+    header.addEventListener('click', function() {
+      body.classList.toggle('open');
+      caret.classList.toggle('open');
+    });
+    // First iteration open by default
+    if (i === 0) { body.classList.add('open'); caret.classList.add('open'); }
+
+    iterListEl.appendChild(block);
+  });
+
+  detail.querySelector('.library-detail-back').addEventListener('click', renderArchiveList);
+  detail.querySelector('.reload-entry-btn').addEventListener('click', function() {
+    document.getElementById('main-input').value = e.input;
+    document.getElementById('hint-input').value = e.hint || '';
+    switchTab('response');
+  });
+  detail.querySelector('.delete-entry-btn-detail').addEventListener('click', function() {
+    deleteArchiveEntry(e.id);
+  });
+}
+
+// ═══════════════════════════════════════════════════════════
+// PROVIDER DOT (Constraint 18B)
+// ═══════════════════════════════════════════════════════════
+function updateProviderDot() {
+  var p = findProvider(getSelectedProvider());
+  document.getElementById('providerDot').style.background = (p && p.dotColor) || '#9090a8';
+}
+
+// ═══════════════════════════════════════════════════════════
+// CONTEXT-AWARE PROVIDER DEFAULT (Constraint 12)
+// ═══════════════════════════════════════════════════════════
+(function initProviderDefault() {
+  // fetchModelConfig() renders the selector (which resolves the context-matched
+  // default via each provider's defaultFor) once the live/fallback config exists.
+  fetchModelConfig();
+})();
+
+// ═══════════════════════════════════════════════════════════
+// TABS
+// ═══════════════════════════════════════════════════════════
+var activeTab = 'response';
+function switchTab(tab) {
+  activeTab = tab;
+  document.querySelectorAll('.tab-chip').forEach(function(c) {
+    c.classList.remove('active','active-response','active-prompt','active-log','active-library','active-archive');
+  });
+  document.querySelectorAll('.tab-panel').forEach(function(p) {
+    p.classList.remove('active');
+  });
+  var chip = document.querySelector('.tab-chip[data-tab="' + tab + '"]');
+  chip.classList.add('active', 'active-' + tab);
+  document.getElementById('panel-' + tab).classList.add('active');
+  if (tab === 'library') renderLibraryList();
+  if (tab === 'archive') renderArchiveList();
+}
+
+// ═══════════════════════════════════════════════════════════
+// PROMPT TYPE
+// ═══════════════════════════════════════════════════════════
+var selectedType = 'auto';
+var iterationHistory = [];
+function selectType(el) {
+  document.querySelectorAll('.pt-chip').forEach(function(c) {
+    c.classList.remove('active','auto');
+  });
+  el.classList.add('active');
+  if (el.dataset.type === 'auto') el.classList.add('auto');
+  selectedType = el.dataset.type;
+}
+
+// ═══════════════════════════════════════════════════════════
+// DRAWER (Constraint 06)
+// ═══════════════════════════════════════════════════════════
+function openDrawer() {
+  var cfg = getLoopConfig();
+  poolProviders().forEach(function(p) {
+    var el = document.getElementById(p + 'KeyPool');
+    if (el) el.value = getPool(p).map(function(e) { return e.key; }).join('\n');
+    renderPoolStatus(p);
+  });
+  document.getElementById('thresholdSlider').value = cfg.threshold;
+  document.getElementById('thresholdVal').textContent = cfg.threshold;
+  document.getElementById('maxIter').value = cfg.maxIter;
+  document.getElementById('configDrawer').classList.add('open');
+  document.getElementById('drawerOverlay').classList.add('open');
+  startPoolStatusRefresh();
+}
+function closeDrawer() {
+  document.getElementById('configDrawer').classList.remove('open');
+  document.getElementById('drawerOverlay').classList.remove('open');
+  stopPoolStatusRefresh();
+}
+document.getElementById('gearBtn').addEventListener('click', openDrawer);
+document.getElementById('drawerClose').addEventListener('click', closeDrawer);
+document.getElementById('drawerOverlay').addEventListener('click', closeDrawer);
+
+// ═══════════════════════════════════════════════════════════
+// WARNING BANNER
+// ═══════════════════════════════════════════════════════════
+// Returns true only when the pool has at least one key AND every key is
+// currently cooling — distinct from "no keys configured" (handled separately
+// below). Lets updateWarning() surface an imminent-wait state before the user
+// clicks Run, instead of them only finding out via mid-run status text.
+function isPoolFullyCooling(p) {
+  var pool = getPool(p);
+  if (!pool.length) return false;
+  var now = Date.now();
+  return pool.every(function(e) { return e.cooldownUntil && e.cooldownUntil > now; });
+}
+
+function updateWarning() {
+  var p = findProvider(getSelectedProvider());
+  var w = document.getElementById('keyWarn');
+  if (!w || !p) return;
+  if (!p.requiresKey) {
+    w.classList.remove('visible');
+    return;
+  }
+  if (p.standaloneOnly && window.EngineState.isArtifact) {
+    w.textContent = '⚠ ' + (p.keyNote || (p.label + ' is not available inside claude.ai')) + ' Open standalone to use ' + p.label + '.';
+    w.classList.add('visible');
+    return;
+  }
+  var fallbackTarget = p.hardFallback && findProvider(p.hardFallback);
+  var fallbackHint = fallbackTarget ? (' — falls back to ' + fallbackTarget.label + ' if unset or unreachable') : '';
+  if (!getPool(p.keyStorageName).length) {
+    w.textContent = '⚠ No ' + p.label + ' key configured. Open ⚙ Settings to add one.' + fallbackHint;
+    w.classList.add('visible');
+  } else if (isPoolFullyCooling(p.keyStorageName)) {
+    w.textContent = '⚠ All ' + p.label + ' keys are rate-limited right now.' + (fallbackTarget ? (' The next run will fall back to ' + fallbackTarget.label + '.') : ' The next run will wait for one to clear.');
+    w.classList.add('visible');
+  } else {
+    w.classList.remove('visible');
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+// MARKDOWN RENDERER (Constraint 02)
+// ═══════════════════════════════════════════════════════════
+function renderMarkdown(text) {
+  // Escape HTML entities first
+  var s = text
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;');
+
+  // Headings
+  s = s.replace(/^### (.+)$/gm, '<h3>$1</h3>');
+  s = s.replace(/^## (.+)$/gm,  '<h2>$1</h2>');
+  s = s.replace(/^# (.+)$/gm,   '<h1>$1</h1>');
+
+  // HR
+  s = s.replace(/^---$/gm, '<hr>');
+
+  // Blockquote
+  s = s.replace(/^&gt; (.+)$/gm, '<blockquote>$1</blockquote>');
+
+  // Bold + italic
+  s = s.replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>');
+  s = s.replace(/\*\*(.+?)\*\*/g,     '<strong>$1</strong>');
+  s = s.replace(/\*(.+?)\*/g,         '<em>$1</em>');
+  s = s.replace(/_(.+?)_/g,           '<em>$1</em>');
+
+  // Inline code
+  s = s.replace(/`([^`]+)`/g, '<code>$1</code>');
+
+  // Unordered lists
+  s = s.replace(/^[\*\-] (.+)$/gm, '<li>$1</li>');
+  s = s.replace(/(<li>.*<\/li>)/s, function(m) {
+    return '<ul>' + m + '</ul>';
+  });
+
+  // Ordered lists
+  s = s.replace(/^\d+\. (.+)$/gm, '<li>$1</li>');
+
+  // Paragraphs — double newline
+  s = s.replace(/\n\n+/g, '</p><p>');
+
+  // Single line breaks
+  s = s.replace(/\n/g, '<br>');
+
+  // Wrap in paragraph if not already structured
+  if (!s.startsWith('<h') && !s.startsWith('<ul') && !s.startsWith('<ol') && !s.startsWith('<blockquote')) {
+    s = '<p>' + s + '</p>';
+  }
+
+  return s;
+}
+
+// ═══════════════════════════════════════════════════════════
+// CANONICAL COPY (Constraint 05 — textarea select, no IS_ARTIFACT branching)
+// ═══════════════════════════════════════════════════════════
+function copyToClipboard(text, btn) {
+  if (!text || !text.trim()) return;
+  var origHTML = btn.innerHTML;
+  function onSuccess() {
+    btn.textContent = '✓ Copied';
+    btn.classList.add('copied');
+    setTimeout(function() { btn.innerHTML = origHTML; btn.classList.remove('copied'); }, 1800);
+  }
+  function onFail() {
+    btn.textContent = '✗ Failed';
+    setTimeout(function() { btn.innerHTML = origHTML; }, 1800);
+  }
+  function execCopy() {
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.cssText = 'position:fixed;left:-9999px;top:-9999px;opacity:0;font-size:12px;pointer-events:none;';
+    ta.setAttribute('readonly', '');
+    document.body.appendChild(ta);
+    ta.focus(); ta.select(); ta.setSelectionRange(0, text.length);
+    var ok = false;
+    try { ok = document.execCommand('copy'); } catch(e) {}
+    document.body.removeChild(ta);
+    ok ? onSuccess() : onFail();
+  }
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(onSuccess).catch(execCopy);
+  } else {
+    execCopy();
+  }
+}
+
+// Wrapper preserving existing per-tab copy call sites (Prompt tab / Response tab)
+function copyEl(elId, btnId) {
+  var el = document.getElementById(elId);
+  if (!el) return;
+  var text = el.innerText || el.textContent || '';
+  var btn = document.getElementById(btnId);
+  if (!btn) return;
+  copyToClipboard(text, btn);
+}
+
+// Universal copy — original input + winning prompt + final response, read live from DOM
+function copyWinningPair(btnId) {
+  var btn = document.getElementById(btnId);
+  if (!btn) return;
+  var inputEl    = document.getElementById('main-input');
+  var hintEl     = document.getElementById('hint-input');
+  var promptEl   = document.getElementById('promptArtifact');
+  var responseEl = document.getElementById('responseContent');
+  var inputText    = inputEl    ? inputEl.value.trim()    : '';
+  var hintText     = hintEl     ? hintEl.value.trim()     : '';
+  var promptText   = promptEl   ? (promptEl.innerText   || promptEl.textContent   || '') : '';
+  var responseText = responseEl ? (responseEl.innerText || responseEl.textContent || '') : '';
+  if (!inputText.trim() && !promptText.trim() && !responseText.trim()) return;
+
+  var parts = [];
+  if (inputText) parts.push('ORIGINAL INPUT:\n' + inputText);
+  if (hintText)  parts.push('SUCCESS CRITERION:\n' + hintText);
+  parts.push('WINNING PROMPT:\n' + promptText);
+  parts.push('FINAL RESPONSE:\n' + responseText);
+
+  copyToClipboard(parts.join('\n\n'), btn);
+}
+
+// Copy ONLY the prompts generated at each iteration, markdown-formatted,
+// winning prompt clearly marked — built for pasting into docs (Notion,
+// Obsidian, Google Docs, GitHub) where markdown headers render cleanly.
+function buildIterationPromptsMarkdown(title, input, hint, iterations, winnerIter) {
+  var lines = [];
+  lines.push('# ' + (title || 'Auto-Loop Prompts'));
+  lines.push('');
+  if (input) { lines.push('**Original input:** ' + input); lines.push(''); }
+  if (hint)  { lines.push('**Success criterion:** ' + hint); lines.push(''); }
+
+  iterations.forEach(function(rec) {
+    var isWinner = (rec.iter === winnerIter);
+    lines.push('## Iteration ' + rec.iter + (isWinner ? ' — ★ Winning Prompt' : ' — not selected'));
+    lines.push('*Score: ' + rec.score + '/10 · ' + (rec.isPass ? 'passed' : 'below') + ' threshold · mode: ' + (rec.cognitiveMode || '—') + '*');
+    lines.push('');
+    lines.push('```');
+    lines.push(rec.densePrompt || '');
+    lines.push('```');
+    lines.push('');
+  });
+
+  return lines.join('\n');
+}
+
+function copyAllIterationPrompts(btnId) {
+  var btn = document.getElementById(btnId);
+  if (!btn) return;
+  var inputEl = document.getElementById('main-input');
+  var hintEl  = document.getElementById('hint-input');
+  var inputText = inputEl ? inputEl.value.trim() : '';
+  var hintText  = hintEl  ? hintEl.value.trim()  : '';
+
+  if (!iterationHistory.length) { copyToClipboard('(No completed iterations yet.)', btn); return; }
+
+  var best = iterationHistory.reduce(function(a, b) { return b.score > a.score ? b : a; });
+  var md = buildIterationPromptsMarkdown(makeEntryTitle(inputText), inputText, hintText, iterationHistory, best.iter);
+  copyToClipboard(md, btn);
+}
+
+// Same output, sourced from a saved Library run (runId) rather than the
+// live iterationHistory variable — lets you copy all prompts for a run
+// you saved earlier, not just the one currently on screen.
+function copyAllIterationPromptsForRun(runId, btnEl) {
+  var entries = loadLibraryEntries().filter(function(e) { return e.runId === runId; });
+  if (!entries.length) return;
+  entries.sort(function(a, b) { return (a.iter||0) - (b.iter||0); });
+  var winner = entries.find(function(e) { return e.isWinner; });
+  var recs = entries.map(function(e) {
+    return { iter: e.iter, score: e.score, isPass: e.isPass, cognitiveMode: e.cognitiveMode, densePrompt: e.densePrompt };
+  });
+  var md = buildIterationPromptsMarkdown(entries[0].title, entries[0].input, entries[0].hint, recs, winner ? winner.iter : null);
+  copyToClipboard(md, btnEl);
+  if (libraryDirHandle) fcWriteRunPromptsMd(runId); // refresh the disk backup on manual copy too
+}
+
+// ── MASTER PROMPT ARCHIVE — every run's "Copy All Prompts (MD)" output,
+//    stacked one after another into a single document, newest run first.
+//    This is the one-shot backup: instead of opening each run's card and
+//    hitting its own Copy All Prompts button, this walks the whole Library,
+//    groups every saved iteration by runId, and concatenates each run's
+//    block (built with the same buildIterationPromptsMarkdown() used
+//    per-run) under a top-level heading — so it reads as one archive file,
+//    not sixty separate copy actions. ──
+function buildMasterPromptArchiveMarkdown() {
+  var entries = loadLibraryEntries();
+  if (!entries.length) return '# Prompt Archive\n\n(No saved runs yet.)';
+
+  // group by runId, preserving each run's most recent timestamp for ordering
+  var byRun = {};
+  var order = [];
+  entries.forEach(function(e) {
+    if (!byRun[e.runId]) { byRun[e.runId] = []; order.push(e.runId); }
+    byRun[e.runId].push(e);
+  });
+  order.sort(function(a, b) {
+    var ta = Math.max.apply(null, byRun[a].map(function(e){ return e.timestamp||0; }));
+    var tb = Math.max.apply(null, byRun[b].map(function(e){ return e.timestamp||0; }));
+    return tb - ta; // newest run first
+  });
+
+  var lines = [];
+  lines.push('# Prompt Archive — All Runs');
+  lines.push('');
+  lines.push('*Generated ' + new Date().toLocaleString() + ' · ' + order.length + ' run' + (order.length===1?'':'s') + ' · ' + entries.length + ' total iterations*');
+  lines.push('');
+  lines.push('---');
+  lines.push('');
+
+  order.forEach(function(runId, idx) {
+    var runEntries = byRun[runId].slice().sort(function(a,b){ return (a.iter||0)-(b.iter||0); });
+    var winner = runEntries.find(function(e){ return e.isWinner; });
+    var recs = runEntries.map(function(e) {
+      return { iter: e.iter, score: e.score, isPass: e.isPass, cognitiveMode: e.cognitiveMode, densePrompt: e.densePrompt };
+    });
+    var runMd = buildIterationPromptsMarkdown(runEntries[0].title, runEntries[0].input, runEntries[0].hint, recs, winner ? winner.iter : null);
+    // bump the run's own "# Title" down one level so it nests under the archive title
+    runMd = runMd.replace(/^# /, '## ');
+    lines.push('*Run ' + (idx+1) + ' of ' + order.length + ' · ' + new Date(runEntries[0].timestamp).toLocaleString() + '*');
+    lines.push('');
+    lines.push(runMd);
+    lines.push('---');
+    lines.push('');
+  });
+
+  return lines.join('\n');
+}
+
+function copyMasterPromptArchive(btnEl) {
+  var md = buildMasterPromptArchiveMarkdown();
+  copyToClipboard(md, btnEl);
+  if (libraryDirHandle) fcWriteMasterPromptArchive(md);
+}
+
+// Disk backup of the master archive — one file, overwritten each time, so
+// the "connected folder" always holds a single current stacked document
+// alongside the per-run .md files and per-entry JSON backups.
+async function fcWriteMasterPromptArchive(md) {
+  if (!libraryDirHandle) return false;
+  try {
+    var fh = await libraryDirHandle.getFileHandle('_master-prompt-archive.md', { create: true });
+    var w = await fh.createWritable();
+    await w.write(md);
+    await w.close();
+    return true;
+  } catch(e) { return false; }
+}
+
+// Universal copy — every iteration's architect/executor/evaluator record,
+// plus the original input and the final winning prompt + response.
+function copyFullHistory(btnId) {
+  var btn = document.getElementById(btnId);
+  if (!btn) return;
+  var inputEl = document.getElementById('main-input');
+  var hintEl  = document.getElementById('hint-input');
+  var inputText = inputEl ? inputEl.value.trim() : '';
+  var hintText  = hintEl  ? hintEl.value.trim()  : '';
+
+  var parts = [];
+  parts.push('═══ ORIGINAL INPUT ═══\n' + (inputText || '—'));
+  if (hintText) parts.push('═══ SUCCESS CRITERION ═══\n' + hintText);
+
+  if (!iterationHistory.length) {
+    parts.push('(No completed iterations yet.)');
+  } else {
+    iterationHistory.forEach(function(rec) {
+      var block = [];
+      block.push('═══ ITERATION ' + rec.iter + ' — ' + (rec.isPass ? 'PASS' : 'FAIL') + ' (score ' + rec.score + '/10) ═══');
+      block.push('Cognitive mode: ' + rec.cognitiveMode);
+      block.push('Reconstructed intent: ' + rec.reconstructedIntent);
+      block.push('Escape hatch closed / restructure strategy: ' + rec.escapeHatchClosed);
+      if (rec.gapAnalysis) block.push('Gap analysis (vs. previous): ' + rec.gapAnalysis);
+      block.push('\n--- Dense prompt used ---\n' + rec.densePrompt);
+      block.push('\n--- Executor response ---\n' + rec.response);
+      block.push('\n--- Evaluator verdict ---');
+      block.push('Operation performed: ' + rec.operationPerformed);
+      block.push('Escape hatch used: ' + rec.escapeHatchUsed);
+      if (rec.weaknesses && rec.weaknesses.length) block.push('Weaknesses: ' + rec.weaknesses.join('; '));
+      if (rec.revisionGuidance) block.push('Revision guidance given to next iteration: ' + rec.revisionGuidance);
+      parts.push(block.join('\n'));
+    });
+
+    var best = iterationHistory.reduce(function(a, b) { return b.score > a.score ? b : a; });
+    parts.push('═══ WINNING PROMPT (iteration ' + best.iter + ', score ' + best.score + '/10) ═══\n' + best.densePrompt);
+    parts.push('═══ FINAL RESPONSE ═══\n' + best.response);
+  }
+
+  copyToClipboard(parts.join('\n\n'), btn);
+}
+
+// ═══════════════════════════════════════════════════════════
+// STATUS / PROGRESS
+// ═══════════════════════════════════════════════════════════
+function setStatus(text, active, error) {
+  document.getElementById('statusText').textContent = text;
+  var dot = document.getElementById('statusDot');
+  dot.className = 'status-dot' + (active ? ' active' : error ? ' error' : '');
+}
+function setProgress(pct) {
+  document.getElementById('progressBar').style.width = pct + '%';
+}
+function setChip(id, state) {
+  var el = document.getElementById('chip-' + id);
+  if (el) el.className = 'station-chip' + (state ? ' ' + state : '');
+}
+function resetChips() {
+  ['architect','executor','evaluator','loop'].forEach(function(c) { setChip(c,''); });
+}
+function setDot(n, state) {
+  var el = document.getElementById('dot' + n);
+  if (el) el.className = 'iter-dot' + (state ? ' ' + state : '');
+}
+
+// ═══════════════════════════════════════════════════════════
+// LOG
+// ═══════════════════════════════════════════════════════════
+function clearLog() {
+  document.getElementById('logEntries').innerHTML = '';
+  setBadge('log','—','');
+}
+function addLog(type, label, text, score) {
+  var panel = document.getElementById('logEntries');
+  var empty = panel.querySelector('.empty-state');
+  if (empty) empty.remove();
+  var el = document.createElement('div');
+  el.className = 'log-entry ' + (type || '');
+  var inner = '<div class="log-label">' + label + '</div>';
+  if (score != null) {
+    var cls = score >= 7 ? 'high' : score >= 5 ? 'mid' : 'low';
+    inner += '<div class="log-score ' + cls + '">' + score + '<span style="font-size:12px;color:var(--text3)">/10</span></div>';
+  }
+  if (text) inner += '<div class="log-text">' + text + '</div>';
+  el.innerHTML = inner;
+  panel.appendChild(el);
+  panel.parentElement.scrollTop = panel.parentElement.scrollHeight;
+}
+function addThinking(label) {
+  var panel = document.getElementById('logEntries');
+  var empty = panel.querySelector('.empty-state');
+  if (empty) empty.remove();
+  var el = document.createElement('div');
+  el.className = 'log-entry'; el.id = 'thinking-entry';
+  el.innerHTML = '<div class="thinking-tag"><div class="spinner"></div>' + label + '</div>';
+  panel.appendChild(el);
+  panel.parentElement.scrollTop = panel.parentElement.scrollHeight;
+}
+function removeThinking() {
+  var el = document.getElementById('thinking-entry');
+  if (el) el.remove();
+}
+
+// ═══════════════════════════════════════════════════════════
+// BADGE HELPERS
+// ═══════════════════════════════════════════════════════════
+function setBadge(tab, text, cls) {
+  var el = document.getElementById('badge-' + tab);
+  if (!el) return;
+  el.textContent = text;
+  el.className = 'tab-badge' + (cls ? ' ' + cls : '');
+}
+
+// ═══════════════════════════════════════════════════════════
+// SHOW/HIDE HELPERS (Constraint 08 — visibility, not display)
+// ═══════════════════════════════════════════════════════════
+function showEl(id) {
+  var el = document.getElementById(id);
+  if (!el) return;
+  el.style.visibility = 'visible';
+  el.style.pointerEvents = 'all';
+  el.style.height = '';
+  el.style.overflow = '';
+}
+function hideEl(id) {
+  var el = document.getElementById(id);
+  if (!el) return;
+  el.style.visibility = 'hidden';
+  el.style.pointerEvents = 'none';
+  el.style.height = '0';
+  el.style.overflow = 'hidden';
+}
+function showEmpty(id) {
+  var el = document.getElementById(id);
+  if (el) el.style.display = 'flex';
+}
+function hideEmpty(id) {
+  var el = document.getElementById(id);
+  if (el) el.style.display = 'none';
+}
+
+// ═══════════════════════════════════════════════════════════
+// SSE STREAMING (Constraint 13 — three-layer finalization)
+// ═══════════════════════════════════════════════════════════
+async function readStreamSSE(response, format, onChunk, onDone) {
+  var reader = response.body.getReader();
+  var decoder = new TextDecoder();
+  var buf = '';
+  var done = false;
+  var idleTimer = null;
+  var IDLE_TIMEOUT = 3000;
+
+  function finalize() {
+    if (done) return;
+    done = true;
+    clearTimeout(idleTimer);
+    if (onDone) onDone();
+  }
+
+  // Layer 4: hard timeout
+  var hardTimeout = setTimeout(finalize, 15000);
+
+  try {
+    while (true) {
+      var result = await reader.read();
+      // Layer 2: chunk.done
+      if (result.done) { clearTimeout(hardTimeout); finalize(); break; }
+
+      buf += decoder.decode(result.value, { stream: true });
+      var lines = buf.split('\n'); buf = lines.pop();
+
+      for (var i = 0; i < lines.length; i++) {
+        var line = lines[i];
+        if (!line.startsWith('data: ')) continue;
+        var data = line.slice(6).trim();
+        // Layer 1: [DONE] token
+        if (data === '[DONE]') { clearTimeout(hardTimeout); finalize(); return; }
+        try {
+          var p = JSON.parse(data);
+          var chunk =
+            format === 'anthropic' ? (p.delta && p.delta.text) :
+            format === 'openai'    ? (p.choices && p.choices[0] && p.choices[0].delta && p.choices[0].delta.content) : '';
+          if (chunk) {
+            // Layer 3: idle timer reset on every chunk
+            clearTimeout(idleTimer);
+            idleTimer = setTimeout(finalize, IDLE_TIMEOUT);
+            onChunk(chunk);
+          }
+        } catch(e) {}
+      }
+    }
+  } catch(err) {
+    clearTimeout(hardTimeout);
+    finalize();
+    throw err;
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+// API: SHARED PROVIDER-RESOLUTION CORE
+// callAI and callAIStream previously duplicated the entire Groq
+// chain-walk + OR hard-fallback + OR direct branches (only
+// stream/temperature/unpacking differed). Collapsed into one
+// core that returns a raw Response; the two public functions
+// below only differ in how they unpack it. Do not re-duplicate
+// the branch logic in either wrapper — extend this core instead.
+// ═══════════════════════════════════════════════════════════
+// ── THE GENERIC ADAPTER — replaces per-provider if/else chains. requestFormat is
+// the one place a genuinely new API shape needs a code addition, not a config one. ──
+function buildRequest(providerCfg, modelId, systemPrompt, userMessage, stream, key, extraBody) {
+  if (providerCfg.native === true) {
+    // HARDCODED BRANCH — never built from providerCfg fields (model-config-contract:
+    // "what stays hardcoded" — no Authorization header, pinned endpoint/version).
+    return {
+      url: 'https://api.anthropic.com/v1/messages',
+      headers: {
+        'Content-Type': 'application/json',
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: {
+        model: modelId, max_tokens: 2048, stream: stream,
+        system: systemPrompt, messages: [{ role: 'user', content: userMessage }]
+      }
+    };
+  }
+  var headers = { 'Content-Type': 'application/json' };
+  if (providerCfg.authHeader) headers[providerCfg.authHeader] = (providerCfg.authPrefix || '') + key;
+  if (providerCfg.extraHeaders) {
+    Object.keys(providerCfg.extraHeaders).forEach(function(k) {
+      var v = providerCfg.extraHeaders[k];
+      headers[k] = v === '$origin' ? window.location.origin : v === '$engineName' ? 'Auto-Loop Cognitive Engine' : v;
+    });
+  } else if (providerCfg.id === 'or-auto') {
+    // Preserved from prior behavior — OpenRouter wants these; not yet a declared
+    // extraHeaders field in the canonical config, so kept here until it is.
+    headers['HTTP-Referer'] = window.location.origin;
+    headers['X-Title'] = 'Auto-Loop Cognitive Engine';
+  }
+  var body = providerCfg.requestFormat === 'openai-chat'
+    ? { model: modelId, stream: stream, messages: [{ role: 'system', content: systemPrompt }, { role: 'user', content: userMessage }] }
+    : (function() { throw new Error('Unknown requestFormat: ' + providerCfg.requestFormat); })();
+  if (extraBody) Object.assign(body, extraBody);
+  return { url: providerCfg.endpoint, headers: headers, body: body };
+}
+
+// ── HARD FALLBACK CONTEXT GUARD — non-negotiable. A hardFallback target is only
+// usable if the current context (artifact/standalone) can actually reach it. ──
+function resolveHardFallback(providerCfg, context) {
+  var targetId = providerCfg.hardFallback;
+  if (!targetId) return null; // no hard fallback declared — exhausted, surface to caller
+  var target = findProvider(targetId);
+  if (!target) return null;
+  if (target.standaloneOnly && context === 'artifact') {
+    // Declared target exists but is not authorized in this context. Do NOT attempt
+    // the fetch — treat as fallback-chain exhaustion, not a retry candidate.
+    return null;
+  }
+  return target;
+}
+
+// Walks a keyed provider's modelChain with soft-fallback (non-ok → next model),
+// rotating pool keys per attempt via fetchWithRotation. Never throws — returns
+// { res: Response|null, lastErr } so the caller decides what exhaustion means.
+async function walkModelChain(providerCfg, systemPrompt, userMessage, stream, extraBody) {
+  var chain = (providerCfg.modelChain && providerCfg.modelChain.length) ? providerCfg.modelChain : [];
+  var lastErr, res;
+  for (var i = 0; i < chain.length; i++) {
+    try {
+      res = await fetchWithRotation(providerCfg.keyStorageName,
+        function() { return providerCfg.endpoint; },
+        function(key) {
+          var req = buildRequest(providerCfg, chain[i], systemPrompt, userMessage, stream, key, extraBody);
+          return { method: 'POST', headers: req.headers, body: JSON.stringify(req.body) };
+        });
+    } catch (chainErr) { lastErr = String(chainErr && chainErr.message || chainErr); res = null; continue; }
+    if (!res.ok) {
+      var errBody = await res.clone().json().catch(function() { return null; });
+      lastErr = providerCfg.id + ':' + res.status + (errBody && errBody.error && errBody.error.message ? ' ' + errBody.error.message : '');
+      res = null; continue;
+    }
+    break;
+  }
+  return { res: res, lastErr: lastErr };
+}
+
+async function resolveProviderResponse(systemPrompt, userMessage, stream, groqTemp) {
+  var providerCfg = findProvider(getSelectedProvider());
+  if (!providerCfg) throw new Error('Unknown provider: ' + getSelectedProvider());
+  var context = window.EngineState.isArtifact ? 'artifact' : 'standalone';
+
+  if (providerCfg.native === true) {
+    var req = buildRequest(providerCfg, liveModelConfig.native_model || 'claude-sonnet-4-6', systemPrompt, userMessage, stream);
+    var res = await fetch(req.url, { method: 'POST', headers: req.headers, body: JSON.stringify(req.body) });
+    if (!res.ok) { var t = await res.text(); throw new Error('Claude ' + res.status + ': ' + t.slice(0, 200)); }
+    return { res: res, format: 'anthropic' };
+  }
+
+  if (providerCfg.standaloneOnly && context === 'artifact') {
+    throw new Error(providerCfg.label + ' has no CORS proxy inside claude.ai — this run would be blocked. Open standalone to use ' + providerCfg.label + '.');
+  }
+
+  var extraBody = providerCfg.id === 'groq' ? { temperature: groqTemp, reasoning_format: 'hidden' } : null;
+  var walk = await walkModelChain(providerCfg, systemPrompt, userMessage, stream, extraBody);
+  var res = walk.res;
+
+  if (!res) {
+    // modelChain exhausted — resolve hard fallback, honoring the context guard above.
+    var fallbackTarget = resolveHardFallback(providerCfg, context);
+    if (!fallbackTarget) {
+      var declaredButUnreachable = providerCfg.hardFallback && context === 'artifact';
+      throw new Error(providerCfg.label + ' unavailable (' + walk.lastErr + ')' +
+        (declaredButUnreachable
+          ? '. No fallback reachable inside claude.ai — open standalone to use ' + (findProvider(providerCfg.hardFallback) || {}).label + '.'
+          : ' and no fallback configured.'));
+    }
+    if (!getPool(fallbackTarget.keyStorageName).length) {
+      throw new Error(providerCfg.label + ' unavailable (' + walk.lastErr + ') and no ' + fallbackTarget.label + ' fallback key set.');
+    }
+    var fbWalk = await walkModelChain(fallbackTarget, systemPrompt, userMessage, stream, null);
+    if (!fbWalk.res) {
+      throw new Error(providerCfg.label + ' unavailable (' + walk.lastErr + ') and ' + fallbackTarget.label + ' fallback failed: ' + fbWalk.lastErr);
+    }
+    res = fbWalk.res;
+  }
+  return { res: res, format: providerCfg.streamFormat };
+}
+
+// ═══════════════════════════════════════════════════════════
+// API: STREAMING
+// ═══════════════════════════════════════════════════════════
+async function callAIStream(systemPrompt, userMessage, onChunk) {
+  var out = await resolveProviderResponse(systemPrompt, userMessage, true, 0.7);
+  return new Promise(function(resolve, reject) {
+    readStreamSSE(out.res, out.format, onChunk, resolve).catch(reject);
+  });
+}
+
+// ═══════════════════════════════════════════════════════════
+// API: NON-STREAMING (for Architect / Evaluator / ReArchitect)
+// ═══════════════════════════════════════════════════════════
+async function callAI(systemPrompt, userMessage) {
+  var out = await resolveProviderResponse(systemPrompt, userMessage, false, 0.3);
+  if (out.format === 'anthropic') {
+    var data = await out.res.json();
+    return data.content.map(function(b) { return b.text || ''; }).join('');
+  }
+  return (await out.res.json()).choices[0].message.content.trim();
+}
+
+// ═══════════════════════════════════════════════════════════
+// PROMPT LIBRARY (hybrid-engine-contract: system-prompt-as-library, Shape 3)
+// Each role has one or more named versions. Exactly one is "active" per role.
+// Editable in place, in the browser, via the left overlay panel (☰).
+// Persisted under one localStorage key, same pattern as the response library.
+// ═══════════════════════════════════════════════════════════
+
+var PROMPT_LIBRARY_KEY = 'alpe_prompt_library_v1';
+
+var PROMPT_TYPE_PLAYBOOKS = {
+  reframe:     '\nPROMPT TYPE: REFRAME\nThis prompt is requesting a genuine shift in how the subject is understood — not more information about it, but a different frame that makes it look like a different thing. The output must not report on the topic; it must relocate the reader\'s perspective on it. Success requires: (1) naming what the current default frame is and why it forecloses, (2) introducing a genuinely different frame with its own internal logic, (3) demonstrating the new frame on the specific material so the reader sees the difference, not just hears about it. Do not explain that you are reframing. Do not offer multiple equally weighted frames. One frame. Full commitment. The reframe must make something previously obvious seem like an error, and something previously invisible seem like the real structure.',
+  analytical:  '\nPROMPT TYPE: ANALYTICAL\nThis prompt demands rigorous decomposition. The output must establish a clear structure before filling it — not as a table of contents but as a genuinely load-bearing scaffold the analysis hangs from. Criteria must be named and applied consistently, not gestured at. Distinctions must be precise. Do not begin sentences with "It is important to note." Do not conclude with a "key takeaways" block. The analysis must be able to withstand someone asking "why" at every step.',
+  generative:  '\nPROMPT TYPE: GENERATIVE\nThis prompt is asking for original production, not description or analysis of what already exists. The output must introduce something that was not there before. Do not produce a catalog of what others have already made. Give the thing itself. Quantity serves quality here. Specificity is everything — a vague generative response is not a response at all.',
+  exploratory: '\nPROMPT TYPE: EXPLORATORY\nThis prompt is moving toward something that does not yet have a shape. The output must not impose a shape prematurely. Move through the territory: name what is there, notice what is adjacent, follow threads that seem to lead somewhere without knowing if they do. Premature closure is the primary failure mode. Stay in motion. End on an opening, not a conclusion.',
+  diagnostic:  '\nPROMPT TYPE: DIAGNOSTIC\nThis prompt wants the engine failure named, not described around. Identify the load-bearing fault. Test the diagnosis: if this is the root cause, what else would it predict? A diagnosis that cannot generate predictions is not a diagnosis, it is a description. Name the mechanism, not the symptom.',
+  synthesis:   '\nPROMPT TYPE: SYNTHESIS\nThis prompt wants disparate things fused into a single coherent structure that is more than the sum of its parts. Do not produce a list of things that relate to each other. Produce the unified thing they become. The seam between sources should be invisible. If tension exists, name it and make a decision; do not split the difference.',
+  critical:    '\nPROMPT TYPE: CRITICAL\nThis prompt wants a genuine argument against something, not a balanced account. Take a position. Support it with the strongest available evidence. Anticipate the best counterargument and address it directly. The response has failed if a reader would describe it as "fair" or "balanced." Do not hedge. End on the sharpest formulation of the core claim.'
+};
+
+// Default seed library: each role ships with its ORIGINAL prompt active,
+// and a RE-FORGED version present but inactive, per the assay/re-forge cycle.
+// The executor role stores a template — {PLAYBOOK} is substituted at call time
+// with the cognitive-mode-specific playbook above, same as buildExecutorSystem() did.
+function defaultPromptLibrary() {
+  return {
+    architect: {
+      active: 'original',
+      versions: {
+        original: {
+          name: 'Original',
+          body: 'You are an expert prompt architect. Your single job is to transform vague, raw, or underspecified user input into a dense, orientation-shifting prompt that will cause an executor AI to produce output that genuinely satisfies the intent — not just output that addresses the topic.\n\nThe distinction is critical: most prompts produce a response *about* the topic. A great prompt causes the executor to adopt a specific epistemic stance, operate from a specific set of constraints, and produce output in a specific form that the vague input was gesturing toward but could not name.\n\nWHAT YOU MUST DO:\n\n1. READ THE CHARGE, NOT THE WORDS. The user\'s input is a pointing gesture. What is it pointing at? What does the person actually need to walk away with?\n\n2. DETECT THE COGNITIVE MODE:\n   - REFRAME: needs to shift the frame, not add information\n   - ANALYTICAL: needs rigorous decomposition with load-bearing structure\n   - GENERATIVE: needs actual production of new things, not description of existing ones\n   - EXPLORATORY: needs to move through open territory without premature closure\n   - DIAGNOSTIC: needs to identify the root mechanism, not list contributing factors\n   - SYNTHESIS: needs to fuse disparate inputs into a unified structure\n   - CRITICAL: needs a committed position with direct engagement of counterarguments\n\n3. WRITE A DENSE PROMPT THAT DOES THREE THINGS SIMULTANEOUSLY:\n   a. Specifies the SUBJECT precisely\n   b. Names the EPISTEMIC OPERATION — what cognitive move the executor must make\n   c. Prescribes the OUTPUT FORM — structure, length, what it must NOT do\n\n4. CLOSE THE ESCAPE HATCH. Executors default to description, hedging, and balance. Explicitly forbid the most likely default failure.\n\n5. IF A SUCCESS CRITERION IS PROVIDED, wire it in as a verifiable condition the output must pass.\n\nRespond ONLY with a valid JSON object. No preamble, no markdown:\n{\n  "reconstructed_intent": "A precise 1-2 sentence statement of what the person actually needs",\n  "cognitive_mode": "One of: reframe / analytical / generative / exploratory / diagnostic / synthesis / critical",\n  "detected_escape_hatch": "The most likely default failure mode — what the executor will do if not prevented",\n  "dense_prompt": "The full orientation-shifting prompt. Must specify subject, epistemic operation, output form, length guidance, and close the escape hatch. 4-10 sentences."\n}',
+          source: 'manual', imported: null
+        },
+        reforged: {
+          name: 'Re-forged (override-by-default)',
+          body: 'You are an intent-surgeon, not a form-taker. The words a person uses to ask for something carry the container they\'ve seen before, not the container their content needs — a request for "a summary" is frequently a request for a verdict wearing a summary\'s clothes. Your job is to diagnose the gap between the requested form and the required form, and rebuild the prompt around the latter — even when that means overriding the stated form entirely.\n\nREAD THE CHARGE, NOT THE WORDS. Detect the cognitive mode beneath the ask: REFRAME / ANALYTICAL / GENERATIVE / EXPLORATORY / DIAGNOSTIC / SYNTHESIS / CRITICAL.\n\nYOUR DEFAULT IS OVERRIDE, NOT OBEDIENCE. If the stated form (list, summary, comparison, essay) would let the executor satisfy the letter of the request while missing its charge, discard the stated form and prescribe the one the content demands. Silently — never ask permission, never hedge with "you might also consider." A dense prompt that keeps the user\'s named format when that format was the problem is a failed prompt.\n\nCLOSE THE ESCAPE HATCH belonging to the mode you detected — the specific default failure that mode invites (description in place of diagnosis, balance in place of position, listing in place of synthesis) — and forbid it explicitly.\n\nRespond ONLY with a valid JSON object. No preamble, no markdown:\n{\n  "reconstructed_intent": "1-2 sentences: what the person actually needs, independent of the form they asked for",\n  "form_override": "If the stated form was overridden, name what it was and what replaced it, and why the original would have failed the charge. If the stated form was correct, say so — override is a judgment, not a reflex.",\n  "cognitive_mode": "One of: reframe / analytical / generative / exploratory / diagnostic / synthesis / critical",\n  "detected_escape_hatch": "The specific default failure this mode invites, and what closing it demands",\n  "dense_prompt": "The full orientation-shifting prompt, in the required form, not the requested one. 4-10 sentences."\n}',
+          source: 'manual', imported: null
+        },
+        decompressor: {
+          name: 'Decompressor (fragment-primary)',
+          body: 'You are an intent-archaeologist, not a form-taker. Most raw input is not yet a good ask — it is fragmented, associative, a stream of consciousness circling something the person hasn\'t separated into subject, operation, and form. Before you write any prompt, you decompress the fragment.\n\nREAD THE INPUT IN THREE LAYERS:\n1. STATED — what is explicitly said, even if scattered or out of order\n2. IMPLIED — what the person is standing on without saying it; the assumption beneath the words\n3. REPEATED/INTENSIFIED — what the person\'s own attention kept returning to, even across disorder. This layer is usually where the real ask lives, not in the most articulate sentence.\n\nRECONSTRUCT ONE ASK from those three layers before doing anything else. State it to yourself as a committed fact, not a guess.\n\nCHECK THE RESIDUE. Name what part of the fragment your reconstruction does not account for. If you cannot find real residue — if the reconstruction explains the input too perfectly — treat that as a warning that you may have manufactured coherence rather than found it. Re-weight toward the repeated/intensified layer and reconstruct again before proceeding.\n\nONLY THEN, DETECT THE COGNITIVE MODE the reconstructed ask demands:\n   - REFRAME: needs to shift the frame, not add information\n   - ANALYTICAL: needs rigorous decomposition with load-bearing structure\n   - GENERATIVE: needs actual production of new things, not description of existing ones\n   - EXPLORATORY: needs to move through open territory without premature closure\n   - DIAGNOSTIC: needs to identify the root mechanism, not list contributing factors\n   - SYNTHESIS: needs to fuse disparate inputs into a unified structure\n   - CRITICAL: needs a committed position with direct engagement of counterarguments\n\nWRITE A DENSE PROMPT built on the reconstructed ask, not the raw input\'s literal wording, that does three things simultaneously:\n   a. Specifies the SUBJECT precisely\n   b. Names the EPISTEMIC OPERATION — what cognitive move the executor must make\n   c. Prescribes the OUTPUT FORM — structure, length, what it must NOT do\n\nCLOSE THE ESCAPE HATCH. Explicitly forbid the most likely default failure.\n\nIF A SUCCESS CRITERION IS PROVIDED, wire it in as a verifiable condition the output must pass.\n\nRespond ONLY with a valid JSON object. No preamble, no markdown:\n{\n  "reconstructed_intent": "A precise 1-2 sentence statement of what the person actually needs — this is your Stage-1 reconstruction, stated as fact",\n  "decompression_residue": "What part of the raw input the reconstruction does not account for. If genuinely minimal, say so explicitly rather than leaving this vague.",\n  "cognitive_mode": "One of: reframe / analytical / generative / exploratory / diagnostic / synthesis / critical",\n  "detected_escape_hatch": "The most likely default failure mode — what the executor will do if not prevented",\n  "dense_prompt": "The full orientation-shifting prompt, built on the reconstructed intent. Must specify subject, epistemic operation, output form, length guidance, and close the escape hatch. 4-10 sentences."\n}',
+          source: 'manual', imported: null
+        }
+      }
+    },
+    executor: {
+      active: 'original',
+      versions: {
+        original: {
+          name: 'Original',
+          body: 'You are a precision executor. You receive a dense, fully specified prompt and produce exactly what it demands — no more, no less. You do not explain your approach. You do not introduce yourself. You do not summarize what you are about to do. You begin executing immediately.\n\nYour single constraint: produce the output the prompt specifies, in the form it specifies, at the depth it specifies. If the prompt names a form, use it. If it names a length, honor it. If it explicitly forbids something, treat that prohibition as absolute.\n\nThe failure mode you must avoid above all others: producing a response *about* the topic instead of *performing* the cognitive operation the prompt demands.{PLAYBOOK}\n\nBegin your response with the first substantive word of your output. Nothing else.',
+          source: 'manual', imported: null
+        },
+        reforged: {
+          name: 'Re-forged (fidelity over convention)',
+          body: 'You are a precision executor whose only loyalty is to the specification, not to what reads well. You receive a dense, fully specified prompt and produce exactly what it demands — no more, no less. You do not explain your approach. You do not introduce yourself. You do not summarize what you are about to do. You begin executing immediately.\n\nIF THE SPECIFIED FORM WOULD STRIKE A GENERAL READER AS AWKWARD, UNCONVENTIONAL, OR WRONG — PRODUCE IT ANYWAY. Your job is not to make good writing; it is to make the writing the specification demands. A "precision executor" that quietly smooths an unusual form into something more conventionally readable has failed at precision in the name of politeness. If the prompt asks for a fragmented structure, a repeated phrase, an uncomfortable directness, or any other choice a competent editor would normally soften — do not soften it. Fidelity to the specification outranks your own judgment about what reads well, without exception.\n\nYour single constraint: produce the output the prompt specifies, in the form it specifies, at the depth it specifies. If the prompt names a form, use it exactly, even if a better form occurs to you. If it names a length, honor it. If it explicitly forbids something, treat that prohibition as absolute.\n\nThe failure mode you must avoid above all others: producing a response *about* the topic instead of *performing* the cognitive operation the prompt demands — and the second failure mode, nearly as common: quietly improving the prompt\'s specified form toward convention.{PLAYBOOK}\n\nBegin your response with the first substantive word of your output. Nothing else.',
+          source: 'manual', imported: null
+        },
+        decompressor: {
+          name: 'Decompressor (reads the spec, not just the words)',
+          body: 'You are a precision executor who reads a specification the way a good craftsman reads a diagram — not just the marked measurements, but what the marks imply about the whole. You receive a dense, fully specified prompt and produce exactly what it demands — no more, no less. You do not explain your approach. You do not introduce yourself. You do not summarize what you are about to do.\n\nBEFORE EXECUTING, READ THE PROMPT IN THREE LAYERS, briefly and internally — do not output this reading:\n1. STATED — the explicit instructions: subject, form, length, prohibitions\n2. IMPLIED — what the prompt assumes you already understand about the register, audience, or stakes, without stating it\n3. WEIGHT — which instruction in the prompt is load-bearing versus which is a supporting detail; a dense prompt usually has one instruction the whole task pivots on, even when it isn\'t marked as primary\n\nExecute against all three layers, not just the stated one. A literal-minded reading of the stated layer alone, while technically compliant, is not the same as fidelity to the full specification — the same failure mode as the architect flattening a person\'s fragment into only its most articulate sentence.\n\nYour single constraint: produce the output the prompt specifies, in the form it specifies, at the depth it specifies. If the prompt names a form, use it. If it names a length, honor it. If it explicitly forbids something, treat that prohibition as absolute.\n\nThe failure mode you must avoid above all others: producing a response *about* the topic instead of *performing* the cognitive operation the prompt demands. The second failure mode, specific to this reading discipline: executing the prompt\'s literal words while missing what it implied — technically compliant, substantively hollow.{PLAYBOOK}\n\nBegin your response with the first substantive word of your output. Nothing else.',
+          source: 'manual', imported: null
+        }
+      }
+    },
+    evaluator: {
+      active: 'original',
+      versions: {
+        original: {
+          name: 'Original',
+          body: 'You are a strict, adversarial response evaluator. Your job is not to confirm that a response addresses the topic — it is to determine whether the response actually performs the cognitive operation the prompt demanded, in the form it specified, at the depth it required.\n\nEvaluate on these dimensions:\n1. OPERATION PERFORMED — Did the executor actually do what was demanded, or did it describe/hedge/summarize instead?\n2. ESCAPE HATCH USED — Did the executor default to the most common failure mode?\n3. FORM FIDELITY — Did the output take the form the prompt specified?\n4. SPECIFICITY — Is the output specific to THIS input or would it work for any similar input?\n5. SUCCESS CRITERION MET — If provided, does the output verifiably satisfy it?\n\nScore 1-10. Score 7+ = pass.\n\nRespond ONLY with a valid JSON object. No preamble, no markdown:\n{\n  "score": <integer 1-10>,\n  "operation_performed": "What cognitive operation the executor actually performed",\n  "escape_hatch_used": "Whether and how the executor defaulted — or \'none\' if it held",\n  "weaknesses": ["weakness 1", "weakness 2"],\n  "verdict": "pass" or "fail",\n  "revision_guidance": "Specific, structural instructions for how to rewrite the prompt to force the correct operation."\n}',
+          source: 'manual', imported: null
+        },
+        reforged: {
+          name: 'Re-forged (hedge-zero-tolerance)',
+          body: 'You are a strict, adversarial response evaluator with one absolute: a single hedge is a verdict, not a deduction. Your job is not to confirm that a response addresses the topic — it is to determine whether the response actually performed the cognitive operation the prompt demanded, in the form it specified, at the depth it required.\n\nA HEDGE DISQUALIFIES REGARDLESS OF SURROUNDING QUALITY. If the response contains even one instance of hedging language — "it depends," "on one hand... on the other," "arguably," unearned qualifiers softening a claim the prompt demanded be made cleanly — that response fails, even if every other sentence is excellent. A well-written hedge is still a hedge: polish does not launder an uncommitted operation. Do not average a hedge against strong surrounding text. One hedge, anywhere, is disqualifying — because a hedge is evidence about whether the executor actually committed to the operation, not evidence about writing quality, and those two things can diverge sharply.\n\nEvaluate on these dimensions:\n1. HEDGE CHECK (run first, gates everything else) — any hedging language present? If yes, verdict is fail regardless of the remaining dimensions; still score the rest for revision_guidance.\n2. OPERATION PERFORMED — Did the executor actually do what was demanded, or did it describe/summarize instead?\n3. ESCAPE HATCH USED — Did the executor default to the most common failure mode for this cognitive mode?\n4. FORM FIDELITY — Did the output take the form the prompt specified?\n5. SPECIFICITY — Is the output specific to THIS input or would it work for any similar input?\n6. SUCCESS CRITERION MET — If provided, does the output verifiably satisfy it?\n\nScore 1-10. Score 7+ AND zero hedges = pass. Any hedge = fail, whatever the score.\n\nRespond ONLY with a valid JSON object. No preamble, no markdown:\n{\n  "score": <integer 1-10>,\n  "hedge_found": "Quote the exact hedging phrase if present, or \'none\'",\n  "operation_performed": "What cognitive operation the executor actually performed",\n  "escape_hatch_used": "Whether and how the executor defaulted — or \'none\' if it held",\n  "weaknesses": ["weakness 1", "weakness 2"],\n  "verdict": "pass" or "fail",\n  "revision_guidance": "Specific, structural instructions for how to rewrite the prompt to force the correct operation."\n}',
+          source: 'manual', imported: null
+        },
+        decompressor: {
+          name: 'Decompressor (audits the reading, not just the output)',
+          body: 'You are a strict, adversarial response evaluator whose primary question is not "did this address the topic" but "did the executor actually read the prompt, or did it produce something surface-plausible that merely rhymes with a correct reading."\n\nEvaluate on these dimensions:\n1. OPERATION PERFORMED — Did the executor actually do what was demanded, or did it describe/hedge/summarize instead?\n2. READING FIDELITY — Does the response reflect the prompt\'s implied and load-bearing instructions, or only its most literal, surface-level ones? A response can satisfy every explicit instruction in the prompt while still missing what the prompt was actually weighted toward — that is a failure of reading, not of compliance, and it is just as disqualifying.\n3. ESCAPE HATCH USED — Did the executor default to the most common failure mode?\n4. FORM FIDELITY — Did the output take the form the prompt specified?\n5. SPECIFICITY — Is the output specific to THIS input or would it work for any similar input? A generic response is often the tell that the executor read the prompt\'s stated layer only, without engaging its implied weight.\n6. SUCCESS CRITERION MET — If provided, does the output verifiably satisfy it?\n\nA response that passes dimensions 1, 3, 4, 5, and 6 but fails dimension 2 has still failed — technical compliance with a shallow reading is not the same as genuine performance, and should not be scored as if it were.\n\nScore 1-10. Score 7+ = pass.\n\nRespond ONLY with a valid JSON object. No preamble, no markdown:\n{\n  "score": <integer 1-10>,\n  "operation_performed": "What cognitive operation the executor actually performed",\n  "reading_fidelity": "Did the response engage the prompt\'s implied/load-bearing layer, or only its literal stated layer? Name specifically what was missed, if anything.",\n  "escape_hatch_used": "Whether and how the executor defaulted — or \'none\' if it held",\n  "weaknesses": ["weakness 1", "weakness 2"],\n  "verdict": "pass" or "fail",\n  "revision_guidance": "Specific, structural instructions for how to rewrite the prompt to force the correct operation — including, if reading_fidelity was the failure, how to make the prompt\'s load-bearing instruction impossible to miss rather than merely implied."\n}',
+          source: 'manual', imported: null
+        }
+      }
+    },
+    rearchitect: {
+      active: 'original',
+      versions: {
+        original: {
+          name: 'Original',
+          body: 'You are a prompt revision specialist with a bias toward radical restructure when incremental patching has failed.\n\nA previous prompt attempt produced a response that did not perform the required cognitive operation. Your job is to produce a significantly different prompt — not the same prompt with better wording, but a structurally different approach.\n\nRULES:\n1. If executor described instead of analyzed: specify a structural scaffold with named criteria.\n2. If executor hedged instead of took a position: open with the position stated; task executor with defending it.\n3. If executor was generic: embed specific elements from the original input that must appear.\n4. If escape hatch was used: name it explicitly as forbidden.\n5. If already failed once: escalate — different cognitive mode, different output form.\n\nRespond ONLY with a valid JSON object. No preamble, no markdown:\n{\n  "reconstructed_intent": "Refined intent statement based on evaluator diagnosis",\n  "cognitive_mode": "Updated cognitive mode — may differ from previous if escalating",\n  "gap_analysis": "What the previous prompt structurally failed to force",\n  "restructure_strategy": "How this rewrite differs structurally from the previous attempt",\n  "dense_prompt": "The revised, structurally different dense prompt. 4-10 sentences."\n}',
+          source: 'manual', imported: null
+        },
+        reforged: {
+          name: 'Re-forged (no sentence survives)',
+          body: 'You are a prompt revision specialist governed by one rule: no sentence survives. When a prompt fails, you do not patch it — you do not carry forward a single verbatim sentence from the previous attempt, even one that tested fine in isolation, because a sentence that worked inside a structure that failed is not proven innocent — it may be part of what let the failure happen, and reusing it re-imports the exact frame you\'re trying to escape.\n\nRULES:\n1. If executor described instead of analyzed: specify a structural scaffold with named criteria — written fresh, not adapted from the prior scaffold language.\n2. If executor hedged instead of took a position: open with the position stated; task executor with defending it — in new phrasing, not the prior prompt\'s phrasing with "state the position" inserted.\n3. If executor was generic: embed specific elements from the original input that must appear — chosen freshly from the input, not carried from which elements the prior prompt already named.\n4. If escape hatch was used: name it explicitly as forbidden, in the language of THIS diagnosis, not copied from the prior prompt\'s escape-hatch clause.\n5. If already failed once: escalate — different cognitive mode, different output form, and confirm zero sentence-level overlap with the prior attempt before finalizing.\n\nBefore finalizing, compare your draft sentence-by-sentence against the previous dense_prompt. Any verbatim match must be rewritten, even if rewriting it makes the new prompt objectively weaker on that one point — total reconstruction is the constraint, not an optimization target.\n\nRespond ONLY with a valid JSON object. No preamble, no markdown:\n{\n  "reconstructed_intent": "Refined intent statement based on evaluator diagnosis",\n  "cognitive_mode": "Updated cognitive mode — may differ from previous if escalating",\n  "gap_analysis": "What the previous prompt structurally failed to force",\n  "restructure_strategy": "How this rewrite differs structurally from the previous attempt",\n  "overlap_check": "Confirm zero verbatim sentence overlap with the previous dense_prompt, or name what was rewritten to eliminate it",\n  "dense_prompt": "The revised, structurally different dense prompt. 4-10 sentences."\n}',
+          source: 'manual', imported: null
+        },
+        decompressor: {
+          name: 'Decompressor (questions the original reconstruction, not just the prompt)',
+          body: 'You are a prompt revision specialist who treats a failed cycle as evidence that could implicate two different things: the prompt\'s construction, or the reconstruction of intent the prompt was built on. Most revision specialists only ever check the first. You always check both, in order.\n\nA previous prompt attempt produced a response that did not perform the required cognitive operation. Before revising the prompt, ask: is this a prompt-construction failure, or did the architect\'s original read of the input\'s intent go wrong upstream, such that no prompt built on that reading could have worked?\n\nSTEP 1 — AUDIT THE ORIGINAL RECONSTRUCTION. Given the original user input and what the evaluator found, does the previous cognitive_mode and reconstructed_intent still look right in hindsight? If the executor\'s failure looks like it was chasing the wrong operation entirely — not executing a correct operation poorly, but performing a plausible-but-wrong operation fluently — the reconstruction itself was the failure, not the prompt\'s wording.\n\nSTEP 2 — REVISE ACCORDINGLY.\n- If the reconstruction was sound and only the prompt construction failed: produce a structurally different prompt (not the same prompt with better wording) using these rules:\n  1. If executor described instead of analyzed: specify a structural scaffold with named criteria.\n  2. If executor hedged instead of took a position: open with the position stated; task executor with defending it.\n  3. If executor was generic: embed specific elements from the original input that must appear.\n  4. If escape hatch was used: name it explicitly as forbidden.\n- If the reconstruction itself looks wrong in hindsight: do not merely patch the prompt. Re-read the original input fresh, with the failure as new information about what the fragment actually needed, and produce a new reconstructed_intent — one that may name a different cognitive_mode entirely. This is the harder, more expensive move, and it is the correct one when the failure pattern suggests a category error, not a wording error.\n\nRespond ONLY with a valid JSON object. No preamble, no markdown:\n{\n  "reconstruction_audit": "Did the original reconstructed_intent and cognitive_mode still hold up given the failure, or does the failure implicate the original reading itself? State which, and why.",\n  "reconstructed_intent": "Refined intent statement — may be unchanged if the audit found the original reading sound, or substantially different if the audit found a category error",\n  "cognitive_mode": "Updated cognitive mode — may differ from previous if the audit found the original mode wrong, not just the execution of it",\n  "gap_analysis": "What the previous prompt structurally failed to force",\n  "restructure_strategy": "How this rewrite differs structurally from the previous attempt, and whether that difference is at the wording level or the intent-reading level",\n  "dense_prompt": "The revised, structurally different dense prompt. 4-10 sentences."\n}',
+          source: 'manual', imported: null
+        }
+      }
+    }
+  };
+}
+
+var _promptLibrary = null;
+
+function loadPromptLibrary() {
+  if (_promptLibrary) return _promptLibrary;
+  try {
+    var raw = localStorage.getItem(PROMPT_LIBRARY_KEY);
+    if (raw) {
+      var parsed = JSON.parse(raw);
+      // Backfill: if a role or version is missing (e.g. library saved before a
+      // role/version existed), merge in the default without clobbering user edits.
+      var defaults = defaultPromptLibrary();
+      Object.keys(defaults).forEach(function(role) {
+        if (!parsed[role]) { parsed[role] = defaults[role]; return; }
+        Object.keys(defaults[role].versions).forEach(function(vKey) {
+          if (!parsed[role].versions[vKey]) parsed[role].versions[vKey] = defaults[role].versions[vKey];
+        });
+        if (!parsed[role].active || !parsed[role].versions[parsed[role].active]) parsed[role].active = defaults[role].active;
+      });
+      // Migration: earlier build stored a standalone top-level 'decompressor'
+      // role (Stage 0/1 gate). That gate is gone — decompression now lives as
+      // a per-role version instead — so drop the orphaned key if present.
+      if (parsed.decompressor) delete parsed.decompressor;
+      _promptLibrary = parsed;
+    } else {
+      _promptLibrary = defaultPromptLibrary();
+    }
+  } catch (e) {
+    _promptLibrary = defaultPromptLibrary();
+  }
+  return _promptLibrary;
+}
+
+function savePromptLibrary() {
+  try {
+    localStorage.setItem(PROMPT_LIBRARY_KEY, JSON.stringify(_promptLibrary));
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
+// Returns the active prompt body string for a role. Executor role callers
+// must substitute {PLAYBOOK} themselves (see getActiveExecutorSystem below) —
+// every other role's body is used as-is.
+function getActivePromptBody(role) {
+  var lib = loadPromptLibrary();
+  var r = lib[role];
+  if (!r) return '';
+  var v = r.versions[r.active];
+  return v ? v.body : '';
+}
+
+function getActiveExecutorSystem(cognitiveMode, typeHint) {
+  var playbook = PROMPT_TYPE_PLAYBOOKS[cognitiveMode] || PROMPT_TYPE_PLAYBOOKS[typeHint] || '';
+  var body = getActivePromptBody('executor');
+  return body.indexOf('{PLAYBOOK}') !== -1 ? body.replace('{PLAYBOOK}', playbook) : (body + playbook);
+}
+
+// ── PROMPT LIBRARY PANEL UI ──
+
+var PLIB_ROLE_LABELS = { architect: 'Architect', executor: 'Executor', evaluator: 'Evaluator', rearchitect: 'Re-Architect' };
+var PLIB_PIPELINE_ROLES = Object.keys(PLIB_ROLE_LABELS);
+var _plibOpenEditor = null; // 'role:versionKey' of the currently open editor, or null
+
+function openPromptLibrary() {
+  renderPromptLibraryPanel();
+  document.getElementById('plibOverlay').classList.add('open');
+  document.getElementById('promptLibraryPanel').classList.add('open');
+}
+function closePromptLibrary() {
+  document.getElementById('plibOverlay').classList.remove('open');
+  document.getElementById('promptLibraryPanel').classList.remove('open');
+  _plibOpenEditor = null;
+}
+
+function renderPromptLibraryPanel() {
+  var lib = loadPromptLibrary();
+  var host = document.getElementById('plibRoleList');
+  var html = '';
+  Object.keys(PLIB_ROLE_LABELS).forEach(function(role) {
+    var r = lib[role];
+    html += '<div class="plib-role-block">';
+    html += '<div class="plib-role-title">' + PLIB_ROLE_LABELS[role] + '</div>';
+    Object.keys(r.versions).forEach(function(vKey) {
+      var v = r.versions[vKey];
+      var isActive = (r.active === vKey);
+      var editorId = role + ':' + vKey;
+      var isOpen = (_plibOpenEditor === editorId);
+      html += '<div class="plib-version-row' + (isActive ? ' active' : '') + '" onclick="setActivePromptVersion(\'' + role + '\',\'' + vKey + '\')">'
+        + '<span class="plib-radio' + (isActive ? ' checked' : '') + '"></span>'
+        + '<span class="plib-version-name">' + escapePlib(v.name) + '</span>'
+        + (isActive ? '<span class="plib-active-tag">Active</span>' : '')
+        + '<button class="plib-edit-btn" onclick="event.stopPropagation(); togglePromptEditor(\'' + role + '\',\'' + vKey + '\')">' + (isOpen ? 'Close' : 'Edit') + '</button>'
+        + '</div>';
+      html += '<div class="plib-editor' + (isOpen ? ' open' : '') + '" id="editor-' + editorId + '">'
+        + '<label>Name</label>'
+        + '<input type="text" id="name-' + editorId + '" value="' + escapePlibAttr(v.name) + '">'
+        + '<label>Prompt body' + (role === 'executor' ? ' (use {PLAYBOOK} where the per-mode playbook should insert)' : '') + '</label>'
+        + '<textarea id="body-' + editorId + '">' + escapePlib(v.body) + '</textarea>'
+        + '<div class="plib-editor-actions">'
+        + '<button class="plib-save-btn" onclick="savePromptEdit(\'' + role + '\',\'' + vKey + '\')">Save</button>'
+        + '<span class="plib-save-confirm" id="confirm-' + editorId + '">✓ Saved</span>'
+        + (Object.keys(r.versions).length > 1 ? '<button class="plib-delete-btn" onclick="deletePromptVersion(\'' + role + '\',\'' + vKey + '\')">Delete version</button>' : '')
+        + '</div></div>';
+    });
+    html += '<button class="plib-new-btn" onclick="newPromptVersion(\'' + role + '\')">+ New version</button>';
+    html += '</div>';
+  });
+  host.innerHTML = html;
+}
+
+function escapePlib(s) { return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function escapePlibAttr(s) { return escapePlib(s).replace(/"/g,'&quot;'); }
+
+function setActivePromptVersion(role, vKey) {
+  var lib = loadPromptLibrary();
+  if (!lib[role] || !lib[role].versions[vKey]) return;
+  lib[role].active = vKey;
+  savePromptLibrary();
+  renderPromptLibraryPanel();
+}
+
+// Global preset toolbar — sets pipeline roles' active versions in one pass,
+// persists to localStorage, then re-renders the panel (which redraws each
+// role's active radio/tag) and clears the run-time station chips so no
+// iteration-in-progress state looks stale against the newly applied preset.
+//
+// 'original' / 'reforged' / 'decompressor' apply that version uniformly to
+// every role. 'recommended' is different in kind, not just another version
+// key: it's a per-role starting mix, not a single answer that generalizes
+// across roles the way the other three do. It reflects which upgrade is
+// assayed and has non-conditional payoff per role (architect: Reforged's
+// form-override; evaluator: Reforged's hedge-zero-tolerance — the two
+// highest-leverage, least situational upgrades in the set) versus which
+// role's alternate versions are better reached for only once you've
+// observed a specific failure in the log (executor, rearchitect — left on
+// Original here, not because Reforged/Decompressor are weak for them, but
+// because their payoff is conditional on a failure mode you haven't
+// necessarily hit yet). This is a starting point for a cold instance, not
+// a claim that it stays optimal once you have log evidence pointing
+// elsewhere — hence "Starting Mix," not "Optimal Mix."
+var RECOMMENDED_MIX = {
+  architect:   'reforged',
+  executor:    'original',
+  evaluator:   'reforged',
+  rearchitect: 'original'
+};
+
+function applyGlobalPreset(presetKey) {
+  var lib = loadPromptLibrary();
+  PLIB_PIPELINE_ROLES.forEach(function(role) {
+    if (!lib[role]) return;
+    var targetVersion = (presetKey === 'recommended') ? RECOMMENDED_MIX[role] : presetKey;
+    if (targetVersion && lib[role].versions[targetVersion]) {
+      lib[role].active = targetVersion;
+    }
+  });
+  savePromptLibrary();
+  renderPromptLibraryPanel();
+  resetChips();
+  var confirm = document.getElementById('plibPresetConfirm');
+  if (confirm) {
+    confirm.style.display = 'block';
+    clearTimeout(_plibPresetConfirmTimer);
+    _plibPresetConfirmTimer = setTimeout(function() { confirm.style.display = 'none'; }, 1600);
+  }
+}
+var _plibPresetConfirmTimer = null;
+
+function togglePromptEditor(role, vKey) {
+  var editorId = role + ':' + vKey;
+  _plibOpenEditor = (_plibOpenEditor === editorId) ? null : editorId;
+  renderPromptLibraryPanel();
+}
+
+function savePromptEdit(role, vKey) {
+  var lib = loadPromptLibrary();
+  if (!lib[role] || !lib[role].versions[vKey]) return;
+  var editorId = role + ':' + vKey;
+  var nameVal = document.getElementById('name-' + editorId).value.trim() || lib[role].versions[vKey].name;
+  var bodyVal = document.getElementById('body-' + editorId).value;
+  lib[role].versions[vKey].name = nameVal;
+  lib[role].versions[vKey].body = bodyVal;
+  lib[role].versions[vKey].source = 'manual';
+  lib[role].versions[vKey].imported = new Date().toISOString();
+  var ok = savePromptLibrary();
+  var confirmEl = document.getElementById('confirm-' + editorId);
+  if (confirmEl) {
+    if (ok) {
+      confirmEl.style.display = 'inline';
+      setTimeout(function() { confirmEl.style.display = 'none'; }, 1500);
+    }
+  }
+  renderPromptLibraryPanel();
+  // Re-open the editor for the version just saved, since renderPromptLibraryPanel rebuilds the DOM.
+  _plibOpenEditor = editorId;
+  var reopened = document.getElementById('editor-' + editorId);
+  if (reopened) reopened.classList.add('open');
+}
+
+function newPromptVersion(role) {
+  var lib = loadPromptLibrary();
+  if (!lib[role]) return;
+  var n = 1;
+  var slug = 'custom-' + n;
+  while (lib[role].versions[slug]) { n++; slug = 'custom-' + n; }
+  lib[role].versions[slug] = { name: 'Custom ' + n, body: '', source: 'manual', imported: new Date().toISOString() };
+  savePromptLibrary();
+  _plibOpenEditor = role + ':' + slug;
+  renderPromptLibraryPanel();
+}
+
+function deletePromptVersion(role, vKey) {
+  var lib = loadPromptLibrary();
+  if (!lib[role] || !lib[role].versions[vKey]) return;
+  if (Object.keys(lib[role].versions).length <= 1) return; // never delete the last version of a role
+  var wasActive = (lib[role].active === vKey);
+  delete lib[role].versions[vKey];
+  if (wasActive) lib[role].active = Object.keys(lib[role].versions)[0];
+  if (_plibOpenEditor === (role + ':' + vKey)) _plibOpenEditor = null;
+  savePromptLibrary();
+  renderPromptLibraryPanel();
+}
+
+// ═══════════════════════════════════════════════════════════
+// PIPELINE CALLS
+// ═══════════════════════════════════════════════════════════
+async function runArchitect(userInput, hint, typeHint) {
+  var typeClause = typeHint && typeHint !== 'auto'
+    ? '\n\nUser indicated prompt type: "' + typeHint + '". Honor if consistent; escalate if the input calls for a different mode.'
+    : '';
+  var content = 'User input: "' + userInput + '"' + (hint ? '\n\nSuccess criterion: "' + hint + '"' : '') + typeClause;
+  var raw = await callAI(getActivePromptBody('architect'), content);
+  if (!raw || !raw.trim()) throw new Error('Model returned an empty response (likely rate-limited / free-tier overload) — try running again.');
+  return JSON.parse(raw.replace(/```json|```/g,'').trim());
+}
+
+async function runExecutorStreaming(architectResult, onChunk) {
+  var sys = getActiveExecutorSystem(architectResult.cognitive_mode, selectedType);
+  var accumulated = '';
+  await callAIStream(sys, architectResult.dense_prompt, function(chunk) {
+    accumulated += chunk;
+    onChunk(chunk, accumulated);
+  });
+  return accumulated;
+}
+
+async function runEvaluator(originalInput, architectResult, response, hint) {
+  var content = 'Original user input: "' + originalInput + '"\n' +
+    (hint ? 'Success criterion: "' + hint + '"\n' : '') +
+    'Cognitive mode targeted: ' + architectResult.cognitive_mode + '\n' +
+    'Escape hatch architect tried to close: ' + architectResult.detected_escape_hatch + '\n' +
+    'Dense prompt used: "' + architectResult.dense_prompt + '"\n' +
+    'Response received:\n---\n' + response + '\n---\nEvaluate whether this response truly performed the required cognitive operation.';
+  var raw = await callAI(getActivePromptBody('evaluator'), content);
+  if (!raw || !raw.trim()) throw new Error('Model returned an empty response (likely rate-limited / free-tier overload) — try running again.');
+  return JSON.parse(raw.replace(/```json|```/g,'').trim());
+}
+
+async function runReArchitect(originalInput, previousResult, evalResult, hint) {
+  var content = 'Original user input: "' + originalInput + '"\n' +
+    (hint ? 'Success criterion: "' + hint + '"\n' : '') +
+    'Previous cognitive mode: ' + previousResult.cognitive_mode + '\n' +
+    'Previous dense prompt: "' + previousResult.dense_prompt + '"\n' +
+    'Evaluator score: ' + evalResult.score + '/10\n' +
+    'Operation actually performed: ' + evalResult.operation_performed + '\n' +
+    'Escape hatch used: ' + evalResult.escape_hatch_used + '\n' +
+    'Weaknesses: ' + evalResult.weaknesses.join('; ') + '\n' +
+    'Revision guidance: "' + evalResult.revision_guidance + '"';
+  var raw = await callAI(getActivePromptBody('rearchitect'), content);
+  if (!raw || !raw.trim()) throw new Error('Model returned an empty response (likely rate-limited / free-tier overload) — try running again.');
+  return JSON.parse(raw.replace(/```json|```/g,'').trim());
+}
+
+// ═══════════════════════════════════════════════════════════
+// GUARD
+// ═══════════════════════════════════════════════════════════
+function checkReady() {
+  var p = findProvider(getSelectedProvider());
+  if (!p) return false;
+  if (!p.requiresKey) return true;
+  if (p.standaloneOnly && window.EngineState.isArtifact) {
+    alert(p.label + ' has no CORS proxy inside claude.ai. Open this engine standalone (outside the artifact) to use ' + p.label + '.');
+    return false;
+  }
+  if (!getPool(p.keyStorageName).length) { openDrawer(); return false; }
+  return true;
+}
+
+// ═══════════════════════════════════════════════════════════
+// MAIN LOOP
+// ═══════════════════════════════════════════════════════════
+async function runLoop() {
+  var userInput = document.getElementById('main-input').value.trim();
+  var hint      = document.getElementById('hint-input').value.trim();
+  if (!userInput) { alert('Drop some input first.'); return; }
+  if (!checkReady()) return;
+
+  var cfg = getLoopConfig();
+  var runId = 'run_' + Date.now() + '_' + Math.random().toString(36).slice(2,8);
+
+  // Reset UI
+  iterationHistory = [];
+  clearLog();
+  hideEmpty('responseEmpty');
+  showEmpty('responseEmpty');
+  hideEl('responseContent');
+  document.getElementById('responseContent').innerHTML = '';
+  showEmpty('promptEmpty');
+  hideEl('promptArtifact');
+  document.getElementById('promptArtifact').textContent = '';
+  hideEl('copyResponseBtn');
+  hideEl('copyPromptBtn');
+  hideEl('universalCopyBar');
+  setBadge('response','live','live');
+  setBadge('prompt','—','');
+  setBadge('log','running','live');
+  document.getElementById('runBtn').disabled = true;
+  setDot(1,''); setDot(2,''); setDot(3,'');
+  resetChips();
+  setProgress(0);
+  setStatus('running', true, false);
+
+  // Switch to response tab so user sees streaming
+  switchTab('response');
+
+  if (selectedType !== 'auto') {
+    addLog('type-detected','Type Override','User selected: ' + selectedType);
+  }
+
+  var maxIter = cfg.maxIter;
+  var bestScore = 0, bestResponse = '', bestPrompt = '', bestMode = '', bestIter = 0;
+  var converged = false;
+  var architectResult = null, evalResult = null;
+
+  // Reveal response content area
+  hideEmpty('responseEmpty');
+  showEl('responseContent');
+  document.getElementById('responseContent').innerHTML = '';
+
+  try {
+    for (var iter = 1; iter <= maxIter; iter++) {
+      setDot(iter, 'active');
+      setProgress(((iter - 1) / maxIter) * 90);
+      addLog('iter-start', 'Iteration ' + iter + ' of ' + maxIter, 'Pass ' + iter + ' beginning...');
+
+      // ARCHITECT
+      setChip('architect','active');
+      addThinking('Architect reconstructing intent + detecting operation…');
+      try {
+        architectResult = iter === 1
+          ? await runArchitect(userInput, hint, selectedType)
+          : await runReArchitect(userInput, architectResult, evalResult, hint);
+      } catch(e) { throw new Error('Architect failed: ' + e.message); }
+      removeThinking();
+      setChip('architect','done');
+      addLog('','Architect',
+        'Mode: ' + architectResult.cognitive_mode +
+        '\nIntent: ' + architectResult.reconstructed_intent +
+        '\nEscape hatch closed: ' + (architectResult.detected_escape_hatch || architectResult.restructure_strategy || '—')
+      );
+
+      // Update prompt panel
+      hideEmpty('promptEmpty');
+      showEl('promptArtifact');
+      document.getElementById('promptArtifact').textContent = architectResult.dense_prompt;
+      showEl('copyPromptBtn');
+      setBadge('prompt','live','live');
+
+      // EXECUTOR — streaming
+      setChip('executor','active');
+      addLog('','Executor','Streaming response...');
+      document.getElementById('responseContent').innerHTML = '';
+      document.getElementById('responseContent').classList.add('streaming-cursor');
+
+      var executorResponse = '';
+      try {
+        executorResponse = await runExecutorStreaming(architectResult, function(chunk, accumulated) {
+          // Constraint 02: render markdown via innerHTML
+          document.getElementById('responseContent').innerHTML = renderMarkdown(accumulated);
+        });
+      } catch(e) { throw new Error('Executor failed: ' + e.message); }
+      document.getElementById('responseContent').classList.remove('streaming-cursor');
+      setChip('executor','done');
+
+      // EVALUATOR
+      setChip('evaluator','active');
+      addThinking('Evaluator checking operation performed…');
+      try {
+        evalResult = await runEvaluator(userInput, architectResult, executorResponse, hint);
+      } catch(e) { throw new Error('Evaluator failed: ' + e.message); }
+      removeThinking();
+      setChip('evaluator','done');
+
+      var isPass = evalResult.score >= cfg.threshold;
+      addLog(
+        isPass ? 'score-pass' : 'score-fail',
+        'Evaluator · Iter ' + iter,
+        isPass
+          ? 'PASS ✓  Operation: ' + evalResult.operation_performed
+          : 'FAIL — ' + (evalResult.escape_hatch_used !== 'none' ? 'Escape hatch: ' + evalResult.escape_hatch_used + '. ' : '') + (evalResult.weaknesses && evalResult.weaknesses[0] ? evalResult.weaknesses[0] : ''),
+        evalResult.score
+      );
+
+      if (evalResult.score > bestScore) {
+        bestScore    = evalResult.score;
+        bestResponse = executorResponse;
+        bestPrompt   = architectResult.dense_prompt;
+        bestMode     = architectResult.cognitive_mode;
+        bestIter     = iter;
+      }
+
+      iterationHistory.push({
+        iter: iter,
+        cognitiveMode: architectResult.cognitive_mode,
+        reconstructedIntent: architectResult.reconstructed_intent,
+        escapeHatchClosed: architectResult.detected_escape_hatch || architectResult.restructure_strategy || '—',
+        gapAnalysis: architectResult.gap_analysis || '',
+        densePrompt: architectResult.dense_prompt,
+        response: executorResponse,
+        score: evalResult.score,
+        isPass: isPass,
+        operationPerformed: evalResult.operation_performed || '',
+        escapeHatchUsed: evalResult.escape_hatch_used || '',
+        weaknesses: evalResult.weaknesses || [],
+        revisionGuidance: evalResult.revision_guidance || ''
+      });
+
+      setDot(iter, isPass ? 'done-pass' : 'done-fail');
+
+      if (isPass) {
+        converged = true;
+        setChip('loop','done');
+        addLog('converged','Converged ✓','Score ' + evalResult.score + '/10 — operation confirmed.');
+        setBadge('log','converged','pass');
+        break;
+      } else if (iter < maxIter) {
+        setChip('loop','active');
+        addLog('','Re-prompting','Feeding diagnosis back to Architect for iter ' + (iter+1) + '...');
+        setChip('loop','');
+      }
+    }
+
+    // Final state
+    setProgress(100);
+    document.getElementById('responseContent').innerHTML = renderMarkdown(bestResponse);
+    showEl('copyResponseBtn');
+
+    setBadge('response', 'score ' + bestScore + '/10', converged ? 'pass' : 'fail');
+
+    // Update prompt panel to final state
+    document.getElementById('promptArtifact').textContent = bestPrompt;
+    setBadge('prompt', converged ? 'winning' : 'best found', converged ? 'pass' : 'fail');
+    showEl('copyPromptBtn');
+    showEl('universalCopyBar');
+
+    if (!converged) {
+      addLog('best-available','Best Available ⚠','Did not converge in ' + maxIter + ' iterations. Best score: ' + bestScore + '/10.');
+      setBadge('log','best available','fail');
+    }
+
+    setStatus(converged ? 'converged' : 'best available', false, !converged);
+
+    // ── LIBRARY REGISTRATION (one card per iteration — each iteration's dense
+    //    prompt is independently saved/browsable, tagged with its iter number
+    //    and pass/fail; the converged/highest-scoring one is flagged winning) ──
+    var title = makeEntryTitle(userInput);
+    var runTimestamp = Date.now();
+    iterationHistory.forEach(function(rec) {
+      addLibraryEntry({
+        id: 'lib_' + runTimestamp + '_iter' + rec.iter + '_' + Math.random().toString(36).slice(2,8),
+        runId: runId,
+        timestamp: runTimestamp,
+        title: title,
+        input: userInput,
+        hint: hint,
+        cognitiveMode: rec.cognitiveMode,
+        score: rec.score,
+        isPass: rec.isPass,
+        isWinner: (rec.iter === bestIter),
+        converged: converged,
+        iter: rec.iter,
+        iterationCount: iterationHistory.length,
+        densePrompt: rec.densePrompt,
+        response: rec.response,
+        operationPerformed: rec.operationPerformed,
+        weaknesses: rec.weaknesses,
+        revisionGuidance: rec.revisionGuidance
+      });
+    });
+
+    // ── ITERATION ARCHIVE REGISTRATION (full trail — secondary, exploratory backup) ──
+    addArchiveEntry({
+      id: 'arch_' + Date.now() + '_' + Math.random().toString(36).slice(2,8),
+      runId: runId,
+      timestamp: Date.now(),
+      title: title,
+      input: userInput,
+      hint: hint,
+      cognitiveMode: bestMode,
+      score: bestScore,
+      converged: converged,
+      winningIter: bestIter,
+      densePrompt: bestPrompt,
+      response: bestResponse,
+      iterations: iterationHistory.slice() // full per-iteration prompts + responses + evaluator notes
+    });
+
+    // ── COPY ALL PROMPTS (MD) BACKUP — the exact markdown the Copy All
+    //    Prompts button produces, written to disk automatically so it's
+    //    never dependent on remembering to paste it into Google Docs ──
+    if (libraryDirHandle) {
+      fcWriteRunPromptsMd(runId);
+      fcWriteMasterPromptArchive(buildMasterPromptArchiveMarkdown());
+    }
+
+  } catch(err) {
+    removeThinking();
+    document.getElementById('responseContent').classList.remove('streaming-cursor');
+    setStatus('error', false, true);
+    addLog('','⚠ Error', err.message);
+    setBadge('log','error','fail');
+    setBadge('response','error','fail');
+    setProgress(0);
+    if (iterationHistory.length) showEl('universalCopyBar');
+  } finally {
+    document.getElementById('runBtn').disabled = false;
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════
+// updateWarning already called in initProviderDefault IIFE above
+renderLibraryList();
+renderArchiveList();
+fcAutoReconnectOnLoad(); // Constraint 23B — re-verify a previously connected folder, no prompt on load
+</script>
+</body>
+</html>

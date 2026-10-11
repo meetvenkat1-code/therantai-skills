@@ -1,0 +1,18 @@
+{
+  "skill": "core-extractor",
+  "skill_name": "core-extractor",
+  "description": "Strips any artifact, HTML engine, or code to its generative spine \u2014 separating the engine (the system prompt carrying the cognitive identity) from the vessel (UI, API routing, rendering, storage). Collapses multi-stage AI pipelines into a single self-running instruction, names what weakens in the collapse, and reforges the result as a portable system prompt ready for a custom GPT instruction field, another engine's system slot, or a skill reference. The inverse of distill \u2014 distill goes up toward the regenerative seed; core-extractor goes sideways, preserving the full operation while shedding the vessel.",
+  "source_file": "skills/core-extractor/SKILL.md",
+  "source_sha": "fab88b6cc295d2cc663341e52f2b12c267bf0417719bd02fd92485da9d536475",
+  "resources": [],
+  "provider_config": {
+    "model_core": "v2"
+  },
+  "inputs": [
+    {
+      "id": "chatInput",
+      "kind": "textarea",
+      "label": "Invoke the skill"
+    }
+  ]
+}

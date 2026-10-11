@@ -1,0 +1,18 @@
+{
+  "skill": "governing-variable-sensor",
+  "skill_name": "governing-variable-sensor",
+  "description": ">",
+  "source_file": "skills/governing-variable-sensor/SKILL.md",
+  "source_sha": "9abe5a1bc5803dc6c6bc19ba7c5d746908070780c54944a0eec5a7c1f5daa08e",
+  "resources": [],
+  "provider_config": {
+    "model_core": "v2"
+  },
+  "inputs": [
+    {
+      "id": "chatInput",
+      "kind": "textarea",
+      "label": "Invoke the skill"
+    }
+  ]
+}

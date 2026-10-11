@@ -1,0 +1,18 @@
+{
+  "skill": "carousel-engine",
+  "skill_name": "carousel-engine",
+  "description": "Build an Instagram carousel engine as a single HTML file with full slide generation, preview/storyboard views, copy controls, and ZIP export of individual PNG slides + storyboard overview + carousel-copy.txt. Use this skill whenever the user wants to build, modify, or extend a carousel engine \u2014 including new themes, new hook styles, image support, or brand variants. Trigger on any mention of \"carousel\", \"Instagram slides\", \"slide deck generator\", \"content carousel\", or requests to generate multi-slide social content. The structural contract (views, export, copy, API routing) must remain identical across all builds; only content, colour palette, and AI prompt vary.",
+  "source_file": "skills/carousel-engine/SKILL.md",
+  "source_sha": "7b04773269507154846c5263f634dc35f856a27c98422b20b42194cb7632979e",
+  "resources": [],
+  "provider_config": {
+    "model_core": "v2"
+  },
+  "inputs": [
+    {
+      "id": "chatInput",
+      "kind": "textarea",
+      "label": "Invoke the skill"
+    }
+  ]
+}

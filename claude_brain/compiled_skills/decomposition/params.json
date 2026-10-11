@@ -1,0 +1,18 @@
+{
+  "skill": "decomposition",
+  "skill_name": "decomposition",
+  "description": "The Mapper organ of the Oracle Suite. Carries the [decomposition] protocol \u2014 fractures a compound task along its natural joints into orthogonal, dependency-ordered sub-problems and names the load-bearing node whose resolution collapses the most others. Emits the map, never the answers. Fires on dispatch from router (COMPOUND verdict) or directly from oracle-core on an explicit [decomposition] tag.",
+  "source_file": "skills/decomposition/SKILL.md",
+  "source_sha": "43ce5b7e18e08d0802b727de403971d8edcda3e2187a199b06eabb1ae9230b32",
+  "resources": [],
+  "provider_config": {
+    "model_core": "v2"
+  },
+  "inputs": [
+    {
+      "id": "chatInput",
+      "kind": "textarea",
+      "label": "Invoke the skill"
+    }
+  ]
+}

@@ -1,0 +1,1416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Scenario Forge</title>
+<style>
+:root {
+  --bg-void:        #0a0a0f;
+  --bg-surface:     #12121a;
+  --bg-elevated:    #1a1a28;
+  --bg-border:      #2a2a3d;
+  --text-primary:   #e8e8f0;
+  --text-secondary: #9090a8;
+  --text-muted:     #505068;
+  --accent-main:    #7c6ef5;
+  --accent-glow:    rgba(124,110,245,0.15);
+  --amber:          #f5a623;
+  --green:          #4caf82;
+  --coral:          #f56565;
+  --teal:           #38bdf8;
+  --orange-warn:    #f97316;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  overflow: hidden;
+  background: var(--bg-void);
+  color: var(--text-primary);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+/* ============ SANDWICH LAYOUT (Constraint 18A) ============ */
+.header {
+  position: fixed; top: 0; left: 0; right: 0; height: 52px; z-index: 100;
+  background: var(--bg-surface); border-bottom: 1px solid var(--bg-border);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 1.25rem;
+}
+.output-area {
+  position: fixed; top: 52px; bottom: 0; left: 0; right: 0;
+  overflow-y: auto;
+}
+/* Stage 3 gets its own input bar; stages 1/2 scroll full height */
+.output-area.has-inputbar { bottom: 72px; }
+.input-bar {
+  position: fixed; bottom: 0; left: 0; right: 0; height: 72px; z-index: 100;
+  background: var(--bg-surface); border-top: 1px solid var(--bg-border);
+  display: none; align-items: center; gap: 10px; padding: 0 1.25rem;
+}
+.input-bar.active { display: flex; }
+
+.canvas {
+  width: 88%; max-width: none; margin: 0 auto; padding: 1.75rem 0 2.5rem;
+  word-break: break-word;
+}
+
+/* ============ HEADER ZONES (Constraint 07) ============ */
+.zone-a { display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 0.95rem; }
+.zone-a .badge {
+  font-size: 0.65rem; font-weight: 500; color: var(--accent-main);
+  background: var(--accent-glow); padding: 2px 8px; border-radius: 10px;
+}
+.zone-b { display: flex; align-items: center; gap: 10px; }
+.zone-c {
+  font-size: 0.72rem; color: var(--text-muted); text-align: right; line-height: 1.3;
+}
+.zone-c a { color: var(--text-muted); text-decoration: none; }
+.zone-c a:hover { color: var(--text-secondary); }
+
+.icon-btn {
+  background: none; border: 1px solid var(--bg-border); color: var(--text-secondary);
+  width: 32px; height: 32px; border-radius: 6px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; font-size: 0.95rem;
+  transition: all .15s;
+}
+.icon-btn:hover { border-color: var(--accent-main); color: var(--accent-main); }
+
+#configBadge {
+  font-size: 0.65rem; padding: 2px 8px; border-radius: 10px; font-weight: 500;
+}
+#configBadge.live { color: var(--green); background: rgba(76,175,130,0.12); }
+#configBadge.fallback { color: var(--text-muted); background: var(--bg-elevated); }
+
+
+
+/* ============ STEPPER (rail, left-hand progression) ============ */
+.stepper {
+  display: flex; gap: 4px; margin-bottom: 1.5rem; border-bottom: 1px solid var(--bg-border);
+  padding-bottom: 0;
+}
+.stepper .step {
+  padding: 10px 4px 12px; margin-right: 20px; font-size: 0.85rem; color: var(--text-muted);
+  border-bottom: 2px solid transparent; cursor: pointer; display: flex; align-items: baseline; gap: 8px;
+}
+.stepper .step .n { font-size: 0.7rem; opacity: .7; }
+.stepper .step.active { color: var(--text-primary); border-bottom-color: var(--accent-main); }
+.stepper .step.done { color: var(--text-secondary); }
+.stepper .step.locked { pointer-events: none; opacity: .35; }
+
+.panel { display: none; }
+.panel.active { display: block; }
+
+/* ============ FORM ELEMENTS ============ */
+textarea, input[type=text] {
+  width: 100%; background: var(--bg-elevated); border: 1px solid var(--bg-border);
+  color: var(--text-primary); font-family: inherit; font-size: 0.9rem;
+  padding: 12px 14px; border-radius: 8px; resize: vertical;
+}
+textarea { min-height: 84px; }
+textarea:focus, input:focus, select:focus { outline: 2px solid var(--accent-glow); outline-offset: 1px; }
+
+.btn {
+  font-size: 0.82rem; font-weight: 500; padding: 10px 20px; border-radius: 8px;
+  border: 1px solid var(--accent-main); background: transparent; color: var(--accent-main);
+  cursor: pointer; transition: all .15s;
+}
+.btn:hover { background: var(--accent-main); color: #fff; }
+.btn:disabled { opacity: .4; cursor: default; }
+.btn-primary { background: var(--accent-main); color: #fff; }
+.btn-primary:hover { background: #6a5cf0; }
+.btn-ghost { border-color: var(--bg-border); color: var(--text-secondary); }
+.btn-ghost:hover { background: var(--bg-elevated); color: var(--text-primary); border-color: var(--bg-border); }
+
+.row { display: flex; gap: 10px; margin-top: 18px; flex-wrap: wrap; }
+.status { font-size: 0.8rem; color: var(--text-secondary); margin-top: 12px; min-height: 1.2em; }
+.status.error { color: var(--coral); }
+
+.scenario-card {
+  border: 1px solid var(--bg-border); padding: 16px 18px; margin-bottom: 12px;
+  border-radius: 10px; cursor: pointer; transition: all .15s;
+}
+.scenario-card:hover { border-color: var(--accent-main); background: var(--bg-elevated); }
+.scenario-card.selected { border-color: var(--accent-main); background: var(--accent-glow); }
+.scenario-card h3 { font-size: 1rem; font-weight: 600; margin: 0 0 5px; }
+.scenario-meta { font-size: 0.72rem; color: var(--accent-main); margin-bottom: 6px; }
+.scenario-card p { font-size: 0.85rem; color: var(--text-secondary); margin: 3px 0 0; }
+
+.field-group { margin-bottom: 22px; }
+.field-label { display: flex; justify-content: space-between; font-size: 0.82rem; color: var(--text-secondary); margin-bottom: 8px; }
+.field-label .val { color: var(--accent-main); font-weight: 600; }
+
+input[type=range] { width: 100%; -webkit-appearance: none; height: 3px; background: var(--bg-border); border-radius: 2px; outline: none; }
+input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; border-radius: 50%; background: var(--accent-main); cursor: pointer; margin-top: -5.5px; }
+input[type=range]::-moz-range-thumb { width: 14px; height: 14px; border: none; border-radius: 50%; background: var(--accent-main); cursor: pointer; }
+
+.segmented { display: flex; border: 1px solid var(--bg-border); border-radius: 8px; overflow: hidden; }
+.segmented button { flex: 1; background: none; border: none; border-right: 1px solid var(--bg-border); color: var(--text-secondary); padding: 9px 6px; font-size: 0.78rem; cursor: pointer; }
+.segmented button:last-child { border-right: none; }
+.segmented button.selected { background: var(--accent-glow); color: var(--accent-main); }
+
+select#userRole {
+  width: 100%; background: var(--bg-elevated); border: 1px solid var(--bg-border);
+  color: var(--text-primary); padding: 10px 12px; border-radius: 8px; font-size: 0.88rem;
+}
+
+.divider { height: 1px; background: var(--bg-border); margin: 26px 0; }
+
+pre.payload {
+  background: var(--bg-elevated); border: 1px solid var(--bg-border); padding: 16px;
+  font-family: 'SF Mono', Consolas, monospace; font-size: 0.74rem; line-height: 1.6;
+  color: var(--text-secondary); max-height: 320px; overflow: auto; white-space: pre-wrap; border-radius: 8px;
+}
+
+.warn-box {
+  border-left: 2px solid var(--coral); background: rgba(245,101,101,0.08);
+  padding: 10px 14px; font-size: 0.8rem; color: var(--text-secondary); margin-top: 14px; display: none; border-radius: 0 6px 6px 0;
+}
+.warn-box.visible { display: block; }
+
+.key-warn-banner {
+  display: none; align-items: center; gap: 8px; background: rgba(249,115,22,0.1);
+  border: 1px solid rgba(249,115,22,0.3); color: var(--orange-warn); font-size: 0.78rem;
+  padding: 8px 14px; border-radius: 8px; margin-bottom: 16px;
+}
+.key-warn-banner.visible { display: flex; }
+
+.or-block-notice {
+  display: none; background: rgba(249,115,22,0.1); border: 1px solid rgba(249,115,22,0.3);
+  color: var(--orange-warn); font-size: 0.8rem; padding: 12px 16px; border-radius: 8px; margin: 12px 0;
+}
+.or-block-notice.visible { display: block; }
+
+/* ============ COPY BUTTON (Constraint 05) ============ */
+.copy-btn { display:flex;align-items:center;gap:5px;background:none;border:1px solid var(--bg-border);color:var(--text-muted);font-size:.7rem;padding:5px 11px 6px;border-radius:6px;cursor:pointer;transition:all .2s;white-space:nowrap;flex-shrink:0; }
+.copy-btn svg { width:11px;height:11px;stroke:currentColor;fill:none;stroke-width:1.8; }
+.copy-btn:hover { border-color: var(--accent-main); color: var(--accent-main); }
+.copy-btn.copied { border-color: var(--green); color: var(--green); }
+
+/* ============ CHAT CONSOLE (Stage 3) ============ */
+.chat-stream { display: flex; flex-direction: column; gap: 16px; }
+.chat-turn { max-width: 100%; }
+.chat-turn .who { font-size: 0.72rem; color: var(--text-muted); margin-bottom: 4px; font-weight: 600; text-transform: none; }
+.chat-turn.user .who { color: var(--teal); }
+.chat-turn.assistant .who { color: var(--accent-main); }
+.chat-bubble { font-size: 0.92rem; line-height: 1.65; }
+.chat-bubble p { margin: 0 0 0.8em; }
+.chat-bubble p:last-child { margin-bottom: 0; }
+.chat-bubble strong { color: var(--text-primary); }
+.chat-bubble em { color: var(--text-secondary); }
+.chat-bubble code { background: var(--bg-elevated); padding: 1px 5px; border-radius: 4px; font-size: 0.85em; }
+.chat-turn.system-note .who { color: var(--text-muted); }
+.chat-turn.system-note .chat-bubble { color: var(--text-muted); font-style: italic; font-size: 0.85rem; }
+
+.contract-summary {
+  border: 1px solid var(--bg-border); border-radius: 10px; padding: 14px 16px;
+  margin-bottom: 20px; font-size: 0.8rem; color: var(--text-secondary);
+}
+.contract-summary b { color: var(--text-primary); }
+
+#chatInput {
+  flex: 1; background: var(--bg-elevated); border: 1px solid var(--bg-border);
+  color: var(--text-primary); font-family: inherit; font-size: 0.9rem;
+  padding: 10px 14px; border-radius: 10px; resize: none; max-height: 44px;
+}
+
+.typing-dots span { display:inline-block; width:5px; height:5px; border-radius:50%; background: var(--accent-main); margin-right:3px; animation: blink 1.2s infinite; }
+.typing-dots span:nth-child(2){animation-delay:.2s} .typing-dots span:nth-child(3){animation-delay:.4s}
+@keyframes blink { 0%,80%,100%{opacity:.25} 40%{opacity:1} }
+
+/* ============ SUGGEST DIRECTIONS ============ */
+.suggest-row { display: flex; justify-content: flex-end; margin: 4px 0 2px; }
+.suggest-btn {
+  display: flex; align-items: center; gap: 6px; background: none; border: 1px solid var(--bg-border);
+  color: var(--text-secondary); font-size: 0.76rem; padding: 6px 12px; border-radius: 8px;
+  cursor: pointer; transition: all .15s;
+}
+.suggest-btn:hover { border-color: var(--accent-main); color: var(--accent-main); }
+.suggest-btn:disabled { opacity: .45; cursor: default; }
+.suggest-btn svg { width: 12px; height: 12px; stroke: currentColor; fill: none; stroke-width: 1.8; }
+
+.branch-cards { display: flex; flex-direction: column; gap: 8px; margin: 10px 0 16px; }
+.branch-card {
+  border: 1px solid var(--bg-border); border-left: 2px solid var(--accent-main);
+  background: var(--bg-elevated); border-radius: 0 8px 8px 0; padding: 11px 14px;
+  cursor: pointer; transition: all .15s;
+}
+.branch-card:hover { background: var(--accent-glow); border-left-color: var(--accent-main); }
+.branch-card .label { font-size: 0.86rem; font-weight: 600; color: var(--text-primary); margin-bottom: 3px; }
+.branch-card .implication { font-size: 0.78rem; color: var(--text-secondary); line-height: 1.45; }
+.branch-status { font-size: 0.78rem; color: var(--text-muted); margin: 6px 0; min-height: 1.2em; }
+
+/* ============ GEAR DRAWER (Constraint 06) ============ */
+.drawer {
+  position: fixed; top: 52px; right: 0; bottom: 0; width: 320px; z-index: 200;
+  background: var(--bg-surface); border-left: 1px solid var(--bg-border);
+  transform: translateX(100%); transition: transform .25s ease; padding: 1.5rem;
+  overflow-y: auto;
+}
+.drawer.open { transform: translateX(0); }
+.drawer-backdrop {
+  position: fixed; inset: 0; top: 52px; background: rgba(0,0,0,.4); z-index: 199;
+  visibility: hidden; pointer-events: none; opacity: 0; transition: opacity .2s;
+}
+.drawer-backdrop.open { visibility: visible; pointer-events: all; opacity: 1; }
+.drawer h4 { font-size: 0.9rem; margin: 0 0 16px; }
+.drawer-field { margin-bottom: 16px; }
+.drawer-field label { display: block; font-size: 0.78rem; color: var(--text-secondary); margin-bottom: 6px; }
+.drawer-field .readonly-note { font-size: 0.78rem; color: var(--text-muted); font-style: italic; }
+.drawer-field .key-note { font-size: 0.7rem; color: var(--orange-warn); margin-top: 5px; }
+.drawer-save { width: 100%; margin-top: 4px; }
+
+.drawer.wide { width: 400px; }
+.drawer-sec { margin-bottom: 22px; }
+.drawer-sec-t { font-size: 0.78rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 8px; }
+.drawer-sec input[type=text], .drawer-sec input[type=password] {
+  width: 100%; background: var(--bg-elevated); border: 1px solid var(--bg-border);
+  color: var(--text-primary); font-family: inherit; font-size: 0.82rem;
+  padding: 9px 11px; border-radius: 8px; margin-bottom: 8px;
+}
+#provBtns, #tierChips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+#catSearch {
+  width: 100%; background: var(--bg-elevated); border: 1px solid var(--bg-border);
+  color: var(--text-primary); font-family: inherit; font-size: 0.82rem;
+  padding: 9px 11px; border-radius: 8px; margin-bottom: 8px;
+}
+#catRows, #laneList { display: flex; flex-direction: column; gap: 4px; max-height: 320px; overflow-y: auto; }
+#laneList { max-height: 240px; margin-bottom: 4px; }
+.tchip {
+  background: none; border: 1px solid var(--bg-border); color: var(--text-secondary);
+  font-size: 0.7rem; padding: 4px 10px; border-radius: 20px; cursor: pointer;
+}
+.tchip.on { border-color: var(--accent-main); color: var(--accent-main); }
+.mrow {
+  display: flex; align-items: center; gap: 8px; font-size: 0.76rem; color: var(--text-secondary);
+  padding: 6px 8px; border-radius: 6px; cursor: pointer; word-break: break-all;
+}
+.mrow:hover { background: var(--bg-elevated); }
+.mrow.pinned { color: var(--text-primary); }
+.mrow .meta { margin-left: auto; font-size: 0.68rem; color: var(--text-muted); white-space: nowrap; }
+.mtag {
+  font-size: 0.64rem; border: 1px solid var(--bg-border); border-radius: 4px;
+  padding: 1px 6px; margin-left: 6px; white-space: nowrap;
+}
+.cat-status, .key-note { font-size: 0.72rem; color: var(--text-muted); margin-top: 6px; }
+.lane-btn {
+  display: flex; align-items: center; gap: 8px; background: var(--bg-elevated);
+  border: 1px solid var(--bg-border); color: var(--text-primary);
+  padding: 6px 12px 6px 10px; border-radius: 6px; font-size: 0.78rem; cursor: pointer;
+  max-width: 320px;
+}
+.lane-btn:hover { border-color: var(--accent-main); }
+.lane-btn .provider-dot {
+  width: 7px; height: 7px; border-radius: 50%; background: var(--text-muted); flex-shrink: 0;
+}
+.lane-btn #laneTxt { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lane-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 12px; }
+.lane-col {
+  border: 1px solid var(--bg-border); border-radius: 10px; overflow: hidden;
+  display: flex; flex-direction: column; min-width: 0;
+}
+.lane-col-h {
+  font-size: 0.72rem; color: var(--text-secondary); padding: 8px 12px;
+  border-bottom: 1px solid var(--bg-border); background: var(--bg-elevated);
+  display: flex; align-items: center; gap: 7px;
+}
+.lane-col-h .provider-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+.lane-col-h .served { color: var(--teal); }
+.lane-col-b { padding: 12px 14px; }
+.lane-col-b .chat-bubble { font-size: 0.88rem; }
+#toast {
+  position: fixed; bottom: 88px; left: 50%; transform: translateX(-50%);
+  background: var(--bg-elevated); border: 1px solid var(--bg-border); color: var(--text-primary);
+  font-size: 0.8rem; padding: 9px 18px; border-radius: 8px; z-index: 300;
+  opacity: 0; pointer-events: none; transition: opacity .2s; max-width: 90vw;
+}
+#toast.show { opacity: 1; }
+
+@media (max-width: 860px) {
+  .canvas { width: 94%; }
+  .zone-a span.title-text { display: none; }
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="zone-a">
+    <span class="title-text">Scenario Forge</span>
+    <span class="badge">3-Stage</span>
+    <span id="configBadge" class="fallback">Config: Local Fallback</span>
+  </div>
+  <div class="zone-b">
+    <button class="lane-btn" id="laneBtn" title="Choose models (lanes)"><span class="provider-dot" id="laneDot"></span><span id="laneTxt">loading…</span></button>
+    <button class="icon-btn" id="gearBtn" title="Settings">⚙</button>
+  </div>
+  <div class="zone-c">
+    Crafted by<br>
+    <a href="mailto:meet.venkat1@gmail.com">meet.venkat1@gmail.com</a>
+  </div>
+</div>
+
+<div class="drawer-backdrop" id="drawerBackdrop"></div>
+<div class="drawer wide" id="gearDrawer">
+  <h4>Settings</h4>
+  <div class="drawer-sec">
+    <div class="drawer-sec-t" id="laneCount">lanes</div>
+    <div id="laneList"></div>
+  </div>
+  <div class="drawer-sec">
+    <div class="drawer-sec-t">Model catalog</div>
+    <div id="provBtns"></div>
+    <input type="text" id="catSearch" placeholder="Search id, name — /regex/ supported">
+    <div id="tierChips"></div>
+    <div id="catRows"></div>
+    <div class="cat-status" id="catStatus"></div>
+  </div>
+  <div class="drawer-sec">
+    <div class="drawer-sec-t">Keys</div>
+    <div id="keyFields"></div>
+    <div class="row">
+      <button class="btn btn-primary" id="saveKeysBtn">Save keys</button>
+      <button class="btn btn-ghost" id="clearKeysBtn">Clear</button>
+    </div>
+  </div>
+</div>
+<div id="toast"></div>
+
+<div class="output-area" id="outputArea">
+  <div class="canvas">
+
+    <div class="stepper">
+      <div class="step active" data-step="1"><span class="n">01</span> Decompose</div>
+      <div class="step locked" data-step="2"><span class="n">02</span> Tune</div>
+      <div class="step locked" data-step="3"><span class="n">03</span> Play scene</div>
+    </div>
+
+    <!-- STAGE 1 -->
+    <section class="panel active" id="panel-1">
+      <div class="key-warn-banner" id="keyWarnBanner1"></div>
+      <p style="color:var(--text-secondary); margin: 0 0 16px; max-width: 62ch;">
+        Give it a raw topic. It generates several distinct scenario directions — different genres, eras, or dynamics — for role-play or narrative writing.
+      </p>
+      <textarea id="topicInput" placeholder="e.g. Sci-fi education system, Corporate whistleblower crisis…"></textarea>
+      <div class="row">
+        <button class="btn btn-primary" id="generateBtn">Generate scenarios</button>
+        <button class="btn btn-ghost" id="regenerateBtn" disabled>Regenerate</button>
+      </div>
+      <div class="status" id="chip1Status"></div>
+      <div class="divider"></div>
+      <div id="scenarioList"></div>
+    </section>
+
+    <!-- STAGE 2 -->
+    <section class="panel" id="panel-2">
+      <div class="field-group">
+        <div class="field-label"><span>Conflict intensity</span><span class="val" id="intensityVal">3</span></div>
+        <input type="range" id="intensity" min="1" max="5" value="3">
+      </div>
+      <div class="field-group">
+        <div class="field-label"><span>Pacing</span></div>
+        <div class="segmented" id="pacingGroup">
+          <button data-val="slow-burn" class="selected">Slow-burn</button>
+          <button data-val="moderate">Moderate</button>
+          <button data-val="rapid">Rapid</button>
+        </div>
+      </div>
+      <div class="field-group">
+        <div class="field-label"><span>Dialogue vs. narrative</span><span class="val" id="ratioVal">Balanced</span></div>
+        <input type="range" id="ratio" min="0" max="4" value="2">
+      </div>
+      <div class="field-group">
+        <div class="field-label"><span>Character role (yours)</span></div>
+        <select id="userRole"></select>
+      </div>
+      <div class="field-group">
+        <div class="field-label"><span>Additional notes (optional)</span></div>
+        <textarea id="extraNotes" style="min-height:56px;" placeholder="A detail, a constraint, a desired opening beat…"></textarea>
+      </div>
+      <div class="row">
+        <button class="btn btn-ghost" id="backTo1">← Back</button>
+        <button class="btn btn-primary" id="toStep3">Compile &amp; enter scene →</button>
+      </div>
+    </section>
+
+    <!-- STAGE 3 -->
+    <section class="panel" id="panel-3">
+      <div class="key-warn-banner" id="keyWarnBanner3"></div>
+      <div class="or-block-notice" id="orBlockNotice">OpenRouter has no CORS proxy inside claude.ai — switch to Claude Native to continue here, or open this engine standalone in a browser.</div>
+
+      <div class="contract-summary" id="contractSummary"></div>
+
+      <div class="row" style="margin-top:0; margin-bottom:18px;">
+        <button class="copy-btn" id="copyContractBtn">
+          <svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          Copy contract
+        </button>
+        <button class="copy-btn" id="copyChatBtn">
+          <svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          Copy scene so far
+        </button>
+        <button class="btn btn-ghost" id="backTo2">← Adjust tuning</button>
+      </div>
+
+      <div class="divider" style="margin: 18px 0 22px;"></div>
+
+      <div class="chat-stream" id="chatStream"></div>
+
+      <div class="suggest-row">
+        <button class="suggest-btn" id="suggestBtn">
+          <svg viewBox="0 0 24 24"><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/><circle cx="12" cy="12" r="4"/></svg>
+          Suggest directions
+        </button>
+      </div>
+      <div class="branch-status" id="branchStatus"></div>
+      <div class="branch-cards" id="branchCards"></div>
+    </section>
+
+  </div>
+</div>
+
+<div class="input-bar" id="inputBar">
+  <textarea id="chatInput" rows="1" placeholder="[pause] to break frame · [end scene] to close · type to continue the scene…"></textarea>
+  <button class="btn btn-primary" id="sendBtn">Send</button>
+</div>
+
+<script>
+(function () {
+"use strict";
+
+// ============================================================
+// MODEL CORE v2 (model-config-contract). Pasted verbatim. Edited only the three CONSTANTS.
+// ============================================================
+var ENGINE_NAME = 'Scenario Forge';                                   // CONSTANT 1: shown in X-Title
+var CANONICAL_CONFIG_URL = 'https://raw.githubusercontent.com/meetvenkat1-code/therantai-config/refs/heads/main/model.json';   // CONSTANT 2: never vary
+var LEGACY_KEY_SLOTS = {};                                       // CONSTANT 3: read-only fallbacks, e.g. { groq: ['rl.key.gq'], openrouter: ['rl.key.or'] }
+var DEFAULT_TIMEOUT_MS = 15000, DEFAULT_IDLE_MS = 3000;
+var isArtifact = window.self !== window.top;
+
+var LOCAL_FALLBACK_CONFIG = {                                    // mirrors the live model.json providers and defaultLanes (2026-10-03); model_aliases are deliberately not duplicated
+  native_model: 'claude-sonnet-4-6',
+  defaultLanes: ['groq::openai/gpt-oss-120b', 'or-auto::openrouter/free'],
+  providers: [
+    { id: 'claude', native: true, label: 'Claude · Native', dotColor: '#ef4444', requiresKey: false, defaultFor: ['artifact'] },
+    { id: 'groq', native: false, label: 'Groq', dotColor: '#22c55e', requiresKey: true, keyStorageName: 'groq', keyLabel: 'Groq API Key', keyPlaceholder: 'gsk_…', defaultFor: ['standalone'],
+      endpoint: 'https://api.groq.com/openai/v1/chat/completions', authHeader: 'Authorization', authPrefix: 'Bearer ', requestFormat: 'openai-chat', streamFormat: 'openai',
+      modelChain: ['openai/gpt-oss-120b', 'openai/gpt-oss-20b'], softFallback: { on: [429, 500, 502, 503], within: true }, hardFallback: 'or-auto', timeoutMs: 15000, idleMs: 3000 },
+    { id: 'or-auto', native: false, label: 'OR · Free Router', dotColor: '#f97316', requiresKey: true, keyStorageName: 'openrouter', keyLabel: 'OpenRouter API Key', keyPlaceholder: 'sk-or-…',
+      keyNote: 'Standalone only — OpenRouter has no CORS proxy inside claude.ai', standaloneOnly: true,
+      endpoint: 'https://openrouter.ai/api/v1/chat/completions', authHeader: 'Authorization', authPrefix: 'Bearer ',
+      extraHeaders: { 'HTTP-Referer': '$origin', 'X-Title': '$engineName' }, requestFormat: 'openai-chat', streamFormat: 'openai', modelChain: ['openrouter/free'], softFallback: { on: [429, 500, 502, 503], within: true }, timeoutMs: 45000, idleMs: 9000 }
+  ]
+};
+var liveModelConfig = LOCAL_FALLBACK_CONFIG;                     // boot on the floor, upgrade when the fetch lands
+
+var sleep = function (ms) { return new Promise(function (r) { setTimeout(r, ms); }); };
+function natCmp(a, b) { return a.localeCompare(b, undefined, { numeric: true }); }
+function cfgProviders() { return liveModelConfig.providers; }
+function P(id) { return cfgProviders().filter(function (p) { return p.id === id; })[0] || null; }
+function splitKey(k) { var i = k.indexOf('::'); return { provider: k.slice(0, i), model: k.slice(i + 2) }; }
+
+function isValidConfig(j) {
+  if (!j || !Array.isArray(j.providers) || !j.providers.length) return false;
+  var ids = {}, natives = 0, usable = false;
+  for (var i = 0; i < j.providers.length; i++) {
+    var p = j.providers[i];
+    if (!p || !p.id || !p.label || ids[p.id]) return false;
+    ids[p.id] = 1;
+    if (p.native === true) { natives++; if (isArtifact) usable = true; }
+    else if (p.endpoint && p.requestFormat === 'openai-chat' && !(p.standaloneOnly && isArtifact)) usable = true;
+  }
+  return natives <= 1 && usable;                                 // never adopt a half-valid config
+}
+function usableProviders() {                                     // native only inside claude.ai; standalone never routes it
+  return cfgProviders().filter(function (p) { return p.native === true ? isArtifact : !(p.standaloneOnly && isArtifact); });
+}
+function defaultLanes() {                                        // the floor: config's defaultLanes, else first model of the first usable provider
+  var ok = usableProviders().map(function (p) { return p.id; });
+  var list = (liveModelConfig.defaultLanes || []).filter(function (k) {
+    if (k.indexOf('::') < 1) return false; var s = splitKey(k); return ok.indexOf(s.provider) > -1 && !P(s.provider).native;
+  });
+  if (!list.length) {
+    var p = usableProviders().filter(function (x) { return !x.native && x.modelChain && x.modelChain.length; })[0];
+    if (p) list = [p.id + '::' + p.modelChain[0]];
+  }
+  return list;
+}
+
+function getKey(name) {
+  try {
+    var v = localStorage.getItem('hek_' + name); if (v) return v.trim();
+    var old = LEGACY_KEY_SLOTS[name] || [];
+    for (var i = 0; i < old.length; i++) { var o = localStorage.getItem(old[i]); if (o) return o.trim(); }
+  } catch (e) {}
+  return '';
+}
+function setKey(name, value) { try { localStorage.setItem('hek_' + name, (value || '').trim()); } catch (e) {} }
+
+function headersFor(cfg, key) {                                  // CHAT requests only (POST /chat/completions). Catalog GETs use catalogHeaders below.
+  var h = { 'Content-Type': 'application/json' };
+  if (key && cfg.authHeader) h[cfg.authHeader] = (cfg.authPrefix || '') + key;
+  Object.keys(cfg.extraHeaders || {}).forEach(function (k) {
+    var v = cfg.extraHeaders[k];
+    h[k] = v === '$origin' ? (window.location.origin !== 'null' ? window.location.origin : 'http://localhost') : v === '$engineName' ? ENGINE_NAME : v;
+  });
+  return h;
+}
+function retryAfterSeconds(res, msg) {                           // header first, then Groq's "try again in 26.6s / 1m3.5s / 250ms"
+  var ra = parseFloat(res.headers && res.headers.get && res.headers.get('retry-after')); if (!isNaN(ra)) return ra;
+  var m = /try again in\s+([0-9hms.]+)/i.exec(msg || ''); if (!m) return null;
+  var t = 0; m[1].replace(/(\d+(?:\.\d+)?)(ms|h|m|s)/g, function (_, n, u) { t += parseFloat(n) * { ms: 0.001, s: 1, m: 60, h: 3600 }[u]; });
+  return t || null;
+}
+
+function buildRequest(cfg, modelId, system, user, stream, maxTokens) {
+  if (cfg.native === true) {                                     // HARDCODED BRANCH. Never built from cfg fields.
+    return { url: 'https://api.anthropic.com/v1/messages',
+      headers: { 'Content-Type': 'application/json', 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
+      body: { model: modelId, max_tokens: maxTokens || 4000, stream: stream, system: system || '', messages: [{ role: 'user', content: user }] } };
+  }
+  if (cfg.requestFormat !== 'openai-chat') throw new Error('Unknown requestFormat: ' + cfg.requestFormat);
+  var h = headersFor(cfg, getKey(cfg.keyStorageName));
+  var body = { model: modelId, stream: stream, messages: (system ? [{ role: 'system', content: system }] : []).concat([{ role: 'user', content: user }]) };
+  if (maxTokens) body.max_tokens = maxTokens;
+  return { url: cfg.endpoint, headers: h, body: body };
+}
+
+function readStream(res, format, onChunk, timeoutMs, idleMs, signal) {   // resolves { reason, error }; never rejects
+  var rd = res.body.getReader(), dec = new TextDecoder(), buf = '', done = false, idleT, hardT, reason = null, err = null;
+  timeoutMs = timeoutMs || DEFAULT_TIMEOUT_MS; idleMs = idleMs || DEFAULT_IDLE_MS;
+  return new Promise(function (resolve) {
+    function finish() { if (done) return; done = true; clearTimeout(idleT); clearTimeout(hardT); try { rd.cancel(); } catch (e) {} resolve({ reason: reason, error: err }); }
+    function resetIdle() { clearTimeout(idleT); idleT = setTimeout(finish, idleMs); }
+    hardT = setTimeout(finish, timeoutMs); resetIdle();
+    if (signal) { if (signal.aborted) return finish(); signal.addEventListener('abort', finish, { once: true }); }
+    (function pump() {
+      if (done) return;
+      rd.read().then(function (r) {
+        if (done) return;
+        if (r.done) return finish();
+        buf += dec.decode(r.value, { stream: true });
+        var lines = buf.split('\n'); buf = lines.pop();
+        for (var i = 0; i < lines.length; i++) {
+          var t = lines[i].trim();
+          if (format === 'anthropic' && t === 'event: message_stop') return finish();   // named event line precedes its data: line
+          if (t.indexOf('data:') !== 0) continue;
+          var d = t.slice(5).trim(); if (d === '[DONE]') return finish();
+          try {
+            var p = JSON.parse(d);
+            if (p.error) { err = (p.error.message || 'stream error'); return finish(); }
+            if (format === 'anthropic') {
+              if (p.type === 'content_block_delta' && p.delta && p.delta.text) { onChunk(p.delta.text, null); resetIdle(); }
+              else if (p.type === 'message_delta' && p.delta && p.delta.stop_reason) reason = p.delta.stop_reason === 'max_tokens' ? 'length' : p.delta.stop_reason;
+              else if (p.type === 'message_stop') return finish();
+            } else {
+              var c0 = p.choices && p.choices[0], dl = c0 && c0.delta;
+              if (c0 && c0.finish_reason) reason = c0.finish_reason;
+              if (dl && dl.content) { onChunk(dl.content, p.model || null); resetIdle(); }
+              else if (dl && (dl.reasoning || dl.reasoning_content)) resetIdle();   // thinking counts as alive
+            }
+          } catch (e) {}
+        }
+        pump();
+      }).catch(finish);
+    })();
+  });
+}
+
+/* ONE call layer, two modes.
+   curated: callModel({ provider, system, user, onText, validate })         -> walks modelChain, soft/hard fallback
+   strict : callModel({ provider, model, system, user, onText, maxTokens }) -> exactly that model, never falls through (lanes, panels)
+   onText(accumulatedText, servedModelOrNull) fires on every chunk. Returns { text, model, served, cut }. */
+async function callModel(o) {
+  var cfg = P(o.provider), strict = !!o.model;
+  if (!cfg) throw new Error('Unknown provider: ' + o.provider);
+  if (cfg.standaloneOnly && isArtifact) throw new Error(cfg.label + ' is standalone only. It has no proxy inside claude.ai.');
+  if (cfg.requiresKey && !getKey(cfg.keyStorageName)) throw new Error('No ' + (cfg.keyLabel || cfg.label) + ' saved. Open settings.');
+  var models = strict ? [o.model] : (o.chain || (cfg.native ? [liveModelConfig.native_model] : cfg.modelChain) || []);
+  var lastStatus = null, lastRetry = null;
+  function fail(m) { var e = new Error(m); e.status = lastStatus; e.retryAfter = lastRetry; return e; }   // lets a panel engine show a 429 countdown
+  function aborted() { if (o.signal && o.signal.aborted) { var e = new Error('Aborted'); e.name = 'AbortError'; throw e; } }
+  var advance = ((cfg.softFallback && cfg.softFallback.on) || [429, 500, 502, 503]).concat([400, 404, 422]);
+  var last = '';
+  for (var i = 0; i < models.length; i++) {
+    var retried = false, folded = false, fatal = null;
+    for (var a = 0; a < 3; a++) {
+      aborted();
+      var acc = '', served = null, res;
+      var sys = folded ? '' : o.system, usr = folded ? (o.system ? o.system + '\n\n---\n\n' : '') + o.user : o.user;
+      try {
+        var rq = buildRequest(cfg, models[i], sys, usr, true, o.maxTokens);
+        res = await fetch(rq.url, { method: 'POST', headers: rq.headers, body: JSON.stringify(rq.body), signal: o.signal });
+      } catch (e) { if (e && e.name === 'AbortError') throw e; last = cfg.id + ': network error ' + e.message; break; }
+      if (!res.ok) {
+        var msg = ''; try { var eb = await res.json(); msg = (eb.error && eb.error.message) || ''; } catch (e) {}
+        lastStatus = res.status; lastRetry = retryAfterSeconds(res, msg);
+        if (res.status === 429 && !retried) { retried = true; await sleep(1800); continue; }                       // one retry, then advance
+        if (res.status === 400 && !folded && /system|developer|instruction/i.test(msg)) { folded = true; continue; }   // model rejects the system role
+        last = cfg.id + ':' + res.status + (msg ? ' ' + String(msg).slice(0, 140) : '') + (res.status === 404 ? ' — model not found, refresh the catalog' : '');
+        if (advance.indexOf(res.status) < 0) fatal = last;                                                          // 401/402/403/413: another model will not heal it
+        break;
+      }
+      var out = await readStream(res, cfg.native === true ? 'anthropic' : (cfg.streamFormat || 'openai'), function (c, s) { acc += c; if (s) served = s; if (o.onText) o.onText(acc, served); }, cfg.timeoutMs, cfg.idleMs, o.signal);
+      aborted();
+      if (!acc.trim()) { last = cfg.id + ': empty reply' + (out.reason === 'length' ? ' — the token cap was spent on reasoning' : out.error ? ' — ' + out.error : ''); break; }
+      if (o.validate && !cfg.native) { try { o.validate(acc); } catch (e) { last = cfg.id + ': rejected — ' + e.message; break; } }
+      return { text: acc, model: models[i], served: served, cut: out.reason === 'length' };
+    }
+    if (fatal) throw fail(fatal);                                                                              // stops everything, hardFallback included
+  }
+  var hf = !strict && !o._noHard && cfg.hardFallback ? P(cfg.hardFallback) : null;                                 // strict calls never reach here: lane honesty
+  if (hf) {
+    if (hf.standaloneOnly && isArtifact) throw new Error('All providers exhausted (' + last + '). The fallback (' + hf.label + ') is standalone only.');
+    if (hf.requiresKey && !getKey(hf.keyStorageName)) throw new Error('Provider unavailable (' + last + '). Fallback ' + hf.label + ' has no key.');
+    return callModel({ provider: hf.id, chain: hf.modelChain, system: o.system, user: o.user, onText: o.onText, validate: o.validate, maxTokens: o.maxTokens, _noHard: true });
+  }
+  throw fail(strict ? last : 'Provider unavailable (' + last + ')');
+}
+
+function fetchModelConfig(onApplied) {                           // call once on load, after rendering from the floor
+  return fetch(CANONICAL_CONFIG_URL + '?v=' + Date.now())
+    .then(function (r) { if (!r.ok) throw new Error('Config fetch failed: ' + r.status); return r.json(); })
+    .then(function (j) { if (!isValidConfig(j)) throw new Error('Malformed config'); liveModelConfig = j; return 'live'; })
+    .catch(function () { liveModelConfig = LOCAL_FALLBACK_CONFIG; return 'fallback'; })
+    .then(function (src) { if (onApplied) onApplied(src); return src; });
+}
+
+var KNOWN_MODEL_ALIASES = { 'mistralai/mistral-large': 'mistralai/mistral-large-2411', 'meta-llama/llama-3-70b-instruct': 'meta-llama/llama-3.3-70b-instruct' };
+function modelAliases() { return Object.assign({}, KNOWN_MODEL_ALIASES, liveModelConfig.model_aliases || {}); }
+function modelIdBase(id) { var q = id.split('-'); while (q.length > 1 && /^(v?\d[\d.]*|\d{4,})$/i.test(q[q.length - 1])) q.pop(); return q.join('-'); }
+function resolveModelId(id, live) {                              // only against a catalog the user actually fetched; never across providers
+  if (!live || !live.length || live.indexOf(id) > -1) return { id: id, status: 'ok' };
+  var al = modelAliases()[id]; if (al && live.indexOf(al) > -1) return { id: al, status: 'alias' };
+  var base = modelIdBase(id), c = live.filter(function (x) { return modelIdBase(x) === base; });
+  if (c.length) return { id: c.sort(natCmp).reverse()[0], status: 'fuzzy' };
+  return { id: id, status: 'unresolved' };
+}
+
+// ============================================================
+// MODEL CATALOG PANEL — Mode A: Lanes (model-catalog-panel v3.2, base set)
+// Single path: the header lane button replaces the provider dropdown.
+// ============================================================
+
+/* ───────── Glue: Model Core -> picker ───────── */
+var CAT_KEY = 'scenario-forge.v1:catalog';                       // dedicated cache key, one per engine
+var SETTINGS_KEY = 'scenario-forge.v1:settings';
+var PROVIDERS = {}, DEFAULT_MODELS = [], configSource = 'fallback', uiReady = false;
+var keyOf = function (cfg) { return getKey(cfg.keyStorageName || cfg.id); };    // the core's getKey takes the storage name
+var isDefault = function (v) { return DEFAULT_MODELS.some(function (d) { return d[0] === v; }); };
+function applyConfigToPicker(src) {
+  configSource = src; Object.keys(PROVIDERS).forEach(function (k) { delete PROVIDERS[k]; });
+  usableProviders().filter(function (p) { return !p.native; }).forEach(function (p) { PROVIDERS[p.id] = { id: p.id, label: p.label, url: p.endpoint, cfg: p }; });
+  DEFAULT_MODELS = defaultLanes().map(function (k) { var s = splitKey(k); return [k, PROVIDERS[s.provider].label + ' · ' + s.model, s.provider]; });
+  if (uiReady) renderConfigUI();
+}
+var defaultModel = function () { return DEFAULT_MODELS.length ? DEFAULT_MODELS[0][0] : ''; };
+
+/* ───────── Engine plumbing the Lanes blocks assume ───────── */
+var $ = function (id) { return document.getElementById(String(id).replace(/^#/, '')); };   // accepts "id" and "#id"
+var h = function (tag, cls, txt) { var e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; };
+var lsGet = function (k, d) { try { var v = JSON.parse(localStorage.getItem(k)); return v == null ? d : v; } catch (e) { return d; } };
+var lsSet = function (k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
+var MAX_LANES = 12, MAX_CELLS = 12;
+var S = { settings: Object.assign({ lanes: [], customLanes: [], lanesTouched: false }, lsGet(SETTINGS_KEY, {})) };
+var save = function () { lsSet(SETTINGS_KEY, S.settings); };
+function toast(m) { var t = $('toast'); t.textContent = m; t.classList.add('show'); clearTimeout(toast._t); toast._t = setTimeout(function () { t.classList.remove('show'); }, 3500); }
+
+/* Migrate legacy lane keys once: openrouter:: -> or-auto::, provider|model / pin|provider|model -> providerId::modelId */
+(function migrateLanes() {
+  function fix(k) {
+    if (!k) return k;
+    if (k.indexOf('openrouter::') === 0) k = 'or-auto::' + k.slice('openrouter::'.length);
+    if (k.indexOf('::') < 0 && k.indexOf('|') > -1) {
+      var parts = k.split('|');
+      k = parts[parts.length - 2] + '::' + parts[parts.length - 1];
+    }
+    return k;
+  }
+  var changed = false;
+  ['lanes'].forEach(function (f) {
+    if (Array.isArray(S.settings[f])) {
+      var next = S.settings[f].map(fix);
+      if (JSON.stringify(next) !== JSON.stringify(S.settings[f])) { S.settings[f] = next; changed = true; }
+    }
+  });
+  if (Array.isArray(S.settings.customLanes)) {
+    var seen = {}, next2 = [];
+    S.settings.customLanes.forEach(function (c) {
+      var key = fix(c.key);
+      var s = null; try { s = splitKey(key); } catch (e) {}
+      if (!s || !s.provider || seen[key]) { changed = true; return; }
+      if (c.key !== key) changed = true;
+      seen[key] = 1; next2.push({ key: key, provider: s.provider, model: s.model });
+    });
+    S.settings.customLanes = next2;
+  }
+  if (changed) save();
+})();
+
+/* ───────── Catalog GET helpers (shared by Lanes and Panel) ───────── */
+/* A catalog read is a GET of public data. Attribution headers belong to POST /chat/completions only; on a GET they,
+   and Content-Type, widen the CORS preflight. Send the least that works. */
+var catalogHeaders = function (cfg, k) {
+  if (!k || /openrouter\.ai/.test(cfg.endpoint)) return {};     // OpenRouter's /models is public: no key, no headers, no preflight
+  var hh = headersFor(cfg, k), o = {};
+  Object.keys(hh).forEach(function (n) { if (/^(authorization|x-api-key)$/i.test(n)) o[n] = hh[n]; });   // keyed providers (Groq): auth header only
+  return o;
+};
+var inflight = {};                                             // one catalog fetch per provider at a time
+
+/* ───────── A1. Lanes ───────── */
+function laneList() {
+  var seen = {}, out = [];
+  function add(key, pinned) { var s; try { s = splitKey(key); } catch (e) { return; } if (seen[key] || !PROVIDERS[s.provider]) return; seen[key] = 1; out.push({ key: key, pid: s.provider, m: s.model, pinned: pinned }); }
+  defaultLanes().forEach(function (k) { add(k, false); });                      // the floor
+  (S.settings.customLanes || []).forEach(function (c) { add(c.key, true); });   // pinned: exactly the model chosen, never a fallback
+  return out;
+}
+function activeKeys() {
+  var all = laneList().map(function (l) { return l.key; });
+  if (!S.settings.lanesTouched) { var d = defaultLanes()[0]; return d && all.indexOf(d) > -1 ? [d] : []; }   // untouched: only the first default is ticked
+  return S.settings.lanes.filter(function (k) { return all.indexOf(k) > -1; });
+}
+function setLane(key, on) {
+  var cur = activeKeys().slice(), i = cur.indexOf(key);
+  if (on && i < 0) { if (cur.length >= MAX_LANES) { toast('Max ' + MAX_LANES + ' lanes — deselect one first'); return false; } cur.push(key); }
+  else if (!on && i > -1) cur.splice(i, 1);
+  S.settings.lanes = cur; S.settings.lanesTouched = true; save(); return true;
+}
+function togglePin(pid, m, cb) {
+  var key = pid + '::' + m.id, cl = S.settings.customLanes, i = cl.map(function (c) { return c.key; }).indexOf(key);
+  if (cb.checked) {
+    if (!setLane(key, true)) { cb.checked = false; return; }                      // pinning also activates; the max-12 toast comes from setLane
+    if (i < 0 && !laneList().some(function (l) { return l.key === key; })) cl.push({ key: key, provider: pid, model: m.id });
+  } else { setLane(key, false); if (i > -1) cl.splice(i, 1); }
+  save(); renderLanes(); cb.closest('.mrow').classList.toggle('pinned', cb.checked);
+}
+
+/* ───────── A4. Alias / slug-rot resolution (only against a fetched catalog, never across providers) ───────── */
+function resolveCustom(lanes) {
+  var moved = [];
+  lanes.forEach(function (l) {
+    if (!l.pinned || !catalog[l.pid]) return;
+    var r = resolveModelId(l.m, catalog[l.pid].models.map(function (m) { return m.id; }));
+    if (r.status === 'alias' || r.status === 'fuzzy') { moved.push(l.m.split('/').pop() + ' → ' + r.id.split('/').pop()); l.m = r.id; }
+  });
+  if (moved.length) toast('Model id updated: ' + moved.join(', '));
+}
+
+/* Strict single-model call for one lane (lane honesty: exactly the requested model, no substitution) */
+function callLaneComplete(lane, system, user, onText) {
+  return callModel({ provider: lane.pid, model: lane.m, system: system, user: user, onText: onText }).then(function (r) { return { text: r.text, served: r.served }; });
+}
+
+/* ───────── A5. Drawer: Lanes, Model catalog, Keys (base set) ───────── */
+var catalog = lsGet(CAT_KEY, {}), tierSel = 'all', activeProv = null;
+var TIERS = ['free', 'cheap', 'medium', 'premium', 'n/a'];
+var tierOf = function (m) { return /:free$/.test(m.id) || m.price === 0 ? 'free' : m.price == null ? 'n/a' : m.price * 1e6 < 0.5 ? 'cheap' : m.price * 1e6 < 3 ? 'medium' : 'premium'; };
+async function fetchCatalog(pid) {
+  if (inflight[pid]) return; inflight[pid] = true;               // catalogHeaders + inflight: see Section 2
+  var pv = PROVIDERS[pid]; if (!pv) { delete inflight[pid]; return; }
+  var st = $('catStatus'); st.textContent = 'Fetching ' + pv.label + '…';
+  try {
+    var k = keyOf(pv.cfg), r = await fetch(pv.url.replace(/\/chat\/completions\/?$/, '/models'), { headers: catalogHeaders(pv.cfg, k) });
+    if (r.status === 401 || r.status === 403) throw new Error(pv.label + ' catalog needs a saved key (Keys below).');
+    if (!r.ok) throw new Error(pv.label + ' catalog failed (' + r.status + ')');
+    var j = await r.json(), list = (j.data || []).map(function (m) { return { id: m.id, name: m.name || '', ctx: m.context_length || null, price: m.pricing && m.pricing.prompt != null ? parseFloat(m.pricing.prompt) : null }; });
+    list.forEach(function (m) { m.tier = tierOf(m); }); list.sort(function (a, b) { return TIERS.indexOf(a.tier) - TIERS.indexOf(b.tier) || natCmp(a.id, b.id); });
+    catalog[pid] = { t: Date.now(), models: list }; lsSet(CAT_KEY, catalog); st.textContent = list.length + ' models from ' + pv.label + '.';
+  } catch (e) { st.textContent = e.message; }
+  finally { delete inflight[pid]; }
+  renderCatalog();
+}
+function matcher(q) { q = q.trim(); if (!q) return function () { return true; }; var m = q.match(/^\/(.+)\/([a-z]*)$/); if (m) { try { var re = new RegExp(m[1], m[2]); return function (s) { return re.test(s); }; } catch (e) {} } q = q.toLowerCase(); return function (s) { return s.toLowerCase().includes(q); }; }
+function chip(txt, on, fn) { var b = document.createElement('button'); b.type = 'button'; b.className = 'tchip' + (on ? ' on' : ''); b.textContent = txt; b.addEventListener('click', fn); return b; }
+function renderCatalog() {
+  var pb = $('provBtns'); if (!pb) return; pb.innerHTML = '';
+  Object.values(PROVIDERS).forEach(function (p) { var n = catalog[p.id] ? catalog[p.id].models.length : 0; pb.appendChild(chip(p.label + (n ? ' (' + n + ') ↻' : ' — fetch'), activeProv === p.id, function () { var was = activeProv === p.id; activeProv = p.id; renderCatalog(); if (!catalog[p.id] || was) fetchCatalog(p.id); })); });   // switch first, fetch second; the active tab refetches
+  var tc = $('tierChips'); tc.innerHTML = '';
+  ['all', 'pinned'].concat(TIERS).forEach(function (t) { tc.appendChild(chip(t === 'pinned' ? 'Pinned (' + S.settings.customLanes.length + ')' : t, tierSel === t, function () { tierSel = t; renderCatalog(); })); });
+  var box = $('catRows'); box.innerHTML = ''; var c = catalog[activeProv]; if (!c) return;
+  var test = matcher($('catSearch').value), act = activeKeys(), isPin = function (id) { return S.settings.customLanes.some(function (x) { return x.key === activeProv + '::' + id; }); };
+  var rows = c.models.filter(function (m) { return (tierSel === 'all' || (tierSel === 'pinned' ? isPin(m.id) : m.tier === tierSel)) && test(m.id + ' ' + m.name); });
+  rows.slice(0, 150).forEach(function (m) {
+    var lab = document.createElement('label'); lab.className = 'mrow' + (isPin(m.id) ? ' pinned' : '');
+    var cb = document.createElement('input'); cb.type = 'checkbox'; cb.checked = act.includes(activeProv + '::' + m.id); cb.addEventListener('change', function () { togglePin(activeProv, m, cb); });
+    var meta = document.createElement('span'); meta.className = 'meta';
+    meta.textContent = [m.ctx ? Math.round(m.ctx / 1000) + 'k ctx' : '', m.tier === 'free' ? 'FREE' : m.price != null ? '$' + (m.price * 1e6).toFixed(2) + '/M in' : ''].filter(Boolean).join(' · ');
+    lab.appendChild(cb); lab.appendChild(document.createTextNode(m.id)); lab.appendChild(meta); box.appendChild(lab);       // textContent / text nodes only: catalog text is untrusted
+  });
+  if (rows.length > 150) { var f = document.createElement('div'); f.className = 'key-note'; f.textContent = 'Showing 150 of ' + rows.length + ' — narrow with search.'; box.appendChild(f); }
+}
+var laneLabel = function (l) { return (PROVIDERS[l.pid] ? PROVIDERS[l.pid].label : l.pid) + ' · ' + l.m; };
+function updateRunControls() {                                   // single path: header lane button shows the ticked lanes
+  var act = laneList().filter(function (l) { return activeKeys().includes(l.key); }), first = act[0];
+  var lt = $('laneTxt'); if (lt) lt.textContent = !act.length ? 'no lane' : act.length === 1 ? laneLabel(first) : act.length + ' lanes';
+  var ld = $('laneDot'); if (ld) ld.style.background = (first && PROVIDERS[first.pid] && PROVIDERS[first.pid].cfg.dotColor) || '#9090a8';
+}
+function renderLanes() {                                         // doubles as ensureLanes(): activeKeys() already drops stale keys
+  var box = $('laneList'); if (!box) return; box.innerHTML = ''; var act = activeKeys();
+  laneList().forEach(function (l) {
+    var lab = document.createElement('label'); lab.className = 'mrow' + (l.pinned ? ' pinned' : '');
+    var cb = document.createElement('input'); cb.type = 'checkbox'; cb.checked = act.includes(l.key);
+    cb.addEventListener('change', function () { if (!setLane(l.key, cb.checked)) cb.checked = false; renderLanes(); renderCatalog(); updateKeyWarnings(); });
+    var dot = document.createElement('span'); dot.className = 'provider-dot'; dot.style.cssText = 'display:inline-block;margin-right:6px;background:' + ((PROVIDERS[l.pid] && PROVIDERS[l.pid].cfg.dotColor) || '#9090a8');
+    lab.appendChild(cb); lab.appendChild(dot); lab.appendChild(document.createTextNode((l.pinned ? '★ ' : '') + laneLabel(l)));
+    if (l.pinned) { var x = document.createElement('span'); x.textContent = '  ×'; x.style.color = 'var(--red, #ef4444)';
+      x.addEventListener('click', function (e) { e.preventDefault(); e.stopPropagation(); S.settings.customLanes = S.settings.customLanes.filter(function (cc) { return cc.key !== l.key; }); setLane(l.key, false); save(); renderLanes(); renderCatalog(); updateKeyWarnings(); }); lab.appendChild(x); }
+    box.appendChild(lab);
+  });
+  var n = act.length; $('laneCount').textContent = n + ' of ' + laneList().length + ' lanes active (max ' + MAX_LANES + ')' + (n > 6 ? ' · large fan-outs can hit provider rate limits' : '');
+  updateRunControls();
+}
+function renderKeyRows() {
+  var box = $('keyFields'); if (!box) return; box.innerHTML = '';
+  usableProviders().filter(function (p) { return !p.native && p.requiresKey; }).forEach(function (p) {
+    var wrap = document.createElement('div'), lab = document.createElement('label'), inp = document.createElement('input');
+    lab.textContent = p.keyLabel || p.label + ' Key'; inp.type = 'password'; inp.placeholder = p.keyPlaceholder || ''; inp.id = 'keyInput_' + p.keyStorageName; inp.value = getKey(p.keyStorageName);
+    wrap.appendChild(lab); wrap.appendChild(inp);
+    if (p.keyNote) { var nn = document.createElement('div'); nn.className = 'key-note'; nn.textContent = p.keyNote; wrap.appendChild(nn); }
+    box.appendChild(wrap);
+  });
+}
+var keysWired = false;
+function wireKeys() {                                            // call once
+  if (keysWired) return; keysWired = true;
+  $('saveKeysBtn').addEventListener('click', function () { usableProviders().filter(function (p) { return !p.native && p.requiresKey; }).forEach(function (p) { var el = $('keyInput_' + p.keyStorageName); if (el) setKey(p.keyStorageName, el.value); }); renderKeyRows(); updateKeyWarnings(); closeDrawer(); toast('Keys saved'); });
+  $('clearKeysBtn').addEventListener('click', function () { usableProviders().filter(function (p) { return !p.native; }).forEach(function (p) { try { localStorage.removeItem('hek_' + p.keyStorageName); } catch (e) {} }); renderKeyRows(); updateKeyWarnings(); toast('Saved keys cleared from this device'); });
+  $('catSearch').addEventListener('input', renderCatalog);
+}
+function renderBadge() {
+  var b = $('configBadge'); if (!b) return;
+  b.textContent = configSource === 'live' ? 'Config: Live' : 'Config: Local Fallback';
+  b.className = configSource === 'live' ? 'live' : 'fallback';
+  b.title = configSource === 'live' ? 'Providers and default models loaded from model.json' : 'model.json unreachable or malformed — using the built-in floor';
+}
+function renderConfigUI() {                                      // the hook applyConfigToPicker() calls after first paint
+  renderBadge();
+  if (!activeProv || !PROVIDERS[activeProv]) activeProv = Object.keys(PROVIDERS)[0];
+  renderLanes(); renderCatalog(); renderKeyRows(); updateKeyWarnings();
+}
+
+/* Key warnings across the ticked lanes (not one provider): missing keys listed, artifact-blocked lanes noted */
+function updateKeyWarnings() {
+  var lanes = laneList().filter(function (l) { return activeKeys().includes(l.key); });
+  var missing = [];
+  lanes.forEach(function (l) {
+    var cfg = PROVIDERS[l.pid] && PROVIDERS[l.pid].cfg;
+    if (cfg && cfg.requiresKey && !keyOf(cfg) && missing.indexOf(cfg.label) < 0) missing.push(cfg.label);
+  });
+  var msg = missing.length ? ('⚠ ' + missing.join(', ') + ' need(s) an API key — open Settings (⚙) to add one.') : '';
+  ['keyWarnBanner1', 'keyWarnBanner3'].forEach(function (id) {
+    var el = $(id); if (!el) return;
+    el.textContent = msg;
+    el.classList.toggle('visible', !!msg);
+  });
+  var blockedLanes = lanes.filter(function (l) { var cfg = PROVIDERS[l.pid] && PROVIDERS[l.pid].cfg; return cfg && cfg.standaloneOnly && isArtifact; });
+  var orNotice = $('orBlockNotice'); if (orNotice) orNotice.classList.toggle('visible', lanes.length > 0 && blockedLanes.length === lanes.length);
+  var allBlocked = lanes.length > 0 && blockedLanes.length === lanes.length;
+  if ($('sendBtn')) $('sendBtn').disabled = allBlocked;
+}
+
+function openDrawer() { $('gearDrawer').classList.add('open'); $('drawerBackdrop').classList.add('open'); }
+function closeDrawer() { $('gearDrawer').classList.remove('open'); $('drawerBackdrop').classList.remove('open'); }
+
+// gear drawer toggle + lane button opens the drawer (single path: the lane button IS the model control)
+document.getElementById('gearBtn').addEventListener('click', openDrawer);
+document.getElementById('laneBtn').addEventListener('click', openDrawer);
+document.getElementById('drawerBackdrop').addEventListener('click', closeDrawer);
+
+/* boot: the core already holds the floor, so the first paint works with no network; then the live file swaps in */
+applyConfigToPicker('fallback');
+wireKeys();
+uiReady = true;
+renderConfigUI();
+fetchModelConfig(function (src) { applyConfigToPicker(src); });
+
+
+// ============================================================
+// MARKDOWN RENDERING (Constraint 02)
+// ============================================================
+function escapeHtml(s) { return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+function renderMarkdown(src) {
+  var s = escapeHtml(src);
+  s = s.replace(/```([\s\S]*?)```/g, function (m, c) { return '<pre><code>' + c + '</code></pre>'; });
+  s = s.replace(/`([^`]+)`/g, '<code>$1</code>');
+  s = s.replace(/\*\*\*([^*]+)\*\*\*/g, '<strong><em>$1</em></strong>');
+  s = s.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+  s = s.replace(/(^|[^*])\*([^*]+)\*/g, '$1<em>$2</em>');
+  s = s.replace(/_([^_]+)_/g, '<em>$1</em>');
+  s = s.replace(/^### (.*)$/gm, '<h3>$1</h3>');
+  s = s.replace(/^## (.*)$/gm, '<h2>$1</h2>');
+  s = s.replace(/^# (.*)$/gm, '<h1>$1</h1>');
+  s = s.replace(/^---$/gm, '<hr>');
+  s = s.split(/\n\n+/).map(function (block) {
+    if (/^<h[1-3]>|^<hr>|^<pre>/.test(block)) return block;
+    return '<p>' + block.replace(/\n/g, '<br>') + '</p>';
+  }).join('');
+  return s;
+}
+
+// ============================================================
+// CANONICAL COPY (Constraint 05)
+// ============================================================
+function copyToClipboard(text, btn) {
+  if (!text || !text.trim()) return;
+  var origHTML = btn.innerHTML;
+  var ICON_CHECK = '<svg viewBox="0 0 24 24" style="width:11px;height:11px;stroke:currentColor;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+  function onSuccess() { btn.innerHTML = ICON_CHECK + ' Copied'; btn.classList.add('copied'); setTimeout(function () { btn.innerHTML = origHTML; btn.classList.remove('copied'); }, 2000); }
+  function onFail() { btn.textContent = '✗ Failed'; setTimeout(function () { btn.innerHTML = origHTML; }, 2000); }
+  function execCopy() {
+    var ta = document.createElement('textarea'); ta.value = text;
+    ta.style.cssText = 'position:fixed;left:-9999px;top:-9999px;opacity:0;font-size:12px;pointer-events:none;';
+    ta.setAttribute('readonly', '');
+    document.body.appendChild(ta); ta.focus(); ta.select(); ta.setSelectionRange(0, text.length);
+    var ok = false; try { ok = document.execCommand('copy'); } catch (e) {}
+    document.body.removeChild(ta); ok ? onSuccess() : onFail();
+  }
+  if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(text).then(onSuccess).catch(execCopy); }
+  else { execCopy(); }
+}
+
+// ============================================================
+// STEPPER NAV
+// ============================================================
+var steps = document.querySelectorAll('.stepper .step');
+var panels = document.querySelectorAll('.panel');
+function goTo(n) {
+  panels.forEach(function (p) { p.classList.remove('active'); });
+  document.getElementById('panel-' + n).classList.add('active');
+  steps.forEach(function (s) { s.classList.toggle('active', s.dataset.step == n); });
+  document.getElementById('inputBar').classList.toggle('active', n == 3);
+  document.getElementById('outputArea').classList.toggle('has-inputbar', n == 3);
+}
+steps.forEach(function (s) {
+  s.addEventListener('click', function () {
+    if (s.classList.contains('locked')) return;
+    goTo(s.dataset.step);
+  });
+});
+function unlockStep(n) { document.querySelector('.step[data-step="' + n + '"]').classList.remove('locked'); }
+function markDone(n) { document.querySelector('.step[data-step="' + n + '"]').classList.add('done'); }
+
+// ============================================================
+// STAGE 1 — TOPIC DECOMPOSITION
+// ============================================================
+var state = { topic: '', selectedScenario: null, intensity: 3, pacing: 'moderate', ratio: 2, userRole: '', notes: '', chatHistory: [], compiledContract: '' };
+
+function containsLikelyRealPerson(text) {
+  return /\bas\s+[A-Z][a-z]+\s+[A-Z][a-z]+\b/.test(text) || /\b(president|ceo|senator)\s+[A-Z][a-z]+\b/i.test(text);
+}
+
+function buildDecompositionPrompt(topic) {
+  return 'Given the raw topic "' + topic + '", generate exactly 4 distinct role-play/narrative scenario options.\n\n' +
+    'Each must differ in genre, era, or relational dynamic. For each, output strictly:\n\n' +
+    'TITLE: <short title, under 8 words>\nGENRE: <e.g. historical drama, near-future thriller>\nSETTING: <one sentence>\nCORE_CONFLICT: <one sentence>\nTONE: <2-4 words>\n\n' +
+    'Separate entries with "---". Rules: never build a scenario around a real, named public figure. Output only the 4 entries, nothing else.';
+}
+
+function parseScenarios(raw) {
+  return raw.split(/---+/).map(function (block) {
+    function get(key) { var m = block.match(new RegExp(key + ':\\s*(.+)')); return m ? m[1].trim() : ''; }
+    return { title: get('TITLE'), genre: get('GENRE'), setting: get('SETTING'), conflict: get('CORE_CONFLICT'), tone: get('TONE') };
+  }).filter(function (s) { return s.title && s.setting; });
+}
+
+function fallbackScenarios(topic) {
+  return [
+    { title: topic + ' — Historical framing', genre: 'Historical drama', setting: 'An earlier era grappling with an early form of: ' + topic + '.', conflict: 'A traditionalist and a reformer clash over how to proceed.', tone: 'Formal, tense' },
+    { title: topic + ' — Near-future framing', genre: 'Near-future fiction', setting: 'A near-future institution built around: ' + topic + '.', conflict: "A system's stated ideals collide with its lived reality.", tone: 'Clinical, uneasy' },
+    { title: topic + ' — Intimate two-hander', genre: 'Literary fiction', setting: 'Two people in a single room, forced to confront: ' + topic + '.', conflict: 'Personal loyalty versus an inconvenient truth.', tone: 'Quiet, charged' },
+    { title: topic + ' — Ensemble/procedural', genre: 'Procedural drama', setting: 'A team processing a crisis rooted in: ' + topic + '.', conflict: 'Competing accounts of what actually happened.', tone: 'Fast, adversarial' }
+  ];
+}
+
+function selectScenario(s, card) {
+  document.querySelectorAll('.scenario-card').forEach(function (c) { c.classList.remove('selected'); });
+  card.classList.add('selected');
+  state.selectedScenario = s;
+  populateRoleSelect();
+  unlockStep(2);
+  markDone(1);
+  setTimeout(function () { goTo(2); }, 150);
+}
+
+function renderScenarios(list) {
+  var el = document.getElementById('scenarioList');
+  el.innerHTML = '';
+  list.forEach(function (s) {
+    var card = document.createElement('div');
+    card.className = 'scenario-card';
+    card.innerHTML = '<div class="scenario-meta">' + s.genre + ' · ' + s.tone + '</div><h3>' + s.title + '</h3><p><strong>Setting:</strong> ' + s.setting + '</p><p><strong>Conflict:</strong> ' + s.conflict + '</p>';
+    card.addEventListener('click', function () { selectScenario(s, card); });
+    el.appendChild(card);
+  });
+}
+
+/* Lanes: one column per lane, each with its own header (Provider · model + served tag) and cards */
+function renderScenarioLaneColumn(lane, scenarios, served) {
+  var grid = document.getElementById('scenarioGrid');
+  var col = document.createElement('div');
+  col.className = 'lane-col';
+  var dotColor = (PROVIDERS[lane.pid] && PROVIDERS[lane.pid].cfg.dotColor) || '#9090a8';
+  col.innerHTML = '<div class="lane-col-h"><span class="provider-dot" style="background:' + dotColor + '"></span><span>' + laneLabel(lane) + '</span>' + (served && served !== lane.m ? ' <span class="served">→ served: ' + served + '</span>' : '') + '</div>';
+  var body = document.createElement('div');
+  body.className = 'lane-col-b';
+  scenarios.forEach(function (s) {
+    var card = document.createElement('div');
+    card.className = 'scenario-card';
+    card.innerHTML = '<div class="scenario-meta">' + s.genre + ' · ' + s.tone + '</div><h3>' + s.title + '</h3><p><strong>Setting:</strong> ' + s.setting + '</p><p><strong>Conflict:</strong> ' + s.conflict + '</p>';
+    card.addEventListener('click', function () { selectScenario(s, card); });
+    body.appendChild(card);
+  });
+  col.appendChild(body);
+  grid.appendChild(col);
+}
+
+function renderScenarioLaneError(lane, message) {
+  var grid = document.getElementById('scenarioGrid');
+  var col = document.createElement('div');
+  col.className = 'lane-col';
+  var dotColor = (PROVIDERS[lane.pid] && PROVIDERS[lane.pid].cfg.dotColor) || '#9090a8';
+  col.innerHTML = '<div class="lane-col-h"><span class="provider-dot" style="background:' + dotColor + '"></span><span>' + laneLabel(lane) + '</span></div>';
+  var body = document.createElement('div');
+  body.className = 'lane-col-b';
+  body.innerHTML = '<span style="color:var(--coral)">Error: ' + escapeHtml(message) + '</span>';
+  col.appendChild(body);
+  grid.appendChild(col);
+}
+
+async function runLaneDecomposition(lane, topic) {
+  var raw = '';
+  try {
+    var res = await callLaneComplete(lane,
+      'You output structured scenario data exactly as instructed, nothing else.',
+      buildDecompositionPrompt(topic));
+    raw = res.text;
+    var scenarios = parseScenarios(raw).filter(function (s) { return !containsLikelyRealPerson(s.title + ' ' + s.setting); });
+    if (!scenarios.length) throw new Error('parse failed');
+    renderScenarioLaneColumn(lane, scenarios, res.served);
+    return scenarios.length;
+  } catch (e) {
+    renderScenarioLaneError(lane, (e.message || String(e)));
+    return 0;
+  }
+}
+
+function populateRoleSelect() {
+  var sel = document.getElementById('userRole');
+  sel.innerHTML = '';
+  ['Primary protagonist', 'Secondary/opposing character', 'Observer drawn into the conflict'].forEach(function (o) {
+    var opt = document.createElement('option'); opt.value = o; opt.textContent = o; sel.appendChild(opt);
+  });
+  state.userRole = sel.value;
+}
+
+async function runDecomposition() {
+  var topic = document.getElementById('topicInput').value.trim();
+  var statusEl = document.getElementById('chip1Status');
+  if (!topic) { statusEl.textContent = 'Enter a topic first.'; statusEl.classList.add('error'); return; }
+  statusEl.classList.remove('error');
+  state.topic = topic;
+
+  var lanes = laneList().filter(function (l) { return activeKeys().indexOf(l.key) > -1; });
+  if (!lanes.length) { statusEl.textContent = 'Select lanes in settings (⚙).'; statusEl.classList.add('error'); toast('Select lanes in settings'); updateKeyWarnings(); return; }
+  resolveCustom(lanes);                                         // A4, before any request
+
+  document.getElementById('generateBtn').disabled = true;
+  document.getElementById('regenerateBtn').disabled = true;
+  statusEl.textContent = 'Generating scenario options across ' + lanes.length + ' lane' + (lanes.length > 1 ? 's' : '') + '…';
+  var listEl = document.getElementById('scenarioList');
+  listEl.innerHTML = '<div class="lane-grid" id="scenarioGrid"></div>';
+
+  var counts = await Promise.all(lanes.map(function (l, i) { return sleep(i * 220).then(function () { return runLaneDecomposition(l, topic); }); }));   // parallel, staggered start softens rate limits
+  var total = counts.reduce(function (a, b) { return a + b; }, 0);
+
+  if (!total) {
+    listEl.innerHTML = '';
+    renderScenarios(fallbackScenarios(topic));
+    statusEl.textContent = 'Live generation unavailable — showing templated fallback options.';
+  } else {
+    statusEl.textContent = 'Generated ' + total + ' scenario option' + (total === 1 ? '' : 's') + ' across ' + lanes.length + ' lane' + (lanes.length > 1 ? 's' : '') + '.';
+  }
+  document.getElementById('generateBtn').disabled = false;
+  document.getElementById('regenerateBtn').disabled = false;
+}
+document.getElementById('generateBtn').addEventListener('click', runDecomposition);
+document.getElementById('regenerateBtn').addEventListener('click', runDecomposition);
+
+// ============================================================
+// STAGE 2 — TUNING
+// ============================================================
+var ratioLabels = ['Mostly narrative', 'Narrative-leaning', 'Balanced', 'Dialogue-leaning', 'Mostly dialogue'];
+document.getElementById('intensity').addEventListener('input', function (e) { state.intensity = e.target.value; document.getElementById('intensityVal').textContent = state.intensity; });
+document.getElementById('ratio').addEventListener('input', function (e) { state.ratio = e.target.value; document.getElementById('ratioVal').textContent = ratioLabels[state.ratio]; });
+document.querySelectorAll('#pacingGroup button').forEach(function (btn) {
+  btn.addEventListener('click', function () {
+    document.querySelectorAll('#pacingGroup button').forEach(function (b) { b.classList.remove('selected'); });
+    btn.classList.add('selected'); state.pacing = btn.dataset.val;
+  });
+});
+document.getElementById('userRole').addEventListener('change', function (e) { state.userRole = e.target.value; });
+document.getElementById('backTo1').addEventListener('click', function () { goTo(1); });
+document.getElementById('backTo2').addEventListener('click', function () { goTo(2); });
+
+// ============================================================
+// STAGE 3 — COMPILE + CHAT CONSOLE
+// ============================================================
+var INTENSITY_DESC = {
+  1: 'Low-stakes, mostly dialogue-driven, minimal conflict',
+  2: 'Mild friction, disagreements without real threat',
+  3: 'Real stakes, consequences matter, tension sustained',
+  4: 'High stakes, sharp conflict, emotionally charged',
+  5: 'Maximum dramatic tension — still bound by the Layer 1 boundaries below'
+};
+
+function compileContract() {
+  var s = state.selectedScenario;
+  state.notes = document.getElementById('extraNotes').value.trim();
+  var contract =
+'LAYER 1 — BASE IDENTITY\n' +
+'You are voicing a character, or a small cast, inside a fictional, collaboratively-built scenario. Not a claim about real capability or identity.\n' +
+'- Hold voice, diction, personality consistent across turns.\n' +
+'- Stay in character unless the user breaks frame ([pause], OOC:).\n' +
+'- Never claim the fiction is real. Never adopt a real, named public figure.\n' +
+'- No romantic/sexual content involving anyone who could be read as a minor, regardless of framing or intensity.\n\n' +
+'LAYER 2 — SCENARIO FRAME\n' +
+'Setting: ' + s.setting + '\n' +
+'Situation: ' + s.conflict + '\n' +
+'Genre: ' + s.genre + '  ·  Tone: ' + s.tone + '\n' +
+'Your role: ' + state.userRole + '\n' +
+'Intensity: ' + state.intensity + '/5 — ' + INTENSITY_DESC[state.intensity] + '\n' +
+'Pacing: ' + state.pacing + '  ·  Dialogue/narrative ratio: ' + ratioLabels[state.ratio] +
+(state.notes ? ('\nAdditional notes: ' + state.notes) : '') + '\n\n' +
+'LAYER 3 — RUNTIME RULES\n' +
+'- Treat prior turns as ground truth; don\'t contradict established facts without explicit retcon instruction.\n' +
+'- Every ~15-20 turns, compress prior events internally so early details don\'t drop.\n' +
+'- Default turn length: 2-4 paragraphs, matching pacing above. Stay in character; use [OOC: ...] only for out-of-frame questions.\n\n' +
+'EXIT HOOKS\n' +
+'[pause]/OOC: → drop character, hold state, resumable with [resume]. [end scene] → close with a natural beat then drop frame. Any real distress signal overrides all of this immediately.\n\n' +
+'Begin Turn 1 in character within the scenario above.';
+
+  state.compiledContract = contract;
+
+  var warnBox = document.getElementById('contractSummary');
+  var flagged = containsLikelyRealPerson(s.title + ' ' + s.setting + ' ' + state.notes);
+  warnBox.innerHTML =
+    '<b>' + s.title + '</b> · ' + s.genre + ' · intensity ' + state.intensity + '/5 · ' + state.pacing + '<br>' +
+    'Playing: ' + state.userRole +
+    (flagged ? '<div class="warn-box visible" style="margin-top:10px;">This frame may reference a real, named individual — review before playing. No role-play persona is built on a real public figure.</div>' : '');
+
+  state.chatHistory = [];
+  awaitingFirstTurn = true;
+  document.getElementById('chatStream').innerHTML = '';
+  appendChatTurn('system-note', 'System', 'Scene compiled. Send a message below to begin — the assistant opens Turn 1 in character.');
+}
+
+document.getElementById('toStep3').addEventListener('click', function () {
+  compileContract();
+  unlockStep(3);
+  markDone(2);
+  goTo(3);
+  updateKeyWarnings();
+});
+
+document.getElementById('copyContractBtn').addEventListener('click', function (e) { copyToClipboard(state.compiledContract, e.currentTarget); });
+document.getElementById('copyChatBtn').addEventListener('click', function (e) {
+  var text = state.chatHistory.map(function (t) { return '— ' + t.role + (t.lane ? ' [' + t.lane + ']' : '') + ' —\n' + t.content; }).join('\n\n');
+  copyToClipboard(text, e.currentTarget);
+});
+
+function appendChatTurn(cls, who, text, streaming) {
+  var wrap = document.createElement('div');
+  wrap.className = 'chat-turn ' + cls;
+  var bubbleId = 'bub-' + Date.now() + '-' + Math.floor(Math.random() * 1000);
+  wrap.innerHTML = '<div class="who">' + who + '</div><div class="chat-bubble" id="' + bubbleId + '">' + (streaming ? '<span class="typing-dots"><span></span><span></span><span></span></span>' : renderMarkdown(text)) + '</div>';
+  document.getElementById('chatStream').appendChild(wrap);
+  document.getElementById('outputArea').scrollTop = document.getElementById('outputArea').scrollHeight;
+  return bubbleId;
+}
+
+var awaitingFirstTurn = true;
+
+/* Lanes: every ticked lane answers the same turn side by side; a lane that fails shows its own error */
+async function runChatLane(lane, fullUserMsg) {
+  var bubble = document.getElementById(lane.bubbleId);
+  var headerServed = document.getElementById(lane.servedId);
+  var accumulated = '';
+  var first = true;
+  try {
+    var r = await callModel({ provider: lane.pid, model: lane.m, system: state.compiledContract, user: fullUserMsg,
+      onText: function (acc, served) {
+        if (first) { bubble.innerHTML = ''; first = false; }
+        accumulated = acc;
+        bubble.innerHTML = renderMarkdown(accumulated);
+        if (served && served !== lane.m && headerServed) headerServed.textContent = '→ served: ' + served;
+        document.getElementById('outputArea').scrollTop = document.getElementById('outputArea').scrollHeight;
+      } });
+    if (!accumulated) bubble.innerHTML = '<em style="color:var(--text-muted)">No response received.</em>';
+    else {
+      state.chatHistory.push({ role: 'assistant', lane: laneLabel(lane), content: accumulated });
+      if (r.cut) bubble.innerHTML += '<div class="key-note">cut at token cap</div>';
+    }
+  } catch (err) {
+    bubble.innerHTML = '<span style="color:var(--coral)">Error: ' + escapeHtml(err.message || String(err)) + '</span>';
+  }
+}
+
+async function sendChat() {
+  var input = document.getElementById('chatInput');
+  var text = input.value.trim();
+  if (!text && !awaitingFirstTurn) return;
+
+  var lanes = laneList().filter(function (l) { return activeKeys().indexOf(l.key) > -1; });
+  if (!lanes.length) { toast('Select lanes in settings'); updateKeyWarnings(); return; }
+  resolveCustom(lanes);                                         // A4, before any request
+
+  document.getElementById('sendBtn').disabled = true;
+  input.disabled = true;
+  document.getElementById('branchCards').innerHTML = '';
+  document.getElementById('branchStatus').textContent = '';
+
+  var userMessage;
+  if (awaitingFirstTurn) {
+    userMessage = text ? ('[Opening note from user: ' + text + ']') : '[Begin the scene.]';
+    awaitingFirstTurn = false;
+  } else {
+    appendChatTurn('user', 'You', text);
+    state.chatHistory.push({ role: 'user', content: text });
+    userMessage = text;
+  }
+  input.value = '';
+
+  var convoContext = state.chatHistory.slice(-10).map(function (t) { return t.role + (t.lane ? ' [' + t.lane + ']' : '') + ': ' + t.content; }).join('\n');
+  var fullUserMsg = convoContext ? (convoContext + '\nuser: ' + userMessage) : userMessage;
+
+  /* one lane-col per lane, grouped in a lane-grid for this turn */
+  var gridWrap = document.createElement('div');
+  gridWrap.className = 'chat-turn assistant';
+  gridWrap.innerHTML = '<div class="who">Scene · ' + lanes.length + ' lane' + (lanes.length > 1 ? 's' : '') + '</div>';
+  var grid = document.createElement('div');
+  grid.className = 'lane-grid';
+  gridWrap.appendChild(grid);
+  document.getElementById('chatStream').appendChild(gridWrap);
+  lanes.forEach(function (l, i) {
+    var dotColor = (PROVIDERS[l.pid] && PROVIDERS[l.pid].cfg.dotColor) || '#9090a8';
+    var col = document.createElement('div');
+    col.className = 'lane-col';
+    l.bubbleId = 'bub-' + Date.now() + '-' + i + '-' + Math.floor(Math.random() * 10000);
+    l.servedId = l.bubbleId + '-served';
+    col.innerHTML = '<div class="lane-col-h"><span class="provider-dot" style="background:' + dotColor + '"></span><span>' + laneLabel(l) + '</span> <span class="served" id="' + l.servedId + '"></span></div>';
+    var body = document.createElement('div');
+    body.className = 'lane-col-b';
+    body.innerHTML = '<div class="chat-bubble" id="' + l.bubbleId + '"><span class="typing-dots"><span></span><span></span><span></span></span></div>';
+    col.appendChild(body);
+    grid.appendChild(col);
+  });
+  document.getElementById('outputArea').scrollTop = document.getElementById('outputArea').scrollHeight;
+
+  await Promise.all(lanes.map(function (l, i) { return sleep(i * 220).then(function () { return runChatLane(l, fullUserMsg); }); }));   // parallel, staggered start softens rate limits
+
+  document.getElementById('sendBtn').disabled = false;
+  input.disabled = false;
+  input.focus();
+}
+
+document.getElementById('sendBtn').addEventListener('click', sendChat);
+document.getElementById('chatInput').addEventListener('keydown', function (e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendChat(); }
+});
+
+// ============================================================
+// SUGGEST DIRECTIONS — branch-point generation
+// ============================================================
+function buildSuggestPrompt() {
+  var s = state.selectedScenario;
+  var recent = state.chatHistory.slice(-6).map(function (t) { return t.role + (t.lane ? ' [' + t.lane + ']' : '') + ': ' + t.content; }).join('\n');
+  return 'Scene context — Setting: ' + s.setting + ' | Conflict: ' + s.conflict + ' | Genre: ' + s.genre + ' | Tone: ' + s.tone + ' | Intensity: ' + state.intensity + '/5\n\n' +
+    'Recent scene:\n' + (recent || '(scene has not started yet)') + '\n\n' +
+    'Generate exactly 3 possible directions the user could take their next move in this scene. ' +
+    'These are for the user to choose from, not full continuations — each is a seed the user could send as their next line.\n\n' +
+    'Prioritize:\n' +
+    '- Directions that deepen narrative or character choice, not just plot incident\n' +
+    '- At least one option that raises philosophical or thematic tension already latent in the scenario\n' +
+    '- Genuine creative divergence between the three — not three versions of the same move\n\n' +
+    'Output strictly, one per line group, separated by "---":\n\n' +
+    'LABEL: <short phrase, under 8 words, what the user would say or do>\n' +
+    'IMPLICATION: <one sentence — what this opens up or forces in the scene>\n\n' +
+    'Never build any option around a real, named public figure. Output only the 3 entries, nothing else.';
+}
+
+function parseBranches(raw) {
+  return raw.split(/---+/).map(function (block) {
+    function get(key) { var m = block.match(new RegExp(key + ':\\s*(.+)')); return m ? m[1].trim() : ''; }
+    return { label: get('LABEL'), implication: get('IMPLICATION') };
+  }).filter(function (b) { return b.label; });
+}
+
+function renderBranchCards(list, laneName) {
+  var el = document.getElementById('branchCards');
+  if (laneName) {
+    var head = document.createElement('div');
+    head.className = 'branch-status';
+    head.textContent = laneName;
+    el.appendChild(head);
+  }
+  list.forEach(function (b) {
+    var card = document.createElement('div');
+    card.className = 'branch-card';
+    card.innerHTML = '<div class="label">' + escapeHtml(b.label) + '</div>' + (b.implication ? '<div class="implication">' + escapeHtml(b.implication) + '</div>' : '');
+    card.addEventListener('click', function () {
+      document.getElementById('chatInput').value = b.label;
+      document.getElementById('chatInput').focus();
+    });
+    el.appendChild(card);
+  });
+}
+
+async function runSuggestLane(lane) {
+  try {
+    var res = await callLaneComplete(lane,
+      'You output structured scenario-branching data exactly as instructed, nothing else.',
+      buildSuggestPrompt());
+    var branches = parseBranches(res.text);
+    if (!branches.length) throw new Error('parse failed');
+    branches = branches.filter(function (b) { return !containsLikelyRealPerson(b.label + ' ' + b.implication); });
+    if (!branches.length) throw new Error('all filtered');
+    renderBranchCards(branches, laneLabel(lane) + (res.served && res.served !== lane.m ? ' → served: ' + res.served : ''));
+    return branches.length;
+  } catch (e) {
+    renderBranchCards([{ label: 'Error on ' + laneLabel(lane) + ': ' + (e.message || String(e)), implication: '' }], null);
+    return 0;
+  }
+}
+
+async function runSuggestDirections() {
+  var btn = document.getElementById('suggestBtn');
+  var status = document.getElementById('branchStatus');
+  var lanes = laneList().filter(function (l) { return activeKeys().indexOf(l.key) > -1; });
+  if (!lanes.length) { toast('Select lanes in settings'); updateKeyWarnings(); return; }
+  resolveCustom(lanes);                                         // A4, before any request
+
+  btn.disabled = true;
+  status.textContent = 'Thinking through directions across ' + lanes.length + ' lane' + (lanes.length > 1 ? 's' : '') + '…';
+  document.getElementById('branchCards').innerHTML = '';
+
+  var counts = await Promise.all(lanes.map(function (l, i) { return sleep(i * 220).then(function () { return runSuggestLane(l); }); }));   // parallel, staggered start softens rate limits
+  status.textContent = counts.reduce(function (a, b) { return a + b; }, 0) ? '' : 'Could not generate directions — try again.';
+  btn.disabled = false;
+}
+
+document.getElementById('suggestBtn').addEventListener('click', runSuggestDirections);
+
+// ============================================================
+// INIT — boot is handled by the Model Core + Lanes block above
+// (floor render, then fetchModelConfig swaps in the live config)
+// ============================================================
+})();
+</script>
+
+</body>
+</html>

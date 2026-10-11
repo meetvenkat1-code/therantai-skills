@@ -1,0 +1,18 @@
+{
+  "skill": "radiate",
+  "skill_name": "radiate",
+  "description": ">",
+  "source_file": "skills/radiate/SKILL.md",
+  "source_sha": "1b8f9ff0baa7bd8110f49ab6133ef3022fee1fa59f0052165ac73f1693dd251e",
+  "resources": [],
+  "provider_config": {
+    "model_core": "v2"
+  },
+  "inputs": [
+    {
+      "id": "chatInput",
+      "kind": "textarea",
+      "label": "Invoke the skill"
+    }
+  ]
+}

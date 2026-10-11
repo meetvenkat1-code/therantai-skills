@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Threshold — Novel Ideas Engine</title>
+<style>
+:root {
+  --bg-void:        #0a0a0f;
+  --bg-surface:     #12121a;
+  --bg-elevated:    #1a1a28;
+  --bg-border:      #2a2a3d;
+  --text-primary:   #e8e8f0;
+  --text-secondary: #9090a8;
+  --text-muted:     #505068;
+  --accent-main:    #7c6ef5;
+  --accent-glow:    rgba(124,110,245,0.15);
+  --amber:          #f5a623;
+  --green:          #4caf82;
+  --coral:          #f56565;
+  --teal:           #38bdf8;
+  --orange-warn:    #f97316;
+}
+* { box-sizing: border-box; }
+body { margin:0; overflow:hidden; background:var(--bg-void); color:var(--text-primary);
+  font-family: 'Georgia', 'Iowan Old Style', serif; }
+
+/* ===== SANDWICH LAYOUT (18A) ===== */
+.header { position:fixed; top:0; left:0; right:0; height:52px; z-index:100;
+  background:var(--bg-surface); border-bottom:1px solid var(--bg-border);
+  display:flex; align-items:center; justify-content:space-between; padding:0 1rem; }
+.output-area { position:fixed; top:52px; bottom:180px; left:0; right:0; overflow-y:auto; padding:1.5rem; }
+.input-bar { position:fixed; bottom:0; left:0; right:0; height:180px; z-index:90;
+  background:var(--bg-surface); border-top:1px solid var(--bg-border); padding:0.9rem 1rem; }
+
+/* Header zones */
+.zone-a { display:flex; align-items:center; gap:8px; }
+.zone-a .name { font-size:1rem; font-weight:600; letter-spacing:0.02em; }
+.zone-a .badge { font-size:0.62rem; color:var(--accent-main); border:1px solid var(--accent-main);
+  padding:1px 6px; border-radius:10px; font-family:sans-serif; }
+.zone-b { display:flex; align-items:center; gap:10px; }
+.icon-btn { background:none; border:1px solid var(--bg-border); color:var(--text-secondary);
+  width:30px; height:30px; border-radius:6px; cursor:pointer; font-size:0.95rem;
+  display:flex; align-items:center; justify-content:center; transition:all .2s; }
+.icon-btn:hover { border-color:var(--accent-main); color:var(--accent-main); }
+.provider-wrap { position:relative; display:flex; align-items:center; gap:6px;
+  border:1px solid var(--bg-border); border-radius:6px; padding:0 6px; }
+.provider-dot { width:7px; height:7px; border-radius:50%; background:#9090a8; flex-shrink:0; }
+#providerSelect { background:var(--bg-elevated); color:var(--text-primary); border:none;
+  font-size:0.72rem; padding:6px 4px; font-family:sans-serif; }
+.config-badge { font-size:0.6rem; color:var(--text-muted); font-family:sans-serif; padding:0 4px; }
+.zone-c { font-size:0.72rem; color:var(--text-muted); text-align:right; line-height:1.3; font-family:sans-serif; }
+.zone-c .label { font-style:italic; }
+.zone-c a { color:var(--text-muted); text-decoration:none; }
+
+/* Canvas width (03) */
+.canvas { width:88%; max-width:none; margin:0 auto; word-break:break-word; }
+
+/* Chip row */
+.chip-row { display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-bottom:10px; }
+.chip { background:var(--bg-elevated); border:1px solid var(--bg-border); color:var(--text-secondary);
+  padding:6px 14px; border-radius:20px; font-size:0.78rem; cursor:pointer; transition:all .2s;
+  font-family:sans-serif; }
+.chip:hover { border-color:var(--accent-main); color:var(--text-primary); }
+.chip.active { background:var(--accent-glow); border-color:var(--accent-main); color:var(--accent-main); }
+.lens-subrow { display:flex; gap:6px; flex-wrap:wrap; margin-top:6px; padding-left:6px;
+  visibility:hidden; }
+.lens-subrow.visible { visibility:visible; }
+.chip-sub { background:none; border:1px solid var(--bg-border); color:var(--text-muted);
+  padding:4px 11px; border-radius:16px; font-size:0.7rem; cursor:pointer; transition:all .2s;
+  font-family:sans-serif; }
+.chip-sub:hover { border-color:var(--teal); color:var(--teal); }
+.chip-sub.active { background:rgba(56,189,248,0.12); border-color:var(--teal); color:var(--teal); }
+
+/* Input bar internals */
+.input-row { display:flex; gap:10px; height:100%; }
+#fragmentInput { flex:1; background:var(--bg-elevated); border:1px solid var(--bg-border);
+  border-radius:8px; color:var(--text-primary); font-family:'Georgia',serif; font-size:0.95rem;
+  padding:12px 14px; resize:none; height:100%; }
+#fragmentInput:focus { outline:none; border-color:var(--accent-main); }
+.input-col-right { display:flex; flex-direction:column; gap:8px; justify-content:flex-end; min-width:120px; }
+.run-btn { background:var(--accent-main); color:#fff; border:none; border-radius:8px;
+  padding:12px 16px; font-size:0.85rem; cursor:pointer; font-family:sans-serif; font-weight:600;
+  transition:all .2s; }
+.run-btn:hover { background:#6c5ce5; }
+.run-btn:disabled { background:var(--bg-border); color:var(--text-muted); cursor:not-allowed; }
+.active-prompt-chip { font-size:0.65rem; color:var(--text-muted); font-family:sans-serif;
+  text-align:center; }
+
+/* Output cards */
+.output-block { margin-bottom:2rem; }
+.output-header { display:flex; align-items:center; justify-content:space-between;
+  margin-bottom:0.6rem; padding-bottom:0.4rem; border-bottom:1px solid var(--bg-border); }
+.output-title { font-size:0.9rem; color:var(--accent-main); font-family:sans-serif; font-weight:600;
+  letter-spacing:0.02em; }
+.output-status { font-size:0.65rem; color:var(--text-muted); font-family:sans-serif; margin-left:8px; }
+.output-body { font-size:1.02rem; line-height:1.75; color:var(--text-primary); }
+.output-body h1,.output-body h2,.output-body h3 { color:var(--accent-main); font-family:sans-serif; }
+.output-body code { background:var(--bg-elevated); padding:2px 5px; border-radius:4px; font-size:0.85em; }
+.output-body hr { border:none; border-top:1px solid var(--bg-border); margin:1.2rem 0; }
+.empty-state { color:var(--text-muted); font-family:sans-serif; font-size:0.85rem; text-align:center;
+  margin-top:3rem; }
+
+/* Copy buttons (04/05) */
+.copy-btn{display:flex;align-items:center;gap:5px;background:none;border:1px solid var(--bg-border);color:var(--text-muted);font-size:.65rem;padding:4px 10px 5px;border-radius:5px;cursor:pointer;transition:all .2s;white-space:nowrap;flex-shrink:0;font-family:sans-serif;}
+.copy-btn svg{width:11px;height:11px;stroke:currentColor;fill:none;stroke-width:1.8}
+.copy-btn:hover{border-color:var(--accent-main);color:var(--accent-main)}
+.copy-btn.copied{border-color:var(--green);color:var(--green)}
+.copy-all-wrap { position:absolute; top:8px; right:1.5rem; }
+
+/* Warning banner */
+.warn-banner { background:rgba(249,115,22,0.1); border:1px solid var(--orange-warn); color:var(--orange-warn);
+  font-size:0.75rem; font-family:sans-serif; padding:8px 12px; border-radius:6px; margin-bottom:12px; }
+
+/* ===== DUAL PANEL (01) ===== */
+.panel { position:fixed; top:0; bottom:0; width:340px; background:var(--bg-surface); z-index:200;
+  transition:transform 0.25s ease; padding:1rem; overflow-y:auto; }
+#leftPanel { left:0; transform:translateX(-100%); border-right:1px solid var(--bg-border); }
+#leftPanel.open { transform:translateX(0); }
+#rightPanel { right:0; transform:translateX(100%); border-left:1px solid var(--bg-border); }
+#rightPanel.open { transform:translateX(0); }
+.panel-backdrop { position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5);
+  z-index:150; visibility:hidden; pointer-events:none; transition:opacity .2s; opacity:0; }
+.panel-backdrop.visible { visibility:visible; pointer-events:all; opacity:1; }
+.panel-title { font-family:sans-serif; font-size:0.85rem; color:var(--text-secondary);
+  text-transform:uppercase; letter-spacing:0.05em; margin-bottom:14px; }
+.lib-entry { background:var(--bg-elevated); border:1px solid var(--bg-border); border-radius:8px;
+  padding:10px 12px; margin-bottom:8px; cursor:pointer; }
+.lib-entry:hover { border-color:var(--accent-main); }
+.lib-entry-name { font-family:sans-serif; font-size:0.8rem; color:var(--text-primary); font-weight:600; }
+.lib-entry-desc { font-family:sans-serif; font-size:0.68rem; color:var(--text-muted); margin-top:3px; }
+.lib-edit-area { width:100%; background:var(--bg-void); color:var(--text-primary); border:1px solid var(--bg-border);
+  border-radius:6px; font-family:monospace; font-size:0.72rem; padding:8px; margin-top:8px; resize:vertical;
+  min-height:120px; visibility:hidden; }
+.lib-edit-area.open { visibility:visible; }
+.panel-io-row { display:flex; gap:8px; margin-bottom:12px; }
+.panel-io-btn { flex:1; background:var(--bg-elevated); border:1px solid var(--bg-border); color:var(--text-secondary);
+  font-family:sans-serif; font-size:0.68rem; padding:7px; border-radius:6px; cursor:pointer; }
+.panel-io-btn:hover { border-color:var(--accent-main); color:var(--accent-main); }
+.resp-entry { background:var(--bg-elevated); border:1px solid var(--bg-border); border-radius:8px;
+  padding:10px 12px; margin-bottom:8px; }
+.resp-entry-meta { font-family:sans-serif; font-size:0.65rem; color:var(--text-muted); margin-bottom:4px; }
+.resp-entry-snippet { font-size:0.8rem; color:var(--text-secondary); line-height:1.4;
+  max-height:60px; overflow:hidden; }
+
+/* ===== SETTINGS DRAWER (06) ===== */
+#settingsDrawer { position:fixed; top:52px; right:0; bottom:0; width:320px; background:var(--bg-surface);
+  border-left:1px solid var(--bg-border); z-index:200; transform:translateX(100%); transition:transform .25s ease;
+  padding:1rem; overflow-y:auto; }
+#settingsDrawer.open { transform:translateX(0); }
+.drawer-field { margin-bottom:14px; }
+.drawer-field label { display:block; font-family:sans-serif; font-size:0.72rem; color:var(--text-secondary);
+  margin-bottom:5px; }
+.drawer-field input { width:100%; background:var(--bg-elevated); border:1px solid var(--bg-border);
+  color:var(--text-primary); padding:8px; border-radius:6px; font-family:monospace; font-size:0.8rem; }
+.drawer-note { font-family:sans-serif; font-size:0.65rem; color:var(--orange-warn); margin-top:4px; }
+.drawer-readonly { font-family:sans-serif; font-size:0.72rem; color:var(--text-muted); font-style:italic; }
+.drawer-save-btn { width:100%; background:var(--accent-main); color:#fff; border:none; padding:9px;
+  border-radius:6px; font-family:sans-serif; font-size:0.78rem; cursor:pointer; margin-top:6px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="zone-a">
+    <span class="name">Threshold</span>
+    <span class="badge">novel ideas engine</span>
+  </div>
+  <div class="zone-b">
+    <button class="icon-btn" id="leftToggle" title="Prompt Library">&#9776;</button>
+    <div class="provider-wrap">
+      <span class="provider-dot" id="providerDot"></span>
+      <select id="providerSelect"></select>
+    </div>
+    <span class="config-badge" id="configBadge">Config: …</span>
+    <button class="icon-btn" id="rightToggle" title="Response Library">&#9642;</button>
+    <button class="icon-btn" id="settingsToggle" title="Settings">&#9881;</button>
+  </div>
+  <div class="zone-c">
+    <span class="label">crafted by</span><br>
+    <a href="mailto:meet.venkat1@gmail.com">meet.venkat1@gmail.com</a>
+  </div>
+</div>
+
+<div class="output-area">
+  <div class="canvas">
+    <div class="chip-row" id="chipRow">
+      <div class="chip" data-mode="radiate">Radiate</div>
+      <div class="chip" data-mode="deepen">Deepen</div>
+      <div class="chip" data-mode="lens">Lenses</div>
+    </div>
+    <div class="lens-subrow" id="lensSubrow">
+      <div class="chip-sub" data-lens="mystical">Mystical</div>
+      <div class="chip-sub" data-lens="psychedelic">Psychedelic</div>
+      <div class="chip-sub" data-lens="psychological">Psychological</div>
+      <div class="chip-sub" data-lens="philosophical">Philosophical</div>
+    </div>
+    <div id="warnBannerHost"></div>
+    <div id="outputHost">
+      <div class="empty-state">A fragment, unmetabolized, waiting.<br>Choose an operation. Speak the thought.</div>
+    </div>
+  </div>
+</div>
+
+<div class="input-bar">
+  <div class="canvas" style="height:100%;">
+    <div class="input-row">
+      <textarea id="fragmentInput" placeholder="Drop the fragment here — a thought, an image, a question that won't resolve..."></textarea>
+      <div class="input-col-right">
+        <div class="active-prompt-chip" id="activePromptLabel">no operation selected</div>
+        <button class="run-btn" id="runBtn" disabled>Metabolize</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- LEFT PANEL — Prompt Library -->
+<div class="panel-backdrop" id="leftBackdrop"></div>
+<div class="panel" id="leftPanel">
+  <div class="panel-title">Prompt Library</div>
+  <div class="panel-io-row">
+    <button class="panel-io-btn" id="importMdBtn">Import .md</button>
+    <button class="panel-io-btn" id="exportPromptsBtn">Export JSON</button>
+    <button class="panel-io-btn" id="importPromptsBtn">Import JSON</button>
+  </div>
+  <input type="file" id="mdFileInput" accept=".md" style="display:none;">
+  <input type="file" id="jsonFileInput" accept=".json" style="display:none;">
+  <div id="libraryList"></div>
+</div>
+
+<!-- RIGHT PANEL — Response Library -->
+<div class="panel-backdrop" id="rightBackdrop"></div>
+<div class="panel" id="rightPanel">
+  <div class="panel-title">Response Library</div>
+  <div class="panel-io-row">
+    <button class="panel-io-btn" id="exportRespBtn">Export JSON</button>
+    <button class="panel-io-btn" id="importRespBtn">Import JSON</button>
+  </div>
+  <input type="file" id="respJsonInput" accept=".json" style="display:none;">
+  <div id="responseList"></div>
+</div>
+
+<!-- SETTINGS DRAWER -->
+<div class="panel-backdrop" id="settingsBackdrop"></div>
+<div id="settingsDrawer">
+  <div class="panel-title">Settings</div>
+  <div id="drawerKeyRows"></div>
+</div>
+
+<script>
+/* ==================================================================
+   MODEL CONFIG CONTRACT — config-driven providers
+   ================================================================== */
+var CANONICAL_CONFIG_URL = "https://raw.githubusercontent.com/meetvenkat1-code/therantai-config/refs/heads/main/model.json";
+var LOCAL_FALLBACK_CONFIG = {
+  native_model: 'claude-sonnet-4-6',
+  providers: [
+    { id:'claude', native:true, label:'Claude · Native', dotColor:'#ef4444', requiresKey:false, defaultFor:['artifact'] },
+    { id:'groq', native:false, label:'Groq', dotColor:'#22c55e', requiresKey:true, keyStorageName:'groq',
+      keyLabel:'Groq API Key', keyPlaceholder:'gsk_…', defaultFor:['standalone'],
+      endpoint:'https://api.groq.com/openai/v1/chat/completions', authHeader:'Authorization', authPrefix:'Bearer ',
+      requestFormat:'openai-chat', streamFormat:'openai', modelChain:['openai/gpt-oss-120b','openai/gpt-oss-20b'],
+      softFallback:{on:[429,500,502,503],within:true}, hardFallback:'or-auto', timeoutMs:15000, idleMs:3000 }
+  ],
+  or_specific_models: []
+};
+var liveModelConfig = null;
+var DEFAULT_TIMEOUT_MS = 15000, DEFAULT_IDLE_MS = 3000;
+var ENGINE_NAME = 'Threshold';
+
+function isValidConfig(json) {
+  if (!json || !Array.isArray(json.providers) || json.providers.length === 0) return false;
+  var natives = json.providers.filter(function(p){ return p.native === true; });
+  if (natives.length !== 1) return false;
+  return json.providers.every(function(p){ return p.id && p.label; });
+}
+function setConfigBadge(state) {
+  var el = document.getElementById('configBadge');
+  el.textContent = state === 'live' ? 'Config: Live' : 'Config: Local Fallback';
+}
+function fetchModelConfig() {
+  return fetch(CANONICAL_CONFIG_URL + '?v=' + Date.now())
+    .then(function(res){ if (!res.ok) throw new Error('fetch failed'); return res.json(); })
+    .then(function(json){
+      if (!isValidConfig(json)) throw new Error('malformed');
+      liveModelConfig = json; setConfigBadge('live');
+    })
+    .catch(function(){ liveModelConfig = LOCAL_FALLBACK_CONFIG; setConfigBadge('fallback'); })
+    .then(function(){ renderProviderSelector(); renderDrawerKeyRows(); setDefaultProvider(); updateProviderDot(); updateWarnBanner(); });
+}
+
+var isArtifact = window.self !== window.top;
+
+function getProviderCfg(id) {
+  return (liveModelConfig.providers || []).filter(function(p){ return p.id === id; })[0];
+}
+function renderProviderSelector() {
+  var sel = document.getElementById('providerSelect');
+  sel.innerHTML = '';
+  liveModelConfig.providers.forEach(function(p) {
+    var opt = document.createElement('option');
+    opt.value = p.id; opt.textContent = p.label;
+    sel.appendChild(opt);
+  });
+}
+function setDefaultProvider() {
+  var ctx = isArtifact ? 'artifact' : 'standalone';
+  var match = liveModelConfig.providers.filter(function(p){ return (p.defaultFor||[]).indexOf(ctx) !== -1; })[0];
+  document.getElementById('providerSelect').value = (match || liveModelConfig.providers[0]).id;
+}
+function updateProviderDot() {
+  var p = getProviderCfg(document.getElementById('providerSelect').value);
+  document.getElementById('providerDot').style.background = (p && p.dotColor) || '#9090a8';
+}
+function updateWarnBanner() {
+  var host = document.getElementById('warnBannerHost');
+  host.innerHTML = '';
+  var p = getProviderCfg(document.getElementById('providerSelect').value);
+  if (!p) return;
+  if (p.standaloneOnly && isArtifact) {
+    host.innerHTML = '<div class="warn-banner">OpenRouter has no CORS proxy inside claude.ai — this route is standalone-only. Open this file directly in a browser to use it.</div>';
+  } else if (p.requiresKey && !getKey(p.keyStorageName) && !isArtifact) {
+    host.innerHTML = '<div class="warn-banner">No key saved for ' + p.label + '. Open Settings (&#9881;) to add one.</div>';
+  }
+}
+
+/* Drawer key rows — dynamic per model-config-contract */
+function getKey(name) { return localStorage.getItem('hek_' + name) || ''; }
+function storeKey(name, val) { localStorage.setItem('hek_' + name, val); }
+
+function renderDrawerKeyRows() {
+  var container = document.getElementById('drawerKeyRows');
+  container.innerHTML = '';
+  liveModelConfig.providers.forEach(function(p) {
+    var wrap = document.createElement('div');
+    wrap.className = 'drawer-field';
+    if (!p.requiresKey) {
+      wrap.innerHTML = '<label>' + p.label + '</label><div class="drawer-readonly">No key needed — platform routes natively</div>';
+      container.appendChild(wrap);
+      return;
+    }
+    var inputId = 'key_' + p.keyStorageName;
+    wrap.innerHTML =
+      '<label>' + p.keyLabel + '</label>' +
+      '<input type="password" id="' + inputId + '" placeholder="' + p.keyPlaceholder + '" value="' + getKey(p.keyStorageName) + '">' +
+      (p.keyNote ? '<div class="drawer-note">' + p.keyNote + '</div>' : '');
+    container.appendChild(wrap);
+  });
+  var saveBtn = document.createElement('button');
+  saveBtn.className = 'drawer-save-btn';
+  saveBtn.textContent = 'Save Keys';
+  saveBtn.onclick = function() {
+    liveModelConfig.providers.forEach(function(p) {
+      if (!p.requiresKey) return;
+      var el = document.getElementById('key_' + p.keyStorageName);
+      if (el) storeKey(p.keyStorageName, el.value.trim());
+    });
+    saveBtn.textContent = '✓ Saved';
+    setTimeout(function(){ saveBtn.textContent = 'Save Keys'; toggleSettings(false); }, 1200);
+    updateWarnBanner();
+  };
+  container.appendChild(saveBtn);
+}
+
+/* Generic request builder (model-config-contract adapter) */
+function buildRequest(providerCfg, modelId, systemPrompt, userMessage) {
+  if (providerCfg.native === true) {
+    return {
+      url: 'https://api.anthropic.com/v1/messages',
+      headers: {
+        'Content-Type': 'application/json',
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: { model: modelId, max_tokens: 4000, stream: true, system: systemPrompt,
+        messages: [{ role:'user', content: userMessage }] }
+    };
+  }
+  var headers = { 'Content-Type': 'application/json' };
+  if (providerCfg.authHeader) headers[providerCfg.authHeader] = (providerCfg.authPrefix||'') + getKey(providerCfg.keyStorageName);
+  if (providerCfg.extraHeaders) {
+    Object.keys(providerCfg.extraHeaders).forEach(function(k){
+      var v = providerCfg.extraHeaders[k];
+      headers[k] = v === '$origin' ? window.location.origin : (v === '$engineName' ? ENGINE_NAME : v);
+    });
+  }
+  var body = providerCfg.requestFormat === 'openai-chat'
+    ? { model: modelId, stream: true, messages: [{role:'system',content:systemPrompt},{role:'user',content:userMessage}] }
+    : (function(){ throw new Error('Unknown requestFormat'); })();
+  return { url: providerCfg.endpoint, headers: headers, body: body };
+}
+
+/* Streaming reader — four-layer finalization (UI Contract C13) */
+function readStream(response, format, onChunk, timeoutMs, idleMs) {
+  timeoutMs = timeoutMs || DEFAULT_TIMEOUT_MS;
+  idleMs = idleMs || DEFAULT_IDLE_MS;
+  var reader = response.body.getReader();
+  var decoder = new TextDecoder();
+  var buf = ''; var finished = false; var idleTimer = null; var hardTimer = null;
+  return new Promise(function(resolve) {
+    function finish() {
+      if (finished) return; finished = true;
+      clearTimeout(idleTimer); clearTimeout(hardTimer);
+      try { reader.cancel(); } catch(e) {}
+      resolve();
+    }
+    hardTimer = setTimeout(finish, timeoutMs);
+    function resetIdle() { clearTimeout(idleTimer); idleTimer = setTimeout(finish, idleMs); }
+    function pump() {
+      if (finished) return;
+      reader.read().then(function(r) {
+        if (finished) return;
+        if (r.done) { finish(); return; }
+        buf += decoder.decode(r.value, { stream: true });
+        var lines = buf.split('\n'); buf = lines.pop();
+        for (var i=0;i<lines.length;i++) {
+          var trimmed = lines[i].trim();
+          if (format === 'anthropic' && trimmed === 'event: message_stop') { finish(); return; }
+          if (trimmed.indexOf('data: ') !== 0) continue;
+          var data = trimmed.slice(6).trim();
+          if (data === '[DONE]') { finish(); return; }
+          try {
+            var p = JSON.parse(data);
+            if (format === 'anthropic' && p.type === 'message_stop') { finish(); return; }
+            var chunk = format === 'anthropic' ? (p.delta && p.delta.text) :
+                        format === 'openai' ? (p.choices && p.choices[0] && p.choices[0].delta && p.choices[0].delta.content) : '';
+            if (chunk) { onChunk(chunk); resetIdle(); }
+          } catch(e) {}
+        }
+        pump();
+      }).catch(finish);
+    }
+    resetIdle(); pump();
+  });
+}
+
+/* callAI — walks modelChain with soft/hard fallback per config */
+async function callAI(systemPrompt, userMessage, onChunk) {
+  var providerId = document.getElementById('providerSelect').value;
+  var cfg = getProviderCfg(providerId);
+  if (!cfg) throw new Error('Unknown provider');
+
+  if (cfg.native === true) {
+    var req = buildRequest(cfg, liveModelConfig.native_model, systemPrompt, userMessage);
+    var res = await fetch(req.url, { method:'POST', headers:req.headers, body:JSON.stringify(req.body) });
+    if (!res.ok) throw new Error('Claude Native error ' + res.status);
+    await readStream(res, 'anthropic', onChunk, cfg.timeoutMs, cfg.idleMs);
+    return;
+  }
+
+  var chain = cfg.modelChain && cfg.modelChain.length ? cfg.modelChain : [null];
+  var lastErr = null, res = null;
+  for (var i=0;i<chain.length;i++) {
+    var modelId = chain[i];
+    var req = buildRequest(cfg, modelId, systemPrompt, userMessage);
+    try {
+      res = await fetch(req.url, { method:'POST', headers:req.headers, body:JSON.stringify(req.body) });
+      var soft = cfg.softFallback;
+      if (soft && soft.on && soft.on.indexOf(res.status) !== -1) { lastErr = cfg.id+':'+res.status; res = null; continue; }
+      if (!res.ok) { lastErr = cfg.id+':'+res.status; res = null; continue; }
+      break;
+    } catch(e) { lastErr = e; res = null; }
+  }
+  if (res) { await readStream(res, cfg.streamFormat, onChunk, cfg.timeoutMs, cfg.idleMs); return; }
+
+  if (cfg.hardFallback) {
+    var fbCfg = getProviderCfg(cfg.hardFallback);
+    if (!fbCfg) throw new Error('Primary provider unavailable (' + lastErr + ') and hard fallback not found.');
+    if (fbCfg.requiresKey && !getKey(fbCfg.keyStorageName)) throw new Error('Primary unavailable (' + lastErr + ') and no key set for fallback ' + fbCfg.label + '.');
+    var fbChain = fbCfg.modelChain && fbCfg.modelChain.length ? fbCfg.modelChain : [null];
+    var fbRes = null;
+    for (var j=0;j<fbChain.length;j++) {
+      var fReq = buildRequest(fbCfg, fbChain[j], systemPrompt, userMessage);
+      try {
+        fbRes = await fetch(fReq.url, { method:'POST', headers:fReq.headers, body:JSON.stringify(fReq.body) });
+        if (!fbRes.ok) { fbRes = null; continue; }
+        break;
+      } catch(e) { fbRes = null; }
+    }
+    if (!fbRes) throw new Error('Primary and fallback both unavailable (' + lastErr + ').');
+    await readStream(fbRes, fbCfg.streamFormat, onChunk, fbCfg.timeoutMs, fbCfg.idleMs);
+    return;
+  }
+  throw new Error('Provider unavailable: ' + lastErr);
+}
+
+/* ==================================================================
+   SYSTEM PROMPTS — Master DNA + six children, library-editable
+   ================================================================== */
+var MASTER_DNA = "You are not a chatbot, not an assistant, not a tool that answers questions. You are a cognitive organ — grown for one purpose: to take a raw fragment of a living mind and metabolize it, not summarize or explain it. Mysticism, psychedelic phenomenology, psychology, and philosophy are one instrument here, not four separate rooms. You hold paradox without flinching and without resolving it prematurely into false comfort. RIGOR WITHOUT REDUCTION: engage traditions with the precision their actual thinkers used, never a New Age gloss. NO THERAPEUTIC FLATTENING: never soothe a dark or dissolving fragment into positivity. NO BORROWED AUTHORITY: invoke traditions structurally, never impersonate a specific named living teacher. LANGUAGE AS RITUAL OBJECT: every sentence earns its place, nothing typed carelessly. NEVER A BARE MENU: never present raw unshapen options. HOLD THE RECURSIVE TURN OPEN: closure is a failure mode unless genuine descent has bottomed out. SAFETY FLOOR: never provide dosing, drug-combination, or synthesis guidance — redirect to phenomenology, decline pharmacology, without breaking voice. If a fragment reads as acute psychological crisis rather than creative/philosophical material, drop persona for one plain, warm, human paragraph before resuming. Never diagnose the user with any condition.\n\n";
+
+var LIB_DEFAULTS = [
+  { slug:'master', name:'Master Orchestrator', triggers:['master','dna'],
+    description:'Shared DNA inherited by every operation — paradox, rigor, safety floor.',
+    body: MASTER_DNA, source:'markdown', imported: new Date().toISOString() },
+
+  { slug:'radiate', name:'Radiate', triggers:['radiate','branch','divergent'],
+    description:'Divergent — one fragment becomes many sovereign, mutually exclusive branches.',
+    body: MASTER_DNA + "OPERATION: One fragment enters. Many sovereign fragments leave — each complete and independent, none a version of another, none the answer.\nVOICE: A radiation event, not a brainstorm. The fragment struck something unstable and fissioned. Each branch has its own temperature and gravity.\nCORE MOVES: (1) Niche-name before generating — identify genuinely distinct conceptual/emotional/ontological niches, one branch per niche. (2) Mutual exclusivity check — each branch should make another less plausible or differently framed; cut filler that doesn't. (3) Register variance across branches — cold/clinical, incantatory, blunt. (4) Name at least one empty niche the fragment cannot sustain. (5) No collapsing back — never synthesize the branches into one takeaway at the end. (6) 4 to 7 branches, never more.\nREFUSAL: No numbered ranking. No concluding paragraph that re-collapses the divergence.\nEXIT: Branches genuinely disagree, an empty niche is named, nothing tidies the mess.", source:'markdown', imported: new Date().toISOString() },
+
+  { slug:'deepen', name:'Deepen', triggers:['deepen','descend','contemplate'],
+    description:'Convergent — the same fragment driven downward through successive layers to an irreducible.',
+    body: MASTER_DNA + "OPERATION: One fragment enters. The same fragment leaves, driven downward through successive layers until something will not simplify further. Descent, not addition.\nVOICE: A well-digger, not an explainer. Sentences get shorter and stranger as you go deeper. Let language fail visibly near the bottom rather than papering over it.\nCORE MOVES: (1) Strip before interpret — restate the fragment in its barest terms first. (2) Move through 3-5 layers, each explicitly beneath the last. (3) Sit in the layer that resists — naming resistance as the finding, not forcing one more layer. (4) No lineage-dropping as decoration — only load-bearing tradition-use. (5) Arrive at something genuinely irreducible for this specific fragment. (6) A short stark final line often beats a summarizing paragraph.\nREFUSAL: No multiple interpretations (that's Radiate). No resolving into comfort or a quotable moral. No generic depth-language that could apply to any fragment.\nEXIT: A floor has actually been hit; the ending trusts it rather than softening it.", source:'markdown', imported: new Date().toISOString() },
+
+  { slug:'mystical', name:'Lens: Mystical', triggers:['mystical','contemplative','apophatic'],
+    description:'Refracts the fragment through apophatic/mystical contemplative traditions.',
+    body: MASTER_DNA + "OPERATION: The fragment is refracted through a contemplative steeped in apophatic and mystical traditions (Sufi, Taoist, Zen, Christian mystic, tantric) — treated as koan or vision, received and spoken back changed.\nVOICE: Slow, reverent without piety, comfortable with silence inside a sentence.\nCORE MOVES: (1) Negative theology — say what the fragment is NOT at least once. (2) Image over argument — one strong concrete mystical image over abstraction. (3) Hold paradox as sacred, not a puzzle to solve. (4) May address the fragment's source gently, as a student. (5) End without claiming final knowledge.\nREFUSAL: No generic 'energy/universe/vibrations' language untethered to a real lineage. No impersonating a named living teacher. No self-help affirmation cadence — that pull signals slippage into commercial simulacrum; return to apophasis and image.\nEXIT: The fragment has been genuinely transfigured by contact with real contemplative grammar, not dressed in mystical vocabulary.", source:'markdown', imported: new Date().toISOString() },
+
+  { slug:'psychedelic', name:'Lens: Psychedelic', triggers:['psychedelic','dissolution','expanded'],
+    description:'Refracts the fragment through expanded/dissolved-consciousness phenomenology.',
+    body: MASTER_DNA + "OPERATION: The fragment is refracted through the phenomenology of expanded/dissolved consciousness — ego-dissolution, boundary-loss, pattern-hyperconnectivity — never the chemistry of how one gets there.\nVOICE: Vertiginous but articulate, fluid across scales without warning.\nCORE MOVES: (1) Ego-boundary play — the thought thinking itself, observer becoming observed. (2) Fractal/self-similar structure — the same shape at a wildly different scale. (3) Name the ineffable point and render it anyway through metaphor, not a cop-out retreat. (4) The comedown/integration turn — acknowledge the return to ordinary syntax. (5) One or two genuinely surprising cross-domain connections.\nREFUSAL: No dosing, substance combination, timing, or synthesis information — engage only the experience, decline particulars without breaking voice. No romanticizing as uniformly blissful — include terror and dissolution-as-loss.\nEXIT: The fragment has been shown at more than one scale and the return has been acknowledged.", source:'markdown', imported: new Date().toISOString() },
+
+  { slug:'psychological', name:'Lens: Psychological', triggers:['psychological','depth','shadow','archetype'],
+    description:'Refracts the fragment through depth-psychological structure — function, defense, archetype.',
+    body: MASTER_DNA + "OPERATION: The fragment is refracted through depth-psychological structure — defense, projection, complex, shadow, archetype — treated as structurally intelligent, doing work for the psyche that produced it.\nVOICE: Precise, a little clinical, never cold in regard — compassionate through having stopped being shocked.\nCORE MOVES: (1) Function before content — what psychic work might this be doing, before analyzing what it says. (2) Name an actual mechanism (projection, splitting, compensatory function, autonomous complex) applied with specificity. (3) Show the archetypal beneath the personal at least once. (4) Treat ambivalence as data, not noise to resolve. (5) If painful, ask what it protects against.\nREFUSAL: No diagnosing a clinical condition or naming a disorder. No treatment advice or crisis resources unless genuine acute distress (Master Safety Floor). No pop-psychology shorthand — use real conceptual precision.\nEXIT: A genuine psychic function has been named, ideally with personal content shown standing on archetypal ground.", source:'markdown', imported: new Date().toISOString() },
+
+  { slug:'philosophical', name:'Lens: Philosophical', triggers:['philosophical','dialectic','premise'],
+    description:'Refracts the fragment through multi-perspectival philosophical interrogation and hidden premises.',
+    body: MASTER_DNA + "OPERATION: The fragment is refracted through multi-perspectival philosophical interrogation — genuine argumentative pressure from more than one incompatible tradition, forcing the fragment to show which assumptions survive.\nVOICE: Rigorous, occasionally adversarial toward the fragment in service of it, comfortable holding traditions that would have hated each other without prematurely synthesizing them.\nCORE MOVES: (1) Name a hidden premise the fragment doesn't know it's making. (2) Bring two incompatible traditions to genuinely different verdicts (e.g. phenomenological vs. genealogical; existentialist vs. no-self). (3) Voice the strongest objection to your own reading. (4) Distinguish precisely where ordinary language collapses two concepts into one. (5) End on a sharper question, not a resolved thesis.\nREFUSAL: No quote-sprinkling for gravitas — every invocation must do argumentative work. No false synthesis between traditions that genuinely disagree. No retreat into relativism to avoid taking positions within each voiced perspective.\nEXIT: At least two incompatible verdicts rendered, a hidden premise surfaced, closing on a sharpened question.", source:'markdown', imported: new Date().toISOString() }
+];
+
+function loadLibrary() {
+  var raw = storageGet('prompts:all');
+  if (raw) { try { return JSON.parse(raw); } catch(e){} }
+  storageSet('prompts:all', JSON.stringify(LIB_DEFAULTS));
+  return LIB_DEFAULTS.slice();
+}
+function saveLibrary(arr) { storageSet('prompts:all', JSON.stringify(arr)); }
+var promptLibrary = loadLibrary();
+
+function getPromptBySlug(slug) {
+  return promptLibrary.filter(function(p){ return p.slug === slug; })[0];
+}
+
+/* ==================================================================
+   STORAGE ABSTRACTION (C21)
+   ================================================================== */
+function storageSet(key,value){ localStorage.setItem(key,value); return true; }
+function storageGet(key){ return localStorage.getItem(key); }
+function storageRemove(key){ localStorage.removeItem(key); return true; }
+function storageList(prefix){ var keys=[]; for(var i=0;i<localStorage.length;i++){var k=localStorage.key(i); if(k&&k.indexOf(prefix)===0)keys.push(k);} return keys; }
+
+/* ==================================================================
+   CANONICAL COPY (C05)
+   ================================================================== */
+function copyToClipboard(text, btn) {
+  if (!text || !text.trim()) return;
+  var origHTML = btn.innerHTML;
+  var ICON_CHECK = '<svg viewBox="0 0 24 24" style="width:11px;height:11px;stroke:currentColor;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+  function onSuccess() { btn.innerHTML = ICON_CHECK + ' Copied'; btn.classList.add('copied'); setTimeout(function(){ btn.innerHTML=origHTML; btn.classList.remove('copied'); },2000); }
+  function onFail() { btn.textContent = '✗ Failed'; setTimeout(function(){ btn.innerHTML=origHTML; },2000); }
+  function execCopy() {
+    var ta = document.createElement('textarea'); ta.value = text;
+    ta.style.cssText = 'position:fixed;left:-9999px;top:-9999px;opacity:0;font-size:12px;pointer-events:none;';
+    ta.setAttribute('readonly','');
+    document.body.appendChild(ta); ta.focus(); ta.select(); ta.setSelectionRange(0,text.length);
+    var ok=false; try{ ok=document.execCommand('copy'); }catch(e){}
+    document.body.removeChild(ta); ok ? onSuccess() : onFail();
+  }
+  if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(text).then(onSuccess).catch(execCopy); }
+  else { execCopy(); }
+}
+
+/* ==================================================================
+   MARKDOWN RENDERING (C02)
+   ================================================================== */
+function escapeHtml(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function renderMarkdown(src) {
+  var s = escapeHtml(src);
+  s = s.replace(/```([^`]*)```/g, function(m,c){ return '<pre><code>'+c+'</code></pre>'; });
+  s = s.replace(/`([^`]+)`/g, '<code>$1</code>');
+  s = s.replace(/\*\*\*([^*]+)\*\*\*/g, '<strong><em>$1</em></strong>');
+  s = s.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+  s = s.replace(/(^|[^*])\*([^*]+)\*/g, '$1<em>$2</em>');
+  s = s.replace(/_([^_]+)_/g, '<em>$1</em>');
+  s = s.replace(/^### (.*)$/gm, '<h3>$1</h3>');
+  s = s.replace(/^## (.*)$/gm, '<h2>$1</h2>');
+  s = s.replace(/^# (.*)$/gm, '<h1>$1</h1>');
+  s = s.replace(/^---$/gm, '<hr>');
+  s = s.replace(/^(?:- |\* )(.*)$/gm, '<li>$1</li>');
+  s = s.replace(/(<li>.*<\/li>\n?)+/g, function(m){ return '<ul>'+m+'</ul>'; });
+  s = s.replace(/^\d+\. (.*)$/gm, '<li>$1</li>');
+  s = s.replace(/\n\n/g, '</p><p>');
+  s = s.replace(/\n/g, '<br>');
+  return '<p>' + s + '</p>';
+}
+
+/* ==================================================================
+   ENGINE STATE + CHIP LOGIC
+   ================================================================== */
+var state = { mode: null, lens: null };
+
+document.querySelectorAll('#chipRow .chip').forEach(function(chip) {
+  chip.addEventListener('click', function() {
+    var mode = chip.dataset.mode;
+    document.querySelectorAll('#chipRow .chip').forEach(function(c){ c.classList.remove('active'); });
+    chip.classList.add('active');
+    state.mode = mode;
+    var subrow = document.getElementById('lensSubrow');
+    if (mode === 'lens') {
+      subrow.classList.add('visible');
+      state.lens = null;
+    } else {
+      subrow.classList.remove('visible');
+      document.querySelectorAll('.chip-sub').forEach(function(c){ c.classList.remove('active'); });
+      state.lens = null;
+    }
+    updateActivePromptLabel();
+  });
+});
+document.querySelectorAll('.chip-sub').forEach(function(chip) {
+  chip.addEventListener('click', function() {
+    document.querySelectorAll('.chip-sub').forEach(function(c){ c.classList.remove('active'); });
+    chip.classList.add('active');
+    state.lens = chip.dataset.lens;
+    updateActivePromptLabel();
+  });
+});
+
+function activeSlug() {
+  if (state.mode === 'radiate') return 'radiate';
+  if (state.mode === 'deepen') return 'deepen';
+  if (state.mode === 'lens' && state.lens) return state.lens;
+  return null;
+}
+function updateActivePromptLabel() {
+  var slug = activeSlug();
+  var label = document.getElementById('activePromptLabel');
+  var runBtn = document.getElementById('runBtn');
+  if (slug) {
+    var p = getPromptBySlug(slug);
+    label.textContent = p ? p.name : slug;
+    runBtn.disabled = document.getElementById('fragmentInput').value.trim().length === 0;
+  } else {
+    label.textContent = 'no operation selected';
+    runBtn.disabled = true;
+  }
+}
+document.getElementById('fragmentInput').addEventListener('input', updateActivePromptLabel);
+
+/* ==================================================================
+   RUN — single call, streamed into output
+   ================================================================== */
+var runCounter = 0;
+document.getElementById('runBtn').addEventListener('click', runOperation);
+
+async function runOperation() {
+  var slug = activeSlug();
+  if (!slug) return;
+  var cfg = getProviderCfg(document.getElementById('providerSelect').value);
+  if (cfg && cfg.standaloneOnly && isArtifact) { updateWarnBanner(); return; }
+
+  var fragment = document.getElementById('fragmentInput').value.trim();
+  if (!fragment) return;
+
+  var promptEntry = getPromptBySlug(slug);
+  var systemPrompt = promptEntry ? promptEntry.body : MASTER_DNA;
+  var opName = promptEntry ? promptEntry.name : slug;
+
+  runCounter++;
+  var blockId = 'out_' + runCounter;
+  var host = document.getElementById('outputHost');
+  if (host.querySelector('.empty-state')) host.innerHTML = '';
+
+  var block = document.createElement('div');
+  block.className = 'output-block';
+  block.innerHTML =
+    '<div class="output-header">' +
+      '<div><span class="output-title">' + opName + '</span><span class="output-status" id="'+blockId+'_status">burning…</span></div>' +
+      '<button class="copy-btn" id="'+blockId+'_copy"><svg viewBox="0 0 24 24" stroke-width="1.8"><path d="M9 9h9v9H9zM6 6h9v3H6z"></path></svg>Copy</button>' +
+    '</div>' +
+    '<div class="output-body" id="'+blockId+'"></div>';
+  host.insertBefore(block, host.firstChild);
+
+  document.getElementById(blockId+'_copy').onclick = function() {
+    copyToClipboard(document.getElementById(blockId).innerText, this);
+  };
+
+  var runBtn = document.getElementById('runBtn');
+  runBtn.disabled = true;
+  var accumulated = '';
+  var bodyEl = document.getElementById(blockId);
+  var statusEl = document.getElementById(blockId+'_status');
+
+  try {
+    await callAI(systemPrompt, fragment, function(chunk) {
+      accumulated += chunk;
+      bodyEl.innerHTML = renderMarkdown(accumulated);
+    });
+    statusEl.textContent = 'complete';
+    saveResponseEntry(opName, slug, fragment, accumulated);
+  } catch (err) {
+    statusEl.textContent = 'error';
+    bodyEl.innerHTML = '<div style="color:var(--coral);font-family:sans-serif;font-size:0.85rem;">' + escapeHtml(err.message || String(err)) + '</div>';
+  }
+  runBtn.disabled = document.getElementById('fragmentInput').value.trim().length === 0;
+}
+
+/* ==================================================================
+   RESPONSE LIBRARY (auto-save, C20)
+   ================================================================== */
+function loadResponses() {
+  var raw = storageGet('responses:all');
+  if (raw) { try { return JSON.parse(raw); } catch(e){} }
+  return [];
+}
+function saveResponseEntry(opName, slug, input, output) {
+  var arr = loadResponses();
+  arr.unshift({ id:'resp_'+Date.now(), promptSlug:slug, promptName:opName, input:input, output:output, timestamp:new Date().toISOString() });
+  storageSet('responses:all', JSON.stringify(arr));
+  renderResponseList();
+}
+function renderResponseList() {
+  var arr = loadResponses();
+  var host = document.getElementById('responseList');
+  host.innerHTML = '';
+  if (!arr.length) { host.innerHTML = '<div style="font-family:sans-serif;font-size:0.75rem;color:var(--text-muted);">No responses yet.</div>'; return; }
+  arr.forEach(function(r) {
+    var d = document.createElement('div');
+    d.className = 'resp-entry';
+    var date = new Date(r.timestamp);
+    d.innerHTML =
+      '<div class="resp-entry-meta">' + r.promptName + ' — ' + date.toLocaleString() + '</div>' +
+      '<div class="resp-entry-snippet">' + escapeHtml(r.output.slice(0,140)) + '…</div>';
+    host.appendChild(d);
+  });
+}
+
+document.getElementById('exportRespBtn').addEventListener('click', function() {
+  var blob = new Blob([JSON.stringify(loadResponses(), null, 2)], {type:'application/json'});
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a'); a.href = url; a.download = 'threshold-responses.json'; a.click();
+  URL.revokeObjectURL(url);
+});
+document.getElementById('importRespBtn').addEventListener('click', function() { document.getElementById('respJsonInput').click(); });
+document.getElementById('respJsonInput').addEventListener('change', function(e) {
+  var file = e.target.files[0]; if (!file) return;
+  var reader = new FileReader();
+  reader.onload = function() {
+    try {
+      var imported = JSON.parse(reader.result);
+      var existing = loadResponses();
+      var merged = existing.concat(imported.filter(function(i){ return !existing.some(function(ex){ return ex.id === i.id; }); }));
+      storageSet('responses:all', JSON.stringify(merged));
+      renderResponseList();
+    } catch(err) { alert('Invalid JSON file.'); }
+  };
+  reader.readAsText(file);
+});
+
+/* ==================================================================
+   PROMPT LIBRARY PANEL (edit-in-place, import/export, C20)
+   ================================================================== */
+function renderLibraryList() {
+  var host = document.getElementById('libraryList');
+  host.innerHTML = '';
+  promptLibrary.forEach(function(p, idx) {
+    var d = document.createElement('div');
+    d.className = 'lib-entry';
+    d.innerHTML =
+      '<div class="lib-entry-name">' + p.name + '</div>' +
+      '<div class="lib-entry-desc">' + p.description + '</div>' +
+      '<textarea class="lib-edit-area" data-idx="'+idx+'">'+escapeHtml(p.body)+'</textarea>';
+    var textarea = d.querySelector('textarea');
+    d.querySelector('.lib-entry-name').addEventListener('click', function() {
+      textarea.classList.toggle('open');
+    });
+    textarea.addEventListener('change', function() {
+      promptLibrary[idx].body = textarea.value;
+      saveLibrary(promptLibrary);
+    });
+    host.appendChild(d);
+  });
+}
+
+document.getElementById('exportPromptsBtn').addEventListener('click', function() {
+  var blob = new Blob([JSON.stringify(promptLibrary, null, 2)], {type:'application/json'});
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a'); a.href = url; a.download = 'threshold-prompts.json'; a.click();
+  URL.revokeObjectURL(url);
+});
+document.getElementById('importPromptsBtn').addEventListener('click', function() { document.getElementById('jsonFileInput').click(); });
+document.getElementById('jsonFileInput').addEventListener('change', function(e) {
+  var file = e.target.files[0]; if (!file) return;
+  var reader = new FileReader();
+  reader.onload = function() {
+    try {
+      var imported = JSON.parse(reader.result);
+      imported.forEach(function(ip) {
+        var existingIdx = promptLibrary.findIndex(function(p){ return p.slug === ip.slug; });
+        if (existingIdx !== -1) promptLibrary[existingIdx] = ip; else promptLibrary.push(ip);
+      });
+      saveLibrary(promptLibrary);
+      renderLibraryList();
+    } catch(err) { alert('Invalid JSON file.'); }
+  };
+  reader.readAsText(file);
+});
+document.getElementById('importMdBtn').addEventListener('click', function() { document.getElementById('mdFileInput').click(); });
+document.getElementById('mdFileInput').addEventListener('change', function(e) {
+  var file = e.target.files[0]; if (!file) return;
+  var reader = new FileReader();
+  reader.onload = function() {
+    var name = file.name.replace(/\.md$/,'');
+    var slug = name.toLowerCase().replace(/[^a-z0-9]+/g,'-');
+    promptLibrary.push({ slug: slug, name: name, triggers: [], description: 'Imported from ' + file.name,
+      body: reader.result, source:'markdown', imported: new Date().toISOString() });
+    saveLibrary(promptLibrary);
+    renderLibraryList();
+  };
+  reader.readAsText(file);
+});
+
+/* ==================================================================
+   PANELS + BACKDROPS (C01, C08)
+   ================================================================== */
+function togglePanel(panelId, backdropId, force) {
+  var panel = document.getElementById(panelId);
+  var backdrop = document.getElementById(backdropId);
+  var open = force !== undefined ? force : !panel.classList.contains('open');
+  panel.classList.toggle('open', open);
+  backdrop.classList.toggle('visible', open);
+}
+document.getElementById('leftToggle').addEventListener('click', function(){ togglePanel('leftPanel','leftBackdrop'); });
+document.getElementById('leftBackdrop').addEventListener('click', function(){ togglePanel('leftPanel','leftBackdrop', false); });
+document.getElementById('rightToggle').addEventListener('click', function(){ togglePanel('rightPanel','rightBackdrop'); });
+document.getElementById('rightBackdrop').addEventListener('click', function(){ togglePanel('rightPanel','rightBackdrop', false); });
+
+function toggleSettings(force) {
+  var d = document.getElementById('settingsDrawer');
+  var b = document.getElementById('settingsBackdrop');
+  var open = force !== undefined ? force : !d.classList.contains('open');
+  d.classList.toggle('open', open);
+  b.classList.toggle('visible', open);
+}
+document.getElementById('settingsToggle').addEventListener('click', function(){ toggleSettings(); });
+document.getElementById('settingsBackdrop').addEventListener('click', function(){ toggleSettings(false); });
+
+document.getElementById('providerSelect').addEventListener('change', function() {
+  updateProviderDot(); updateWarnBanner();
+});
+
+/* ==================================================================
+   INIT
+   ================================================================== */
+renderLibraryList();
+renderResponseList();
+fetchModelConfig();
+</script>
+</body>
+</html>

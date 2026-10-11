@@ -1,0 +1,18 @@
+{
+  "skill": "occams-razor",
+  "skill_name": "occams-razor",
+  "description": "Compresses a messy, rambling, or multi-threaded user input down to the single structural fork that actually matters, resolves that fork using best available reasoning, and states the resolution as one transparent receipt line before proceeding. Invoke with /occam, \"Occam's Razor this\", \"occam it\", or \"cut through this\" when a conversation has accumulated multiple open forks, back-and-forth clarifying questions, or the person explicitly says the discussion feels messy, chaotic, or stuck in a rabbit hole. Do NOT trigger automatically \u2014 invoke only on explicit request. The skill never asks \"which do you prefer\" between options Claude could judge itself; it only asks when the fork requires information only the person possesses.",
+  "source_file": "skills/occams-razor/SKILL.md",
+  "source_sha": "eeddd1a5c29da86a017f42d9bd58544663e289ee69b958c2bca7101ba58720c6",
+  "resources": [],
+  "provider_config": {
+    "model_core": "v2"
+  },
+  "inputs": [
+    {
+      "id": "chatInput",
+      "kind": "textarea",
+      "label": "Invoke the skill"
+    }
+  ]
+}

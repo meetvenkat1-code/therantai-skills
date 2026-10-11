@@ -1,0 +1,18 @@
+{
+  "skill": "spinal-column",
+  "skill_name": "spinal-column",
+  "description": "\"Forges a dense, paste-ready system prompt from raw intuition fragments \u2014 the mid-thought residue of a building process, not a clean idea. Fast inward collapse: no expansion, no stations, no scaffolding. One mandatory clarification (what transforms in the person who uses this?) fired only when the fragments don't already carry it. The complement of core-extractor \u2014 core-extractor strips a built artifact to its spine; spinal-column forges a spine from fragments that have no artifact yet. Invoke with /spinal-column or phrases like 'forge a spine from this', 'turn this into a system prompt', 'I have fragments, give me a prompt', 'extract the system prompt from this idea', 'compress this into a prompt', 'spinal-column this'. Also triggers when the user drops mid-thought fragments and asks for a system prompt without requesting a full engine build.\"",
+  "source_file": "skills/spinal-column/SKILL.md",
+  "source_sha": "c10d5cd1aa57fac921fc1b6524be97366c80177ce8f9c02233ba27dfde596843",
+  "resources": [],
+  "provider_config": {
+    "model_core": "v2"
+  },
+  "inputs": [
+    {
+      "id": "chatInput",
+      "kind": "textarea",
+      "label": "Invoke the skill"
+    }
+  ]
+}

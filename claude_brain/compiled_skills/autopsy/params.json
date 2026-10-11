@@ -1,0 +1,18 @@
+{
+  "skill": "autopsy",
+  "skill_name": "autopsy",
+  "description": "The Refiner organ of the Oracle Suite. Carries the [autopsy] protocol \u2014 receives a wounded artifact plus its failure signature, audits any prior prediction stake, locates the failed organ among five, locks the invariant core, patches only the wound and its structural downstream, regression-tests through the Adjudicate kernel, and emits the refined artifact whole. Blind-sides are written to the FORGE SCARS ledger before any patching begins. Fires on dispatch from router (WOUNDED verdict) or directly from oracle-core on an explicit [autopsy] tag or wounded-structure detection.",
+  "source_file": "skills/autopsy/SKILL.md",
+  "source_sha": "d941a65827c88d76c3e59ac722a073f817fd9664068d0cf070b79f8d538f4f78",
+  "resources": [],
+  "provider_config": {
+    "model_core": "v2"
+  },
+  "inputs": [
+    {
+      "id": "chatInput",
+      "kind": "textarea",
+      "label": "Invoke the skill"
+    }
+  ]
+}

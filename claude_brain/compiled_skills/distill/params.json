@@ -1,0 +1,18 @@
+{
+  "skill": "distill",
+  "skill_name": "distill",
+  "description": ">",
+  "source_file": "skills/distill/SKILL.md",
+  "source_sha": "a870ff9b3ab019d13c2b1fc6dd1b1a2df8e31b40639443618908e31e7c9aea2e",
+  "resources": [],
+  "provider_config": {
+    "model_core": "v2"
+  },
+  "inputs": [
+    {
+      "id": "chatInput",
+      "kind": "textarea",
+      "label": "Invoke the skill"
+    }
+  ]
+}

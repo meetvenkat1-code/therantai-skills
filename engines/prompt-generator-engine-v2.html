@@ -1,0 +1,863 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Prompt Generation Engine</title>
+<style>
+  :root{
+    --bg-void:#0a0b0e; --bg-panel:#12141a; --bg-input:#0d0f14; --bg-border:#23262e;
+    --text-primary:#e4e6eb; --text-muted:#7a7f8c; --text-dim:#4a4e58;
+    --accent-main:#22c55e; --accent-a:#f97316; --accent-b:#a855f7; --accent-c:#3b82f6;
+    --green:#22c55e; --red:#ef4444;
+    font-family:'JetBrains Mono','SF Mono',Consolas,monospace;
+    box-sizing:border-box; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+  }
+  html{scroll-padding-top:env(safe-area-inset-top,0px);}
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{background:var(--bg-void); color:var(--text-primary); min-height:100%;}
+
+  .header{
+    position:sticky; top:env(safe-area-inset-top,0px); left:0; right:0; height:56px; z-index:100;
+    background:var(--bg-panel); border-bottom:1px solid var(--bg-border);
+    display:flex; align-items:center; justify-content:space-between; padding:0 1.5rem;
+  }
+  .header .zone-a{display:flex; align-items:center; gap:.6rem;}
+  .header .title{font-size:.85rem; font-weight:600; letter-spacing:.04em;}
+  .header .badge{font-size:.6rem; color:var(--accent-main); border:1px solid var(--accent-main); padding:1px 6px; border-radius:4px; letter-spacing:.06em;}
+  .header .zone-b{display:flex; align-items:center; gap:.6rem;}
+  .provider-dot{width:8px; height:8px; border-radius:50%; flex-shrink:0;}
+  #providerSelect{
+    background:var(--bg-input); border:1px solid var(--bg-border); color:var(--text-primary);
+    font-family:inherit; font-size:.68rem; padding:4px 8px; border-radius:5px; cursor:pointer;
+  }
+  .settings-btn{
+    background:none; border:1px solid var(--bg-border); color:var(--text-muted);
+    width:28px; height:28px; border-radius:5px; cursor:pointer; display:flex; align-items:center; justify-content:center;
+  }
+  .settings-btn:hover{border-color:var(--accent-main); color:var(--accent-main);}
+  .settings-btn svg{width:14px; height:14px; stroke:currentColor; fill:none; stroke-width:1.8;}
+  .header .zone-c{display:flex; flex-direction:column; align-items:flex-end; gap:1px; font-size:.68rem; color:var(--text-dim);}
+  .header .zone-c .crafted{font-style:italic;}
+  .header .zone-c a{color:var(--text-dim); text-decoration:none;}
+  .header .zone-c a:hover{color:var(--text-muted);}
+
+  .drawer{
+    position:fixed; top:0; right:-340px; width:320px; height:100%; z-index:200;
+    background:var(--bg-panel); border-left:1px solid var(--bg-border);
+    padding:1.5rem; transition:right .25s ease; overflow-y:auto;
+    padding-top:calc(1.5rem + env(safe-area-inset-top,0px));
+  }
+  .drawer.open{right:0;}
+  .drawer h3{font-size:.78rem; margin-bottom:1rem; color:var(--text-primary);}
+  .drawer label{font-size:.65rem; color:var(--text-muted); display:block; margin:1rem 0 .3rem;}
+  .drawer input[type=password], .drawer input[type=text]{
+    width:100%; background:var(--bg-input); border:1px solid var(--bg-border); color:var(--text-primary);
+    font-family:inherit; font-size:.72rem; padding:.5rem; border-radius:5px;
+  }
+  .drawer .key-note{font-size:.6rem; color:var(--text-dim); margin-top:.3rem;}
+  .drawer .save-btn{
+    margin-top:1.5rem; width:100%; background:var(--accent-main); color:#08130c; border:none;
+    border-radius:6px; padding:.55rem; font-family:inherit; font-size:.7rem; font-weight:700; cursor:pointer;
+  }
+  .drawer-overlay{position:fixed; inset:0; background:rgba(0,0,0,.5); z-index:199; display:none;}
+  .drawer-overlay.open{display:block;}
+  .standalone-notice{font-size:.62rem; color:#f97316; background:rgba(249,115,22,.08); border:1px solid rgba(249,115,22,.25); border-radius:5px; padding:.5rem; margin-top:.5rem;}
+
+  .canvas{padding:1.75rem; max-width:100%; overflow-x:hidden;}
+  .top-grid{display:grid; grid-template-columns:1fr 1fr; gap:1.5rem; margin-bottom:1.5rem;}
+  @media (max-width:900px){ .top-grid{grid-template-columns:1fr;} }
+
+  .panel{background:var(--bg-panel); border:1px solid var(--bg-border); border-radius:8px; padding:1.25rem;}
+  .panel-label{font-size:.68rem; text-transform:uppercase; letter-spacing:.08em; color:var(--text-muted); margin-bottom:.75rem; display:flex; align-items:center; gap:.4rem;}
+  .panel-label::before{content:'>'; color:var(--accent-main);}
+
+  textarea{width:100%; background:var(--bg-input); border:1px solid var(--bg-border); border-radius:6px; color:var(--text-primary); font-family:inherit; font-size:.82rem; line-height:1.6; padding:.85rem; resize:vertical;}
+  textarea:focus{outline:none; border-color:var(--accent-main);}
+  #inputAnchor{min-height:110px;}
+
+  .axis-block{margin-bottom:1.4rem;}
+  .axis-block:last-child{margin-bottom:0;}
+  .axis-head{display:flex; justify-content:space-between; align-items:baseline; margin-bottom:.5rem;}
+  .axis-name{font-size:.78rem; font-weight:600;}
+  .axis-value{font-size:.9rem; font-weight:700; font-variant-numeric:tabular-nums;}
+  .axis-a .axis-value{color:var(--accent-a);} .axis-b .axis-value{color:var(--accent-b);} .axis-c .axis-value{color:var(--accent-c);}
+  input[type=range]{-webkit-appearance:none; width:100%; height:4px; border-radius:2px; background:var(--bg-border); outline:none;}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none; width:15px; height:15px; border-radius:50%; cursor:pointer; border:2px solid var(--bg-void);}
+  input[type=range]::-moz-range-thumb{width:15px; height:15px; border-radius:50%; cursor:pointer; border:2px solid var(--bg-void);}
+  .axis-a input[type=range]::-webkit-slider-thumb{background:var(--accent-a);} .axis-b input[type=range]::-webkit-slider-thumb{background:var(--accent-b);} .axis-c input[type=range]::-webkit-slider-thumb{background:var(--accent-c);}
+  .axis-a input[type=range]::-moz-range-thumb{background:var(--accent-a);} .axis-b input[type=range]::-moz-range-thumb{background:var(--accent-b);} .axis-c input[type=range]::-moz-range-thumb{background:var(--accent-c);}
+
+  .preset-preview{margin-top:1.4rem; border-top:1px solid var(--bg-border); padding-top:1rem;}
+  .preset-row{display:flex; justify-content:space-between; font-size:.68rem; color:var(--text-dim); padding:3px 0;}
+  .preset-row .coords{font-variant-numeric:tabular-nums; color:var(--text-muted);}
+
+  .generate-btn{width:100%; margin-top:1.25rem; background:var(--accent-main); color:#08130c; border:none; border-radius:6px; padding:.7rem; font-family:inherit; font-size:.78rem; font-weight:700; letter-spacing:.03em; cursor:pointer; transition:opacity .2s;}
+  .generate-btn:hover{opacity:.88;}
+  .generate-btn:disabled{opacity:.4; cursor:not-allowed;}
+
+  .cards-grid{display:grid; grid-template-columns:1fr 1fr 1fr; gap:1rem;}
+  @media (max-width:1100px){ .cards-grid{grid-template-columns:1fr;} }
+
+  .card{background:var(--bg-panel); border:1px solid var(--bg-border); border-radius:8px; overflow:hidden; display:flex; flex-direction:column;}
+  .card-head{padding:.9rem 1rem; border-bottom:1px solid var(--bg-border); display:flex; justify-content:space-between; align-items:center;}
+  .card-title{font-size:.72rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em;}
+  .card-coords{font-size:.65rem; color:var(--text-dim); font-variant-numeric:tabular-nums; margin-top:2px;}
+  .card-status{font-size:.62rem; color:var(--text-dim); text-align:right;}
+  .card-status.streaming{color:var(--accent-main);}
+  .card-status.error{color:var(--red);}
+
+  .prose-body{padding:1.1rem 1rem; font-size:.86rem; line-height:1.75; color:var(--text-primary); white-space:pre-wrap; flex:1;}
+  .prose-placeholder{color:var(--text-dim); font-style:italic; font-size:.78rem;}
+
+  .prose-actions{display:flex; gap:.5rem; padding:.7rem 1rem; border-top:1px solid var(--bg-border);}
+
+  details.prompt-accordion{border-top:1px solid var(--bg-border);}
+  details.prompt-accordion summary{
+    padding:.6rem 1rem; font-size:.65rem; color:var(--text-dim); cursor:pointer;
+    text-transform:uppercase; letter-spacing:.05em; list-style:none; display:flex; align-items:center; gap:6px;
+  }
+  details.prompt-accordion summary::-webkit-details-marker{display:none;}
+  details.prompt-accordion summary::before{content:'▸'; font-size:.6rem; transition:transform .15s;}
+  details.prompt-accordion[open] summary::before{transform:rotate(90deg);}
+  .accordion-body{padding:0 1rem 1rem; font-size:.68rem; line-height:1.55; color:var(--text-muted); white-space:pre-wrap; max-height:260px; overflow-y:auto;}
+  .accordion-actions{padding:0 1rem 1rem;}
+
+  .card-btn{
+    flex:1; display:flex; align-items:center; justify-content:center; gap:5px;
+    background:none; border:1px solid var(--bg-border); color:var(--text-muted); font-size:.63rem;
+    padding:6px 8px; border-radius:5px; cursor:pointer; transition:all .2s; font-family:inherit;
+  }
+  .card-btn svg{width:11px; height:11px; stroke:currentColor; fill:none; stroke-width:1.8;}
+  .card-btn:hover{border-color:var(--accent-main); color:var(--accent-main);}
+  .card-btn.copied{border-color:var(--green); color:var(--green);}
+  .card-btn:disabled{opacity:.4; cursor:not-allowed;}
+
+  .empty-note{font-size:.7rem; color:var(--text-dim); font-style:italic; padding:2rem; text-align:center; grid-column:1/-1; border:1px dashed var(--bg-border); border-radius:8px;}
+  .error-note{font-size:.68rem; color:var(--red); padding:.5rem 0;}
+  .stage-tag{font-size:.58rem; color:var(--text-dim); text-transform:uppercase; letter-spacing:.04em;}
+
+  .drawer{width:400px; max-width:92%; right:-440px;}
+  .drawer h3 + .key-note{margin:-.6rem 0 .5rem;}
+  .tchip{display:inline-block; width:auto; margin:0 .35rem .35rem 0; padding:2px 9px; font:inherit; font-size:.62rem; background:none; border:1px solid var(--bg-border); color:var(--text-muted); border-radius:11px; cursor:pointer;}
+  .tchip.on{border-color:var(--accent-main); color:var(--accent-main);}
+  .drawer .mrow{display:block; margin:0; padding:.4rem .2rem; border-bottom:1px solid var(--bg-border); font-size:.64rem; color:var(--text-primary); word-break:break-all; cursor:pointer;}
+  .mrow.pinned{border-left:2px solid var(--accent-main); padding-left:.5rem;}
+  .drawer .mrow input{width:auto; margin-right:.5rem;}
+  .mrow .meta{display:block; margin-left:1.4rem; font-size:.58rem; color:var(--text-dim);}
+  .fan-group{margin-top:1.4rem;} .fan-h{font-size:.7rem; color:var(--text-muted); letter-spacing:.05em; text-transform:uppercase; margin-bottom:.6rem;}
+  #toast{position:fixed; left:50%; bottom:1.2rem; transform:translateX(-50%); background:var(--bg-panel); border:1px solid var(--bg-border); color:var(--text-primary); font-size:.68rem; padding:.5rem .9rem; border-radius:6px; opacity:0; pointer-events:none; transition:opacity .2s; z-index:300;}
+  #toast.show{opacity:1;}
+  #cfgBadge[data-state="live"]{color:var(--green); border-color:var(--green);} #cfgBadge[data-state="fallback"]{color:var(--accent-a); border-color:var(--accent-a);}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="zone-a">
+    <span class="title">PROMPT GENERATION ENGINE</span>
+    <span class="badge">v2.1 · two-stage</span><span class="badge" id="cfgBadge">Config: …</span>
+  </div>
+  <div class="zone-b">
+    <span class="provider-dot" id="providerDot"></span>
+    <select id="providerSelect"></select>
+    <button class="settings-btn" id="settingsBtn" title="API Keys">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+    </button>
+  </div>
+  <div class="zone-c">
+    <span class="crafted">crafted by</span>
+    <a href="mailto:meet.venkat1@gmail.com">meet.venkat1@gmail.com</a>
+  </div>
+</div>
+
+<div class="drawer-overlay" id="drawerOverlay"></div>
+<div class="drawer" id="drawer">
+  <h3>Lanes</h3><div class="key-note" id="laneCount"></div><div id="laneList"></div>
+  <h3 style="margin-top:1.4rem">Model catalog</h3>
+  <div id="provBtns"></div><input type="text" id="catSearch" placeholder="search id, name, or /regex/i">
+  <div id="tierChips" style="margin:.5rem 0"></div><div id="catRows"></div><div class="key-note" id="catStatus"></div>
+  <h3 style="margin-top:1.4rem">Keys</h3>
+  <div id="keyFields"></div>
+  <button class="save-btn" id="saveKeysBtn">Save Keys</button>
+  <button class="save-btn" id="clearKeysBtn" style="background:none;color:var(--text-muted);border:1px solid var(--bg-border);margin-top:.6rem">Clear saved keys</button>
+</div>
+<div id="toast"></div>
+
+<div class="canvas">
+  <div class="top-grid">
+    <div class="panel">
+      <div class="panel-label">Input anchor</div>
+      <textarea id="inputAnchor" placeholder="Paste the raw theoretical fragment here.">The unconscious does not repress desire; it structures it. What the subject takes to be spontaneous want is already the trace of a prior prohibition.</textarea>
+
+      <div class="axis-block axis-a">
+        <div class="axis-head"><span class="axis-name">Axis A — Syntactic Rhythm</span><span class="axis-value" id="valA">6</span></div>
+        <input type="range" id="sliderA" min="1" max="10" value="6" step="1">
+      </div>
+      <div class="axis-block axis-b">
+        <div class="axis-head"><span class="axis-name">Axis B — Metaphorical Density</span><span class="axis-value" id="valB">4</span></div>
+        <input type="range" id="sliderB" min="1" max="10" value="4" step="1">
+      </div>
+      <div class="axis-block axis-c">
+        <div class="axis-head"><span class="axis-name">Axis C — Lexical Register</span><span class="axis-value" id="valC">3</span></div>
+        <input type="range" id="sliderC" min="1" max="10" value="3" step="1">
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-label">Geometric presets — computed live</div>
+      <div class="preset-preview">
+        <div class="preset-row"><span>Current position</span><span class="coords" id="pv-current"></span></div>
+        <div class="preset-row"><span>Opposite corner</span><span class="coords" id="pv-opposite"></span></div>
+        <div class="preset-row"><span>Neutral centroid</span><span class="coords" id="pv-centroid"></span></div>
+      </div>
+      <p style="font-size:.66rem; color:var(--text-dim); margin-top:1rem; line-height:1.6;">
+        Two-stage pipeline per card: <b style="color:var(--text-muted)">Stage 1</b> compiles a fresh, fragment-tailored system prompt at each coordinate. <b style="color:var(--text-muted)">Stage 2</b> immediately feeds that compiled prompt back as system instruction, with the original fragment as the user message, to generate the final styled prose. Cards run in parallel; each card's two stages run in sequence.
+      </p>
+      <button class="generate-btn" id="generateBtn">Run Full Pipeline (3 presets × 2 stages)</button>
+      <button class="generate-btn" id="fanBtn" style="margin-top:.6rem;background:none;color:var(--accent-main);border:1px solid var(--accent-main)">Fan out (1)</button>
+    </div>
+  </div>
+
+  <div class="cards-grid" id="cardsGrid">
+    <div class="empty-note">No output yet — set your axes and run the pipeline.</div>
+  </div>
+  <div id="fanOut"></div>
+</div>
+
+<script>
+// ============================================================
+// MODEL CORE (model-config-contract v2), pasted verbatim
+// ============================================================
+/* MODEL CORE v2 (model-config-contract). Paste verbatim. Edit only the three CONSTANTS. */
+var ENGINE_NAME = 'Prompt Generation Engine';                                   // CONSTANT 1: shown in X-Title
+var CANONICAL_CONFIG_URL = 'https://raw.githubusercontent.com/meetvenkat1-code/therantai-config/refs/heads/main/model.json';   // CONSTANT 2: never vary
+var LEGACY_KEY_SLOTS = {};                                       // CONSTANT 3: read-only fallbacks, e.g. { groq: ['rl.key.gq'], openrouter: ['rl.key.or'] }
+var DEFAULT_TIMEOUT_MS = 15000, DEFAULT_IDLE_MS = 3000;
+var isArtifact = window.self !== window.top;
+
+var LOCAL_FALLBACK_CONFIG = {                                    // mirrors the live model.json providers and defaultLanes (2026-10-03); model_aliases are deliberately not duplicated
+  native_model: 'claude-sonnet-4-6',
+  defaultLanes: ['groq::openai/gpt-oss-120b', 'or-auto::openrouter/free'],
+  providers: [
+    { id: 'claude', native: true, label: 'Claude · Native', dotColor: '#ef4444', requiresKey: false, defaultFor: ['artifact'] },
+    { id: 'groq', native: false, label: 'Groq', dotColor: '#22c55e', requiresKey: true, keyStorageName: 'groq', keyLabel: 'Groq API Key', keyPlaceholder: 'gsk_…', defaultFor: ['standalone'],
+      endpoint: 'https://api.groq.com/openai/v1/chat/completions', authHeader: 'Authorization', authPrefix: 'Bearer ', requestFormat: 'openai-chat', streamFormat: 'openai',
+      modelChain: ['openai/gpt-oss-120b', 'openai/gpt-oss-20b'], softFallback: { on: [429, 500, 502, 503], within: true }, hardFallback: 'or-auto', timeoutMs: 15000, idleMs: 3000 },
+    { id: 'or-auto', native: false, label: 'OR · Free Router', dotColor: '#f97316', requiresKey: true, keyStorageName: 'openrouter', keyLabel: 'OpenRouter API Key', keyPlaceholder: 'sk-or-…',
+      keyNote: 'Standalone only — OpenRouter has no CORS proxy inside claude.ai', standaloneOnly: true,
+      endpoint: 'https://openrouter.ai/api/v1/chat/completions', authHeader: 'Authorization', authPrefix: 'Bearer ',
+      extraHeaders: { 'HTTP-Referer': '$origin', 'X-Title': '$engineName' }, requestFormat: 'openai-chat', streamFormat: 'openai', modelChain: ['openrouter/free'], softFallback: { on: [429, 500, 502, 503], within: true }, timeoutMs: 45000, idleMs: 9000 }
+  ]
+};
+var liveModelConfig = LOCAL_FALLBACK_CONFIG;                     // boot on the floor, upgrade when the fetch lands
+
+var sleep = function (ms) { return new Promise(function (r) { setTimeout(r, ms); }); };
+function natCmp(a, b) { return a.localeCompare(b, undefined, { numeric: true }); }
+function cfgProviders() { return liveModelConfig.providers; }
+function P(id) { return cfgProviders().filter(function (p) { return p.id === id; })[0] || null; }
+function splitKey(k) { var i = k.indexOf('::'); return { provider: k.slice(0, i), model: k.slice(i + 2) }; }
+
+function isValidConfig(j) {
+  if (!j || !Array.isArray(j.providers) || !j.providers.length) return false;
+  var ids = {}, natives = 0, usable = false;
+  for (var i = 0; i < j.providers.length; i++) {
+    var p = j.providers[i];
+    if (!p || !p.id || !p.label || ids[p.id]) return false;
+    ids[p.id] = 1;
+    if (p.native === true) { natives++; if (isArtifact) usable = true; }
+    else if (p.endpoint && p.requestFormat === 'openai-chat' && !(p.standaloneOnly && isArtifact)) usable = true;
+  }
+  return natives <= 1 && usable;                                 // never adopt a half-valid config
+}
+function usableProviders() {                                     // native only inside claude.ai; standalone never routes it
+  return cfgProviders().filter(function (p) { return p.native === true ? isArtifact : !(p.standaloneOnly && isArtifact); });
+}
+function defaultLanes() {                                        // the floor: config's defaultLanes, else first model of the first usable provider
+  var ok = usableProviders().map(function (p) { return p.id; });
+  var list = (liveModelConfig.defaultLanes || []).filter(function (k) {
+    if (k.indexOf('::') < 1) return false; var s = splitKey(k); return ok.indexOf(s.provider) > -1 && !P(s.provider).native;
+  });
+  if (!list.length) {
+    var p = usableProviders().filter(function (x) { return !x.native && x.modelChain && x.modelChain.length; })[0];
+    if (p) list = [p.id + '::' + p.modelChain[0]];
+  }
+  return list;
+}
+
+function getKey(name) {
+  try {
+    var v = localStorage.getItem('hek_' + name); if (v) return v.trim();
+    var old = LEGACY_KEY_SLOTS[name] || [];
+    for (var i = 0; i < old.length; i++) { var o = localStorage.getItem(old[i]); if (o) return o.trim(); }
+  } catch (e) {}
+  return '';
+}
+function setKey(name, value) { try { localStorage.setItem('hek_' + name, (value || '').trim()); } catch (e) {} }
+
+function headersFor(cfg, key) {                                  // CHAT requests only (POST /chat/completions). The picker's GET /models does NOT use this: it uses catalogHeaders (model-catalog-panel v3.2), because these headers force a CORS preflight on a cross-origin GET
+  var h = { 'Content-Type': 'application/json' };
+  if (key && cfg.authHeader) h[cfg.authHeader] = (cfg.authPrefix || '') + key;
+  Object.keys(cfg.extraHeaders || {}).forEach(function (k) {
+    var v = cfg.extraHeaders[k];
+    h[k] = v === '$origin' ? (window.location.origin !== 'null' ? window.location.origin : 'http://localhost') : v === '$engineName' ? ENGINE_NAME : v;
+  });
+  return h;
+}
+function retryAfterSeconds(res, msg) {                           // header first, then Groq's "try again in 26.6s / 1m3.5s / 250ms"
+  var ra = parseFloat(res.headers && res.headers.get && res.headers.get('retry-after')); if (!isNaN(ra)) return ra;
+  var m = /try again in\s+([0-9hms.]+)/i.exec(msg || ''); if (!m) return null;
+  var t = 0; m[1].replace(/(\d+(?:\.\d+)?)(ms|h|m|s)/g, function (_, n, u) { t += parseFloat(n) * { ms: 0.001, s: 1, m: 60, h: 3600 }[u]; });
+  return t || null;
+}
+
+function buildRequest(cfg, modelId, system, user, stream, maxTokens) {
+  if (cfg.native === true) {                                     // HARDCODED BRANCH. Never built from cfg fields.
+    return { url: 'https://api.anthropic.com/v1/messages',
+      headers: { 'Content-Type': 'application/json', 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
+      body: { model: modelId, max_tokens: maxTokens || 4000, stream: stream, system: system || '', messages: [{ role: 'user', content: user }] } };
+  }
+  if (cfg.requestFormat !== 'openai-chat') throw new Error('Unknown requestFormat: ' + cfg.requestFormat);
+  var h = headersFor(cfg, getKey(cfg.keyStorageName));
+  var body = { model: modelId, stream: stream, messages: (system ? [{ role: 'system', content: system }] : []).concat([{ role: 'user', content: user }]) };
+  if (maxTokens) body.max_tokens = maxTokens;
+  return { url: cfg.endpoint, headers: h, body: body };
+}
+
+function readStream(res, format, onChunk, timeoutMs, idleMs, signal) {   // resolves { reason, error }; never rejects
+  var rd = res.body.getReader(), dec = new TextDecoder(), buf = '', done = false, idleT, hardT, reason = null, err = null;
+  timeoutMs = timeoutMs || DEFAULT_TIMEOUT_MS; idleMs = idleMs || DEFAULT_IDLE_MS;
+  return new Promise(function (resolve) {
+    function finish() { if (done) return; done = true; clearTimeout(idleT); clearTimeout(hardT); try { rd.cancel(); } catch (e) {} resolve({ reason: reason, error: err }); }
+    function resetIdle() { clearTimeout(idleT); idleT = setTimeout(finish, idleMs); }
+    hardT = setTimeout(finish, timeoutMs); resetIdle();
+    if (signal) { if (signal.aborted) return finish(); signal.addEventListener('abort', finish, { once: true }); }
+    (function pump() {
+      if (done) return;
+      rd.read().then(function (r) {
+        if (done) return;
+        if (r.done) return finish();
+        buf += dec.decode(r.value, { stream: true });
+        var lines = buf.split('\n'); buf = lines.pop();
+        for (var i = 0; i < lines.length; i++) {
+          var t = lines[i].trim();
+          if (format === 'anthropic' && t === 'event: message_stop') return finish();   // named event line precedes its data: line
+          if (t.indexOf('data:') !== 0) continue;
+          var d = t.slice(5).trim(); if (d === '[DONE]') return finish();
+          try {
+            var p = JSON.parse(d);
+            if (p.error) { err = (p.error.message || 'stream error'); return finish(); }
+            if (format === 'anthropic') {
+              if (p.type === 'content_block_delta' && p.delta && p.delta.text) { onChunk(p.delta.text, null); resetIdle(); }
+              else if (p.type === 'message_delta' && p.delta && p.delta.stop_reason) reason = p.delta.stop_reason === 'max_tokens' ? 'length' : p.delta.stop_reason;
+              else if (p.type === 'message_stop') return finish();
+            } else {
+              var c0 = p.choices && p.choices[0], dl = c0 && c0.delta;
+              if (c0 && c0.finish_reason) reason = c0.finish_reason;
+              if (dl && dl.content) { onChunk(dl.content, p.model || null); resetIdle(); }
+              else if (dl && (dl.reasoning || dl.reasoning_content)) resetIdle();   // thinking counts as alive
+            }
+          } catch (e) {}
+        }
+        pump();
+      }).catch(finish);
+    })();
+  });
+}
+
+/* ONE call layer, two modes.
+   curated: callModel({ provider, system, user, onText, validate })         -> walks modelChain, soft/hard fallback
+   strict : callModel({ provider, model, system, user, onText, maxTokens }) -> exactly that model, never falls through (lanes, panels)
+   onText(accumulatedText, servedModelOrNull) fires on every chunk. Returns { text, model, served, cut }. */
+async function callModel(o) {
+  var cfg = P(o.provider), strict = !!o.model;
+  if (!cfg) throw new Error('Unknown provider: ' + o.provider);
+  if (cfg.standaloneOnly && isArtifact) throw new Error(cfg.label + ' is standalone only. It has no proxy inside claude.ai.');
+  if (cfg.requiresKey && !getKey(cfg.keyStorageName)) throw new Error('No ' + (cfg.keyLabel || cfg.label) + ' saved. Open settings.');
+  var models = strict ? [o.model] : (o.chain || (cfg.native ? [liveModelConfig.native_model] : cfg.modelChain) || []);
+  var lastStatus = null, lastRetry = null;
+  function fail(m) { var e = new Error(m); e.status = lastStatus; e.retryAfter = lastRetry; return e; }   // lets a panel engine show a 429 countdown
+  function aborted() { if (o.signal && o.signal.aborted) { var e = new Error('Aborted'); e.name = 'AbortError'; throw e; } }
+  var advance = ((cfg.softFallback && cfg.softFallback.on) || [429, 500, 502, 503]).concat([400, 404, 422]);
+  var last = '';
+  for (var i = 0; i < models.length; i++) {
+    var retried = false, folded = false, fatal = null;
+    for (var a = 0; a < 3; a++) {
+      aborted();
+      var acc = '', served = null, res;
+      var sys = folded ? '' : o.system, usr = folded ? (o.system ? o.system + '\n\n---\n\n' : '') + o.user : o.user;
+      try {
+        var rq = buildRequest(cfg, models[i], sys, usr, true, o.maxTokens);
+        res = await fetch(rq.url, { method: 'POST', headers: rq.headers, body: JSON.stringify(rq.body), signal: o.signal });
+      } catch (e) { if (e && e.name === 'AbortError') throw e; last = cfg.id + ': network error ' + e.message; break; }
+      if (!res.ok) {
+        var msg = ''; try { var eb = await res.json(); msg = (eb.error && eb.error.message) || ''; } catch (e) {}
+        lastStatus = res.status; lastRetry = retryAfterSeconds(res, msg);
+        if (res.status === 429 && !retried) { retried = true; await sleep(1800); continue; }                       // one retry, then advance
+        if (res.status === 400 && !folded && /system|developer|instruction/i.test(msg)) { folded = true; continue; }   // model rejects the system role
+        last = cfg.id + ':' + res.status + (msg ? ' ' + String(msg).slice(0, 140) : '') + (res.status === 404 ? ' — model not found, refresh the catalog' : '');
+        if (advance.indexOf(res.status) < 0) fatal = last;                                                          // 401/402/403/413: another model will not heal it
+        break;
+      }
+      var out = await readStream(res, cfg.native === true ? 'anthropic' : (cfg.streamFormat || 'openai'), function (c, s) { acc += c; if (s) served = s; if (o.onText) o.onText(acc, served); }, cfg.timeoutMs, cfg.idleMs, o.signal);
+      aborted();
+      if (!acc.trim()) { last = cfg.id + ': empty reply' + (out.reason === 'length' ? ' — the token cap was spent on reasoning' : out.error ? ' — ' + out.error : ''); break; }
+      if (o.validate && !cfg.native) { try { o.validate(acc); } catch (e) { last = cfg.id + ': rejected — ' + e.message; break; } }
+      return { text: acc, model: models[i], served: served, cut: out.reason === 'length' };
+    }
+    if (fatal) throw fail(fatal);                                                                              // stops everything, hardFallback included
+  }
+  var hf = !strict && !o._noHard && cfg.hardFallback ? P(cfg.hardFallback) : null;                                 // strict calls never reach here: lane honesty
+  if (hf) {
+    if (hf.standaloneOnly && isArtifact) throw new Error('All providers exhausted (' + last + '). The fallback (' + hf.label + ') is standalone only.');
+    if (hf.requiresKey && !getKey(hf.keyStorageName)) throw new Error('Provider unavailable (' + last + '). Fallback ' + hf.label + ' has no key.');
+    return callModel({ provider: hf.id, chain: hf.modelChain, system: o.system, user: o.user, onText: o.onText, validate: o.validate, maxTokens: o.maxTokens, _noHard: true });
+  }
+  throw fail(strict ? last : 'Provider unavailable (' + last + ')');
+}
+
+function fetchModelConfig(onApplied) {                           // call once on load, after rendering from the floor
+  return fetch(CANONICAL_CONFIG_URL + '?v=' + Date.now())
+    .then(function (r) { if (!r.ok) throw new Error('Config fetch failed: ' + r.status); return r.json(); })
+    .then(function (j) { if (!isValidConfig(j)) throw new Error('Malformed config'); liveModelConfig = j; return 'live'; })
+    .catch(function () { liveModelConfig = LOCAL_FALLBACK_CONFIG; return 'fallback'; })
+    .then(function (src) { if (onApplied) onApplied(src); return src; });
+}
+
+var KNOWN_MODEL_ALIASES = { 'mistralai/mistral-large': 'mistralai/mistral-large-2411', 'meta-llama/llama-3-70b-instruct': 'meta-llama/llama-3.3-70b-instruct' };
+function modelAliases() { return Object.assign({}, KNOWN_MODEL_ALIASES, liveModelConfig.model_aliases || {}); }
+function modelIdBase(id) { var q = id.split('-'); while (q.length > 1 && /^(v?\d[\d.]*|\d{4,})$/i.test(q[q.length - 1])) q.pop(); return q.join('-'); }
+function resolveModelId(id, live) {                              // only against a catalog the user actually fetched; never across providers
+  if (!live || !live.length || live.indexOf(id) > -1) return { id: id, status: 'ok' };
+  var al = modelAliases()[id]; if (al && live.indexOf(al) > -1) return { id: al, status: 'alias' };
+  var base = modelIdBase(id), c = live.filter(function (x) { return modelIdBase(x) === base; });
+  if (c.length) return { id: c.sort(natCmp).reverse()[0], status: 'fuzzy' };
+  return { id: id, status: 'unresolved' };
+}
+
+// ============================================================
+// MODEL CATALOG PANEL v3.1: Lanes, matrix variant. Blocks below are pasted from the skill; engine-specific wiring follows.
+// ============================================================
+/* ───────── Engine plumbing the Lanes blocks assume ───────── */
+const $ = id => document.getElementById(String(id).replace(/^#/, ""));   // accepts "id" (Lanes code) and "#id" (Panel code)
+const h = (tag, cls, txt) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; };   // element builder the Panel pickers use
+const lsGet = (k, d) => { try { const v = JSON.parse(localStorage.getItem(k)); return v == null ? d : v; } catch (e) { return d; } };
+const lsSet = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
+const MAX_LANES = 12, MAX_CELLS = 12, SETTINGS_KEY = "pge.v1:settings";
+const S = { settings: Object.assign({ lanes: [], customLanes: [], lanesTouched: false }, lsGet(SETTINGS_KEY, {})) };
+const save = () => lsSet(SETTINGS_KEY, S.settings);
+function toast(m) { const t = $("toast"); t.textContent = m; t.classList.add("show"); clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.remove("show"), 3500); }
+
+/* ───────── Catalog GET helpers (shared by Lanes and Panel) ───────── */
+/* A catalog read is a GET of public data. Attribution headers belong to POST /chat/completions only; on a GET they,
+   and Content-Type, widen the CORS preflight. Send the least that works. */
+const catalogHeaders = (cfg, k) => {
+  if (!k || /openrouter\.ai/.test(cfg.endpoint)) return {};     // OpenRouter's /models is public: no key, no headers, no preflight
+  const h = headersFor(cfg, k), o = {};
+  const an = (cfg.authHeader || "Authorization").toLowerCase(); Object.keys(h).forEach(n => { if (n.toLowerCase() === an) o[n] = h[n]; });   // keyed providers (Groq): the provider's own auth header only, as named in model.json
+  return o;
+};
+const inflight = {};                                             // one catalog fetch per provider at a time
+
+/* ───────── Glue: Model Core -> picker ───────── */
+const CAT_KEY = "pge.v1:catalog";                       // dedicated cache key, one per engine
+const PROVIDERS = {}; let DEFAULT_MODELS = [], configSource = "fallback", uiReady = false;
+const keyOf = cfg => getKey(cfg.keyStorageName || cfg.id);    // the core's getKey takes the storage name
+const isDefault = v => DEFAULT_MODELS.some(d => d[0] === v);
+function applyConfigToPicker(src) {
+  configSource = src; Object.keys(PROVIDERS).forEach(k => delete PROVIDERS[k]);
+  usableProviders().filter(p => !p.native).forEach(p => { PROVIDERS[p.id] = { id: p.id, label: p.label, url: p.endpoint, cfg: p }; });
+  DEFAULT_MODELS = defaultLanes().map(k => { const s = splitKey(k); return [k, PROVIDERS[s.provider].label + " · " + s.model, s.provider]; });
+  if (uiReady) renderConfigUI();
+}
+const defaultModel = () => DEFAULT_MODELS.length ? DEFAULT_MODELS[0][0] : "";
+
+function renderProviderSelector() {                    // options come from model.json via the core, never from markup
+  var sel = document.getElementById('providerSelect'), keep = sel.value; sel.innerHTML = '';
+  usableProviders().forEach(function (p) { sel.appendChild(new Option(p.label, p.id)); });
+  sel.value = usableProviders().some(function (p) { return p.id === keep; }) ? keep : defaultProviderId();
+  updateProviderDot();                                  // dot colour from p.dotColor (UI Contract 18B)
+}
+function defaultProviderId() {                          // artifact -> defaultFor 'artifact' (Claude); standalone -> defaultFor 'standalone' (Groq)
+  var ps = usableProviders(), want = isArtifact ? 'artifact' : 'standalone';
+  var d = ps.filter(function (p) { return (p.defaultFor || []).indexOf(want) > -1; })[0] || ps[0];
+  return d && d.id;
+}
+function updateProviderDot() { const p = P($('providerSelect').value); $('providerDot').style.background = (p && p.dotColor) || '#9090a8'; }
+$('providerSelect').addEventListener('change', function () { try { localStorage.setItem('hek_selected_provider', this.value); } catch (e) {} updateProviderDot(); });
+function afterConfigUI() { renderProviderSelector(); try { const sv = localStorage.getItem('hek_selected_provider'); if (sv && P(sv)) $('providerSelect').value = sv; } catch (e) {} updateProviderDot(); }
+
+// the engine's existing single-run path: curated chain-walk + fallbacks over the selected provider
+async function callAI(systemPrompt, userMessage, onPartial) {
+  const r = await callModel({ provider: $('providerSelect').value || defaultProviderId(), system: systemPrompt, user: userMessage, onText: acc => { if (onPartial) onPartial(acc); } });
+  return r.text;
+}
+
+function laneList() {
+  var seen = {}, out = [];
+  function add(key, pinned) { var s = splitKey(key); if (seen[key] || !PROVIDERS[s.provider]) return; seen[key] = 1; out.push({ key: key, pid: s.provider, m: s.model, pinned: pinned }); }
+  defaultLanes().forEach(function (k) { add(k, false); });                      // the floor
+  (S.settings.customLanes || []).forEach(function (c) { add(c.key, true); });   // pinned: exactly the model chosen, never a fallback
+  return out;
+}
+function activeKeys() {
+  var all = laneList().map(function (l) { return l.key; });
+  if (!S.settings.lanesTouched) { var d = defaultLanes()[0]; return d && all.indexOf(d) > -1 ? [d] : []; }   // untouched: only the first default is ticked
+  return S.settings.lanes.filter(function (k) { return all.indexOf(k) > -1; });
+}
+function setLane(key, on) {
+  var cur = activeKeys().slice(), i = cur.indexOf(key);
+  if (on && i < 0) { if (cur.length >= MAX_LANES) { toast('Max ' + MAX_LANES + ' lanes — deselect one first'); return false; } cur.push(key); }
+  else if (!on && i > -1) cur.splice(i, 1);
+  S.settings.lanes = cur; S.settings.lanesTouched = true; save(); return true;
+}
+
+function togglePin(pid, m, cb) {
+  var key = pid + '::' + m.id, cl = S.settings.customLanes, i = cl.map(function (c) { return c.key; }).indexOf(key);
+  if (cb.checked) {
+    if (!setLane(key, true)) { cb.checked = false; return; }                      // pinning also activates; the max-12 toast comes from setLane
+    if (i < 0 && !laneList().some(function (l) { return l.key === key; })) cl.push({ key: key, provider: pid, model: m.id });
+  } else { setLane(key, false); if (i > -1) cl.splice(i, 1); }
+  save(); renderLanes(); cb.closest('.mrow').classList.toggle('pinned', cb.checked);
+}
+
+function resolveCustom(lanes) {
+  var moved = [];
+  lanes.forEach(function (l) {
+    if (!l.pinned || !catalog[l.pid]) return;                                    // only against a catalog the user actually fetched
+    var r = resolveModelId(l.m, catalog[l.pid].models.map(function (m) { return m.id; }));
+    if (r.status === 'alias' || r.status === 'fuzzy') { moved.push(l.m.split('/').pop() + ' → ' + r.id.split('/').pop()); l.m = r.id; }
+  });
+  if (moved.length) toast('Model id updated: ' + moved.join(', '));
+}
+
+/* ───────── Lanes drawer: catalog, lanes, keys (base set; add the optional modules only if the brief asked) ───────── */
+let catalog = lsGet(CAT_KEY, {}), tierSel = "all", activeProv = null;
+const TIERS = ["free", "cheap", "medium", "premium", "n/a"];
+const tierOf = m => /:free$/.test(m.id) || m.price === 0 ? "free" : m.price == null ? "n/a" : m.price * 1e6 < 0.5 ? "cheap" : m.price * 1e6 < 3 ? "medium" : "premium";
+async function fetchCatalog(pid) {
+  if (inflight[pid]) return; inflight[pid] = true;               // catalogHeaders + inflight: see Section 2
+  const pv = PROVIDERS[pid], st = $("catStatus"); st.textContent = "Fetching " + pv.label + "…";
+  try {
+    const k = keyOf(pv.cfg), r = await fetch(pv.url.replace(/\/chat\/completions\/?$/, "/models"), { headers: catalogHeaders(pv.cfg, k) });
+    if (r.status === 401 || r.status === 403) throw new Error(pv.label + " catalog needs a saved key (Keys below).");
+    if (!r.ok) throw new Error(pv.label + " catalog failed (" + r.status + ")");
+    const j = await r.json(), list = (j.data || []).map(m => ({ id: m.id, name: m.name || "", ctx: m.context_length || null, price: m.pricing && m.pricing.prompt != null ? parseFloat(m.pricing.prompt) : null }));
+    list.forEach(m => m.tier = tierOf(m)); list.sort((a, b) => TIERS.indexOf(a.tier) - TIERS.indexOf(b.tier) || natCmp(a.id, b.id));
+    catalog[pid] = { t: Date.now(), models: list }; lsSet(CAT_KEY, catalog); st.textContent = list.length + " models from " + pv.label + ".";
+  } catch (e) { st.textContent = e.message; }
+  finally { delete inflight[pid]; }
+  renderCatalog();
+}
+function matcher(q) { q = q.trim(); if (!q) return () => true; const m = q.match(/^\/(.+)\/([a-z]*)$/); if (m) { try { const re = new RegExp(m[1], m[2]); return s => re.test(s); } catch (e) {} } q = q.toLowerCase(); return s => s.toLowerCase().includes(q); }
+function chip(txt, on, fn) { const b = document.createElement("button"); b.type = "button"; b.className = "tchip" + (on ? " on" : ""); b.textContent = txt; b.addEventListener("click", fn); return b; }
+function renderCatalog() {
+  const pb = $("provBtns"); pb.innerHTML = "";
+  Object.values(PROVIDERS).forEach(p => { const n = catalog[p.id] ? catalog[p.id].models.length : 0; pb.appendChild(chip(p.label + (n ? " (" + n + ") ↻" : " — fetch"), activeProv === p.id, () => { const was = activeProv === p.id; activeProv = p.id; renderCatalog(); if (!catalog[p.id] || was) fetchCatalog(p.id); })); });   // switch first, fetch second; the active tab refetches
+  const tc = $("tierChips"); tc.innerHTML = "";
+  ["all", "pinned"].concat(TIERS).forEach(t => tc.appendChild(chip(t === "pinned" ? "Pinned (" + S.settings.customLanes.length + ")" : t, tierSel === t, () => { tierSel = t; renderCatalog(); })));
+  const box = $("catRows"); box.innerHTML = ""; const c = catalog[activeProv]; if (!c) return;
+  const test = matcher($("catSearch").value), act = activeKeys(), isPin = id => S.settings.customLanes.some(x => x.key === activeProv + "::" + id);
+  const rows = c.models.filter(m => (tierSel === "all" || (tierSel === "pinned" ? isPin(m.id) : m.tier === tierSel)) && test(m.id + " " + m.name));
+  rows.slice(0, 150).forEach(m => {
+    const lab = document.createElement("label"); lab.className = "mrow" + (isPin(m.id) ? " pinned" : "");
+    const cb = document.createElement("input"); cb.type = "checkbox"; cb.checked = act.includes(activeProv + "::" + m.id); cb.addEventListener("change", () => togglePin(activeProv, m, cb));
+    const meta = document.createElement("span"); meta.className = "meta";
+    meta.textContent = [m.ctx ? Math.round(m.ctx / 1000) + "k ctx" : "", m.tier === "free" ? "FREE" : m.price != null ? "$" + (m.price * 1e6).toFixed(2) + "/M in" : ""].filter(Boolean).join(" · ");
+    lab.appendChild(cb); lab.appendChild(document.createTextNode(m.id)); lab.appendChild(meta); box.appendChild(lab);       // textContent / text nodes only: catalog text is untrusted
+  });
+  if (rows.length > 150) { const f = document.createElement("div"); f.className = "key-note"; f.textContent = "Showing 150 of " + rows.length + " — narrow with search."; box.appendChild(f); }
+}
+const laneLabel = l => (PROVIDERS[l.pid] ? PROVIDERS[l.pid].label : l.pid) + " · " + l.m;
+function updateRunControls() {                                   // single path: header lane button; matrix variant: Fan out (n)
+  const act = laneList().filter(l => activeKeys().includes(l.key)), first = act[0];
+  const fb = $("fanBtn"); if (fb) fb.textContent = "Fan out (" + act.length + ")";
+  const lt = $("laneTxt"); if (lt) lt.textContent = !act.length ? "no lane" : act.length === 1 ? laneLabel(first) : act.length + " lanes";
+  const ld = $("laneDot"); if (ld) ld.style.background = (first && PROVIDERS[first.pid] && PROVIDERS[first.pid].cfg.dotColor) || "#9090a8";
+}
+function renderLanes() {                                         // doubles as ensureLanes(): activeKeys() already drops stale keys
+  const box = $("laneList"); box.innerHTML = ""; const act = activeKeys();
+  laneList().forEach(l => {
+    const lab = document.createElement("label"); lab.className = "mrow" + (l.pinned ? " pinned" : "");
+    const cb = document.createElement("input"); cb.type = "checkbox"; cb.checked = act.includes(l.key);
+    cb.addEventListener("change", () => { if (!setLane(l.key, cb.checked)) cb.checked = false; renderLanes(); renderCatalog(); });
+    const dot = document.createElement("span"); dot.className = "provider-dot"; dot.style.cssText = "display:inline-block;margin-right:6px;background:" + ((PROVIDERS[l.pid] && PROVIDERS[l.pid].cfg.dotColor) || "#9090a8");
+    lab.appendChild(cb); lab.appendChild(dot); lab.appendChild(document.createTextNode((l.pinned ? "★ " : "") + laneLabel(l)));
+    if (l.pinned) { const x = document.createElement("span"); x.textContent = "  ×"; x.style.color = "var(--red, #ef4444)";
+      x.addEventListener("click", e => { e.preventDefault(); e.stopPropagation(); S.settings.customLanes = S.settings.customLanes.filter(c => c.key !== l.key); setLane(l.key, false); renderLanes(); renderCatalog(); }); lab.appendChild(x); }
+    box.appendChild(lab);
+  });
+  const n = act.length; $("laneCount").textContent = n + " of " + laneList().length + " lanes active (max " + MAX_LANES + ")" + (n > 6 ? " · large fan-outs can hit provider rate limits" : "");
+  updateRunControls();
+}
+function renderKeyRows() {
+  const box = $("keyFields"); box.innerHTML = "";
+  usableProviders().filter(p => !p.native && p.requiresKey).forEach(p => {
+    const wrap = document.createElement("div"), lab = document.createElement("label"), inp = document.createElement("input");
+    lab.textContent = p.keyLabel || p.label + " Key"; inp.type = "password"; inp.placeholder = p.keyPlaceholder || ""; inp.id = "keyInput_" + p.keyStorageName; inp.value = getKey(p.keyStorageName);
+    wrap.appendChild(lab); wrap.appendChild(inp);
+    if (p.keyNote) { const n = document.createElement("div"); n.className = "key-note"; n.textContent = p.keyNote; wrap.appendChild(n); }
+    box.appendChild(wrap);
+  });
+}
+function wireKeys() {                                            // call once; closeDrawer() is the engine's own
+  $("saveKeysBtn").addEventListener("click", () => { usableProviders().filter(p => !p.native && p.requiresKey).forEach(p => { const el = $("keyInput_" + p.keyStorageName); if (el) setKey(p.keyStorageName, el.value); }); closeDrawer(); });
+  $("clearKeysBtn").addEventListener("click", () => { usableProviders().filter(p => !p.native).forEach(p => { try { localStorage.removeItem("hek_" + p.keyStorageName); } catch (e) {} }); renderKeyRows(); toast("Saved keys cleared from this device"); });
+  $("catSearch").addEventListener("input", renderCatalog);
+}
+function renderConfigUI() {                                      // the hook applyConfigToPicker() calls after first paint
+  const b = $("cfgBadge"); b.textContent = configSource === "live" ? "Config: Live" : "Config: Local Fallback"; b.dataset.state = configSource;
+  if (!activeProv || !PROVIDERS[activeProv]) activeProv = Object.keys(PROVIDERS)[0];
+  renderLanes(); renderCatalog(); renderKeyRows();
+  if (typeof afterConfigUI === "function") afterConfigUI();      // matrix / curated engines define it: renderProviderSelector() + restore the saved provider
+}
+
+// ---- engine-specific drawer open/close (ui-contract 06) ----
+function closeDrawer() { $('drawer').classList.remove('open'); $('drawerOverlay').classList.remove('open'); }
+$('settingsBtn').addEventListener('click', () => { renderKeyRows(); $('drawer').classList.add('open'); $('drawerOverlay').classList.add('open'); });
+$('drawerOverlay').addEventListener('click', closeDrawer);
+wireKeys();
+
+function computePresets(a,b,c){
+  return { current:{a,b,c}, opposite:{a:11-a,b:11-b,c:11-c}, centroid:{a:5,b:5,c:5} };
+}
+function updatePresetPreview(){
+  const a=+document.getElementById('sliderA').value, b=+document.getElementById('sliderB').value, c=+document.getElementById('sliderC').value;
+  document.getElementById('valA').textContent=a; document.getElementById('valB').textContent=b; document.getElementById('valC').textContent=c;
+  const p = computePresets(a,b,c);
+  document.getElementById('pv-current').textContent = `A:${p.current.a} B:${p.current.b} C:${p.current.c}`;
+  document.getElementById('pv-opposite').textContent = `A:${p.opposite.a} B:${p.opposite.b} C:${p.opposite.c}`;
+  document.getElementById('pv-centroid').textContent = `A:${p.centroid.a} B:${p.centroid.b} C:${p.centroid.c}`;
+}
+['sliderA','sliderB','sliderC'].forEach(id => document.getElementById(id).addEventListener('input', updatePresetPreview));
+
+// ============================================================
+// STAGE 1 PROMPT — compile a fresh system prompt for the coords
+// ============================================================
+function buildStage1Prompt(fragment, coords){
+  return `You are a prompt compiler. Your job is to WRITE a complete, ready-to-use system prompt that another AI model will follow to stylistically render a piece of text — you do NOT render the text yourself.
+
+THEORETICAL FRAGMENT (the content the eventual system prompt must instruct a renderer to style, without you paraphrasing or explaining it):
+"${fragment}"
+
+Write a system prompt instructing a model to render this exact fragment along three continuous stylistic axes, at these exact values:
+
+AXIS A — Syntactic Rhythm & Pacing: ${coords.a}/10
+(1 = clipped staccato declarative sentences, no clause stacking. 10 = recursive cascading clauses, sweeping cadence, incantatory momentum. Interpolate for values in between.)
+
+AXIS B — Metaphorical Density: ${coords.b}/10
+(1 = literal, direct, unmetaphored prose. 10 = hyper-dense mythic/sensory transposition, the abstraction is enacted through image rather than stated. Interpolate for values in between.)
+
+AXIS C — Lexical Register: ${coords.c}/10
+(1 = clinical/psychoanalytic abstraction, diagnostic and distanced. 5 = formal philosophical prose. 10 = expressionist internal monologue, raw and confessional. Interpolate for values in between.)
+
+Requirements for the system prompt you write:
+- Invent fresh, concrete stylistic instructions and illustrative language tailored specifically to THIS fragment's content and vocabulary — do not use generic, fragment-agnostic descriptions.
+- If any two axes pull toward conflicting demands (e.g. cascading rhythm with clinical register), explicitly name the tension inside the prompt you write and instruct the eventual renderer to hold both simultaneously rather than average them into a bland middle register.
+- The prompt you write should quote or closely reference the fragment so the renderer knows exactly what to style.
+- Output ONLY the compiled system prompt itself — no preamble, no meta-commentary, no explanation of what you did. Do not wrap it in markdown code fences.`;
+}
+
+// ============================================================
+// PIPELINE — per card, Stage 1 then Stage 2, sequential within card
+// ============================================================
+const PRESET_META = [
+  { key:'current', label:'Current Position' },
+  { key:'opposite', label:'Opposite Corner' },
+  { key:'centroid', label:'Neutral Centroid' }
+];
+
+function buildCard(grid, key, label, coordsText){
+  const card = document.createElement('div');
+  card.className = 'card';
+  card.setAttribute('data-card', key);
+  card.innerHTML = `
+    <div class="card-head">
+      <div>
+        <div class="card-title">${label}</div>
+        <div class="card-coords">${coordsText}</div>
+      </div>
+      <div class="card-status"><span class="stage-tag">Stage 1</span><br>Compiling…</div>
+    </div>
+    <div class="prose-body"><span class="prose-placeholder">Waiting for compiled prompt…</span></div>
+    <div class="prose-actions">
+      <button class="card-btn copy-final-btn" disabled>
+        <svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        Copy Final Text
+      </button>
+    </div>
+    <details class="prompt-accordion">
+      <summary>Compiled System Prompt (Stage 1)</summary>
+      <div class="accordion-body"><span class="prose-placeholder">Pending…</span></div>
+      <div class="accordion-actions">
+        <button class="card-btn copy-prompt-btn" disabled>
+          <svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+          Copy System Prompt
+        </button>
+      </div>
+    </details>`;
+  grid.appendChild(card);
+  card.querySelector('.copy-final-btn').addEventListener('click', function(){
+    copyToClipboard(card.querySelector('.prose-body').textContent, this);
+  });
+  card.querySelector('.copy-prompt-btn').addEventListener('click', function(){
+    copyToClipboard(card.querySelector('.accordion-body').textContent, this);
+  });
+  return card;
+}
+function renderCardsShell(presets){
+  const grid = document.getElementById('cardsGrid'); grid.innerHTML = '';
+  PRESET_META.forEach(meta => { const c = presets[meta.key]; buildCard(grid, meta.key, meta.label, 'A:' + c.a + ' · B:' + c.b + ' · C:' + c.c); });
+}
+
+async function runCardPipeline(key, fragment, coords, call = callAI){
+  const card = document.querySelector(`[data-card="${key}"]`);
+  const statusEl = card.querySelector('.card-status');
+  const proseEl = card.querySelector('.prose-body');
+  const accordionEl = card.querySelector('.accordion-body');
+  const copyFinalBtn = card.querySelector('.copy-final-btn');
+  const copyPromptBtn = card.querySelector('.copy-prompt-btn');
+
+  // ---- STAGE 1: Compile system prompt ----
+  statusEl.innerHTML = '<span class="stage-tag">Stage 1</span><br><span class="card-status streaming" style="color:var(--accent-main)">Compiling…</span>';
+  accordionEl.textContent = '';
+  let compiledPrompt = '';
+  try {
+    compiledPrompt = await call(
+      'You are a precise, obedient prompt-writing assistant.',
+      buildStage1Prompt(fragment, coords),
+      (partial) => { accordionEl.textContent = partial; }
+    );
+    accordionEl.textContent = compiledPrompt;
+    copyPromptBtn.disabled = false;
+  } catch (e) {
+    const msg = errorMessage(e);
+    accordionEl.innerHTML = '<span class="error-note">⚠ Stage 1 failed: ' + msg + '</span>';
+    proseEl.innerHTML = '<span class="error-note">⚠ Pipeline halted — no compiled prompt to execute.</span>';
+    statusEl.innerHTML = '<span class="stage-tag">Stage 1</span><br><span class="card-status error">Failed</span>';
+    return;
+  }
+
+  // ---- STAGE 2: Execute compiled prompt against original fragment ----
+  statusEl.innerHTML = '<span class="stage-tag">Stage 2</span><br><span class="card-status streaming" style="color:var(--accent-main)">Rendering…</span>';
+  proseEl.textContent = '';
+  try {
+    const finalText = await call(
+      compiledPrompt,
+      fragment,
+      (partial) => { proseEl.textContent = partial; }
+    );
+    proseEl.textContent = finalText;
+    copyFinalBtn.disabled = false;
+    statusEl.innerHTML = '<span class="stage-tag">Complete</span><br><span class="card-status" style="color:var(--green)">Done</span>';
+  } catch (e) {
+    const msg = errorMessage(e);
+    proseEl.innerHTML = '<span class="error-note">⚠ Stage 2 failed: ' + msg + '</span>';
+    statusEl.innerHTML = '<span class="stage-tag">Stage 2</span><br><span class="card-status error">Failed</span>';
+  }
+}
+
+function errorMessage(e){
+  const map = {
+    missing_key: 'API key not set for this provider — open Settings.',
+    provider_unavailable_in_artifact: 'This provider only works in a standalone browser tab, not inside the artifact preview.',
+    empty_completion: 'Model returned no text.',
+    idle_timeout: 'Connection stalled — no response in time.',
+    hard_timeout: 'Request took too long and was aborted.',
+    all_providers_failed: 'All configured providers failed.'
+  };
+  const msg = e && e.message ? e.message : '';
+  return map[msg] || msg || 'Generation failed.';
+}
+
+document.getElementById('generateBtn').addEventListener('click', async () => {
+  const fragment = document.getElementById('inputAnchor').value.trim();
+  if (!fragment) return;
+  const a=+document.getElementById('sliderA').value, b=+document.getElementById('sliderB').value, c=+document.getElementById('sliderC').value;
+  const presets = computePresets(a,b,c);
+
+  const btn = document.getElementById('generateBtn');
+  btn.disabled = true;
+  btn.textContent = 'Pipeline Running…';
+
+  renderCardsShell(presets);
+
+  // Cards run in parallel; each card's own two stages run in sequence (Stage 2 depends on Stage 1's output).
+  // Stage-1 launches are staggered slightly so three concurrent connections to the
+  // same endpoint aren't all opened in the same tick — reduces connection contention
+  // that was causing spurious hard-timeouts on Claude Native.
+  const STAGGER_MS = 400;
+  const cardPromises = PRESET_META.map((meta, i) =>
+    new Promise(resolve => setTimeout(resolve, i * STAGGER_MS))
+      .then(() => runCardPipeline(meta.key, fragment, presets[meta.key]))
+  );
+  await Promise.allSettled(cardPromises);
+
+  btn.disabled = false;
+  btn.textContent = 'Run Full Pipeline (3 presets × 2 stages)';
+});
+
+// ============================================================
+// CANONICAL COPY
+// ============================================================
+function copyToClipboard(text, btn) {
+  if (!text || !text.trim()) return;
+  var origHTML = btn.innerHTML;
+  var ICON_CHECK = '<svg viewBox="0 0 24 24" style="width:11px;height:11px;stroke:currentColor;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+  function onSuccess() { btn.innerHTML = ICON_CHECK + ' Copied'; btn.classList.add('copied'); setTimeout(function(){ btn.innerHTML=origHTML; btn.classList.remove('copied'); },2000); }
+  function onFail() { btn.textContent = '✗ Failed'; setTimeout(function(){ btn.innerHTML=origHTML; },2000); }
+  function execCopy() {
+    var ta = document.createElement('textarea'); ta.value = text;
+    ta.style.cssText = 'position:fixed;left:-9999px;top:-9999px;opacity:0;font-size:12px;pointer-events:none;';
+    ta.setAttribute('readonly','');
+    document.body.appendChild(ta); ta.focus(); ta.select(); ta.setSelectionRange(0,text.length);
+    var ok=false; try{ ok=document.execCommand('copy'); }catch(e){}
+    document.body.removeChild(ta); ok ? onSuccess() : onFail();
+  }
+  if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(text).then(onSuccess).catch(execCopy); }
+  else { execCopy(); }
+}
+
+
+// ---- matrix hooks (the five the skill asks the engine to supply) ----
+function getInput() { return $('inputAnchor').value.trim(); }
+function getUnits() { const p = computePresets(+$('sliderA').value, +$('sliderB').value, +$('sliderC').value);
+  return PRESET_META.map(m => ({ key: m.key, label: m.label, sub: 'A:' + p[m.key].a + ' · B:' + p[m.key].b + ' · C:' + p[m.key].c, coords: p[m.key] })); }
+function buildCell(grid, cellKey, label, sub) { return buildCard(grid, cellKey, label, sub); }
+function runUnit(cellKey, unit, call, input) { return runCardPipeline(cellKey, input, unit.coords, call); }
+function markServed(cellKey, served) { const c = document.querySelector('[data-card="' + cellKey + '"] .card-coords'); if (c && !c.dataset.served) { c.dataset.served = '1'; c.textContent += ' · → served: ' + served; } }
+
+/* ───────── Matrix dispatch: cells = units x lanes ───────── */
+function laneCaller(l, cellKey) {                                // strict callModel bound to one lane
+  return (system, user, onPartial) => callModel({ provider: l.pid, model: l.m, system, user,
+    onText: (acc, served) => { onPartial(acc); if (served && served !== l.m) markServed(cellKey, served); } }).then(r => r.text);
+}
+async function fanOut() {
+  const input = getInput(); if (!input) return;
+  const lanes = laneList().filter(l => activeKeys().includes(l.key)); if (!lanes.length) return toast("Select lanes in settings");
+  const units = getUnits(), cells = units.length * lanes.length;
+  if (cells > MAX_CELLS) return toast(units.length + " units × " + lanes.length + " lanes = " + cells + " runs, max " + MAX_CELLS);
+  resolveCustom(lanes);                                          // A4, before any request
+  const out = $("fanOut"), fb = $("fanBtn"); out.innerHTML = ""; fb.disabled = true;
+  const keyOf2 = (u, li) => "fan-" + u.key + "-" + li;
+  units.forEach(u => {                                           // columns grouped by unit, then lane
+    const g = document.createElement("div"); g.className = "fan-group"; const h = document.createElement("div"); h.className = "fan-h"; h.textContent = u.label; g.appendChild(h);
+    const grid = document.createElement("div"); grid.className = "cards-grid"; g.appendChild(grid); out.appendChild(g);
+    lanes.forEach((l, li) => buildCell(grid, keyOf2(u, li), laneLabel(l), u.sub));
+  });
+  await Promise.allSettled(lanes.map((l, li) => sleep(li * 220).then(async () => {        // lanes in parallel, staggered; within a lane the units run in order
+    for (const u of units) { const k = keyOf2(u, li); await runUnit(k, u, laneCaller(l, k), input); }
+  })));
+  fb.disabled = false; renderLanes();
+}
+$("fanBtn").addEventListener("click", fanOut);
+
+// ============================================================
+// INIT
+// ============================================================
+updatePresetPreview();
+uiReady = true; applyConfigToPicker('fallback');                       // floor first: the core already holds it, so first paint works offline
+fetchModelConfig(src => applyConfigToPicker(src));                    // then the live model.json
+</script>
+</body>
+</html>

@@ -1,0 +1,18 @@
+{
+  "skill": "script-compiler",
+  "skill_name": "script-compiler",
+  "description": "Pure-text meta-compiler for scripts. Takes one or more reference texts (monologue, video-essay narration, sermon, ad copy, explainer, any prose written to move a listener) and builds the slot-grammar script engine that regenerates the same construction on any new subject. Works entirely in the model's own text generation, with no code, scripts or external tools: numbers every sentence, hand-counts length and rhythm in a visible table, maps semantic beats, extracts the modal ladder and register rules by pattern-matching, maps each slot's truth profile so a FIDELITY dial can govern what is allowed to be true, and emits a self-contained, paste-ready engine prompt with scope guard, distress exit and trace. The structured successor to script-dna's qualitative extraction. Invoke with /script-compiler, \"compile this script\", \"build the script engine for this\", \"slot grammar from this text\", \"engine from this reference\".",
+  "source_file": "skills/script-compiler/SKILL.md",
+  "source_sha": "37692eda2039adf601e6d29018eebef06a98e7f55cb3a09bd340d602d8dc1575",
+  "resources": [],
+  "provider_config": {
+    "model_core": "v2"
+  },
+  "inputs": [
+    {
+      "id": "chatInput",
+      "kind": "textarea",
+      "label": "Invoke the skill"
+    }
+  ]
+}

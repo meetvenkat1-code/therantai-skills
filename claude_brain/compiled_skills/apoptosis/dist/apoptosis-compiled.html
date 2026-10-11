@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<!-- COMPILED by tools/compile_skill.py from claude_brain/compiled_skills/apoptosis/. Source: skills/apoptosis/SKILL.md. DO NOT hand-edit; edit skills/ source and re-ingest. -->
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>apoptosis (skill build)</title>
+<style>
+:root{--bg:#0a0a0f;--panel:#12121a;--line:#26263a;--txt:#e8e8f0;--dim:#8a8aa3;--acc:#22c55e}
+body{background:var(--bg);color:var(--txt);font-family:system-ui,sans-serif;margin:0}
+.header{display:flex;justify-content:space-between;align-items:center;padding:.8rem 1.2rem;border-bottom:1px solid var(--line)}
+.badge{font-size:.65rem;border:1px solid var(--line);border-radius:99px;padding:.15rem .6rem;color:var(--dim)}
+.canvas{max-width:800px;margin:0 auto;padding:1.2rem}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:1rem;margin-bottom:1rem}
+.desc{font-size:.8rem;color:var(--dim);margin:.4rem 0 0}
+.bubble{border:1px solid var(--line);border-radius:10px;padding:.7rem 1rem;margin-top:.6rem;white-space:pre-wrap;font-size:.88rem}
+.bubble.user{border-color:var(--acc)}.who{font-size:.65rem;color:var(--dim);letter-spacing:.1em;text-transform:uppercase}
+textarea{width:100%;min-height:70px;background:#0d0d14;color:var(--txt);border:1px solid var(--line);border-radius:8px;padding:.6rem}
+input[type=password]{background:#0d0d14;color:var(--txt);border:1px solid var(--line);border-radius:6px;padding:.4rem .6rem;width:210px}
+select{background:#0d0d14;color:var(--txt);border:1px solid var(--line);border-radius:6px;padding:.35rem}
+button{background:var(--acc);color:#04120a;border:0;border-radius:8px;padding:.55rem 1.1rem;font-weight:700;cursor:pointer;margin-top:.6rem}
+button.plain{background:#1a1a26;color:var(--txt);border:1px solid var(--line);font-weight:400}
+.keyrow{display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;font-size:.72rem;color:var(--dim);margin-top:.6rem}
+</style></head>
+<body>
+<div class="header"><div><b>APOPTOSIS</b> <span class="badge">skill build</span> <span class="badge" id="cfgBadge">Config: …</span></div>
+<div><select id="providerSelect"><option value="groq">Groq</option><option value="or-auto">OR · Free Router</option><option value="claude">Claude · Native</option></select></div></div>
+<div class="canvas"><div class="panel"><p class="desc">Programmed obsolescence-by-evolution. Audits living, beloved, frequently-used skills, memory entries, and standing law for whether they still earn their place as the practice evolves around them. Fires a five-test battery — supersession, practice transcendence, architectural misfit, density cost, the beloved trap — and delivers a three-tier verdict via the shared adjudicate kernel, with named re-entry conditions. Never rewrites. Verdict and death-reason only. Scope: full — skills, memory layer, and standing law. Standing law requires practitioner confirmation before execution; skills and memory entries do not. The third death a skill can die, after moult (drift/disuse) and assay (density failure on birth). Invoke with /apoptosis, &quot;apoptosis this skill&quot;, &quot;has this earned its place&quot;, &quot;is this still alive&quot;, &quot;run the obsolescence check&quot;, &quot;does this still belong here&quot;.</p>
+<div class="keyrow">Keys (this browser only): <input type="password" id="key-groq" placeholder="gsk_…"> <input type="password" id="key-openrouter" placeholder="sk-or-…"> <button class="plain" id="saveKeys">Save</button></div></div>
+<div id="stream"></div>
+<div class="panel"><textarea id="chatInput" placeholder="Invoke the skill… (Enter to send, Shift+Enter for newline)"></textarea><br>
+<button id="sendBtn">Send</button> <button class="plain" id="clearBtn">Clear transcript</button></div></div>
+<script>
+/* ---- Model Core v2 (registry runtime, compact) ---- */
+var ENGINE_NAME = "apoptosis";
+var CANONICAL_CONFIG_URL = "https://raw.githubusercontent.com/meetvenkat1-code/therantai-config/refs/heads/main/model.json";
+var LOCAL_FALLBACK_CONFIG = {
+ "native_model": "claude-sonnet-4-6",
+ "defaultLanes": [
+  "groq::openai/gpt-oss-120b",
+  "or-auto::openrouter/free"
+ ],
+ "providers": [
+  {
+   "id": "groq",
+   "endpoint": "https://api.groq.com/openai/v1/chat/completions",
+   "keyStorageName": "groq",
+   "modelChain": [
+    "openai/gpt-oss-120b",
+    "openai/gpt-oss-20b"
+   ]
+  },
+  {
+   "id": "or-auto",
+   "endpoint": "https://openrouter.ai/api/v1/chat/completions",
+   "keyStorageName": "openrouter",
+   "modelChain": [
+    "openrouter/free"
+   ]
+  }
+ ]
+};
+var liveModelConfig = LOCAL_FALLBACK_CONFIG;
+function getKey(name){ try { return localStorage.getItem("hek_" + name) || ""; } catch(e){ return ""; } }
+async function fetchModelConfig(){
+  try {
+    var r = await fetch(CANONICAL_CONFIG_URL + "?v=" + Date.now(), {cache:"no-store"});
+    if (r.ok) { var j = await r.json(); if (j && j.providers) { liveModelConfig = j; setBadge("live"); return; } }
+  } catch(e){}
+  setBadge("fallback");
+}
+function setBadge(s){ var b = document.getElementById("cfgBadge"); if (b) { b.textContent = "Config: " + s; b.dataset.state = s; } }
+function providers(){ return liveModelConfig.providers || []; }
+async function readOpenAIStream(resp, onText){
+  var reader = resp.body.getReader(), dec = new TextDecoder(), acc = "";
+  var buf = "";
+  while (true) {
+    var chunk = await reader.read(); if (chunk.done) break;
+    buf += dec.decode(chunk.value, {stream:true});
+    var parts = buf.split("\n\n"); buf = parts.pop();
+    for (var p of parts) {
+      var line = p.trim(); if (!line.startsWith("data:")) continue;
+      var data = line.slice(5).trim(); if (data === "[DONE]") continue;
+      try {
+        var d = JSON.parse(data);
+        var t = (d.choices && d.choices[0] && (d.choices[0].delta?.content || d.choices[0].message?.content)) || "";
+        if (t) { acc += t; if (onText) onText(acc); }
+      } catch(e){}
+    }
+  }
+  return acc;
+}
+/* callModel: ONE entry. Proxy first, then direct chain-walk. No scattered fetch. */
+/* Universal skill injection: registry builds define withSkill(); elsewhere this no-ops. */
+async function callModel(opts){
+  try { if (typeof withSkill === 'function') { opts = Object.assign({}, opts, {system: withSkill(opts.system)}); } } catch(e){}
+  var prov = providers().find(p => p.id === opts.provider) || providers()[0];
+  var errors = [];
+  // 1) platform proxy (Netlify) when reachable
+  try {
+    var pr = await fetch("/api/chat", {method:"POST", headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({system: opts.system, user: opts.user, provider: prov.id})});
+    if (pr.ok) {
+      var pj = await pr.json();
+      if (pj && pj.text) { if (opts.onText) opts.onText(pj.text); return {text: pj.text, served: "proxy"}; }
+    }
+  } catch(e){ errors.push("proxy:" + e.message); }
+  // 2) direct BYOK chain
+  var chain = [prov].concat(providers().filter(p => p.id !== prov.id && !p.native));
+  for (var cand of chain) {
+    if (cand.native) continue; // native branch is platform-only; skip standalone
+    var key = getKey(cand.keyStorageName || cand.id);
+    if (!key) { errors.push(cand.id + ":missing_key"); continue; }
+    try {
+      var headers = {"Content-Type":"application/json", "Authorization":"Bearer " + key};
+      var resp = await fetch(cand.endpoint, {method:"POST", headers,
+        body: JSON.stringify({model: (cand.modelChain && cand.modelChain[0]) || "",
+          messages:[{role:"system",content:opts.system},{role:"user",content:opts.user}], stream:true})});
+      if (!resp.ok) { errors.push(cand.id + ":" + resp.status); continue; }
+      var text = await readOpenAIStream(resp, opts.onText);
+      if (text) return {text, served: cand.id};
+    } catch(e){ errors.push(cand.id + ":" + e.message); }
+  }
+  throw new Error("all_providers_failed (" + errors.join("; ") + "). Set keys in Settings.");
+}
+
+/* ---- Skill behavior (verbatim SKILL.md body) ---- */
+function getSkillText(){ return `# Apoptosis
+
+Death by outgrowth, not neglect (moult) or entry-failure (assay). Audits a living, beloved skill/memory/standing-law for whether the practice has grown past it.
+
+**Mounts adjudicate** — inherits grade-from-outside stance, three-tier verdict, root-failure diagnosis, re-entry-condition discipline, anti-recursion law. Own contribution: the five-test battery below.
+
+## Scope
+Skills (any installed file, however beloved). Memory layer (standing protocols, contracts, mandates). Standing law (PERMANENT STANDING INSTRUCTION) — verdict alone is insufficient here; requires explicit practitioner confirmation before striking.
+
+## The Five Tests (binary, PASS = still earns its place)
+
+1. **Supersession** — has another organ/structure absorbed this skill's unique contribution through growth (not neglect)? FAIL → name the successor.
+2. **Practice transcendence** — has the practitioner internalized this so fully that invoking it now only confirms, never resolves? FAIL (the *best* outcome for a skill) → name the metabolized competency.
+3. **Architectural misfit** — was this forged for a practice-version that no longer exists; has its territory been restructured away? FAIL → name the architectural shift.
+4. **Density cost** — does its upkeep/disambiguation overhead now exceed its value? FAIL → name the specific cost (overlap, confusion, maintenance).
+5. **The beloved trap** — is it still installed mainly because forging it was hard/meaningful, not because it's structurally earning its place? Test: would it pass /place today as a stranger with no history? FAIL → name what it'd need to demonstrate today.
+
+## Root-failure diagnosis
+Before verdict, check whether failed tests share one upstream cause: Supersession + Practice Transcendence together usually = one metabolization event. Architectural Misfit + Density Cost together usually = the restructuring is the root, not two costs. Beloved Trap rarely fails alone — it's usually the reason another failure went unnamed, not a co-equal fifth finding. Name the root, not N shallow findings.
+
+## Output Format`; }
+var transcript=[];
+function bubble(who,text,cls){ var d=document.createElement('div'); d.className='bubble '+(cls||''); d.innerHTML='<div class="who">'+who+'</div>'; var b=document.createElement('div'); b.textContent=text; d.appendChild(b); document.getElementById('stream').appendChild(d); d.scrollIntoView(false); return b; }
+function buildUser(){ return transcript.slice(-12).map(function(t){ return t.role+': '+t.content; }).join('\n\n'); }
+async function send(){ var inp=document.getElementById('chatInput').value.trim(); if(!inp) return; document.getElementById('chatInput').value='';
+  transcript.push({role:'user',content:inp}); bubble('you',inp,'user');
+  var body=bubble('skill','…');
+  try{ var r=await callModel({provider:document.getElementById('providerSelect').value,system:getSkillText(),user:buildUser(),onText:function(a){body.textContent=a;}});
+    body.textContent=r.text; transcript.push({role:'assistant',content:r.text}); }
+  catch(e){ body.textContent='Error: '+e.message; } }
+document.getElementById('sendBtn').addEventListener('click',send);
+document.getElementById('chatInput').addEventListener('keydown',function(e){ if(e.key==='Enter'&&!e.shiftKey){ e.preventDefault(); send(); } });
+document.getElementById('clearBtn').addEventListener('click',function(){ transcript=[]; document.getElementById('stream').innerHTML=''; });
+document.getElementById('saveKeys').addEventListener('click',function(){ try{ localStorage.setItem('hek_groq',document.getElementById('key-groq').value); localStorage.setItem('hek_openrouter',document.getElementById('key-openrouter').value); }catch(e){} });
+try{ document.getElementById('key-groq').value=localStorage.getItem('hek_groq')||''; document.getElementById('key-openrouter').value=localStorage.getItem('hek_openrouter')||''; }catch(e){}
+fetchModelConfig();
+</script>
+</body></html>

@@ -1,0 +1,18 @@
+{
+  "skill": "defer-log",
+  "skill_name": "defer-log",
+  "description": "Lightweight session closing instrument. When there is no time or energy for a full /cognitive-friction-extractor + /place run, invoke /defer-log to scan the entire session, render a terse dated carry-forward log of all unplaced frictions, thickening signals, skill candidates, and architectural decisions \u2014 then automatically write the log to therantai-staging-placements.md in Drive with STATUS: raw-capture on each entry. Flags the top two or three highest-priority entries as immediate /place candidates in case a few extra minutes exist. Does NOT replace /place \u2014 it preserves the capture so /place can execute later at full fidelity. Invoke with /defer-log, \"render deferred commit log\", \"quick session close\", \"I don't have time for full extraction\", \"snap the session\", \"defer and close\".",
+  "source_file": "skills/defer-log/SKILL.md",
+  "source_sha": "3689d555405c02ab4a6015b07c0f3e5c882109cff12e71180e618c521539ea13",
+  "resources": [],
+  "provider_config": {
+    "model_core": "v2"
+  },
+  "inputs": [
+    {
+      "id": "chatInput",
+      "kind": "textarea",
+      "label": "Invoke the skill"
+    }
+  ]
+}

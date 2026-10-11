@@ -1,0 +1,18 @@
+{
+  "skill": "graft-in",
+  "skill_name": "graft-in",
+  "description": "Pins the immediate prior response as a frozen root-node inside the current session and opens a sequential branching log from it. Each invocation of /fork runs one new branch from the same pinned root \u2014 a different infusion, a different continuation \u2014 without moving the root. Multiple forks accumulate against the same fixed ground. The in-session organ of the GRAFT pair. Invoke with /graft to pin a node, /fork to run a new branch from it, /log to read the accumulated branch-log, /root to recall the pinned node verbatim. Do NOT trigger automatically \u2014 GRAFT is always a deliberate act. Trigger on: \"pin this\", \"branch from here\", \"fork from this point\", \"I want to try a different direction from this response\", \"graft this\", \"/graft\", \"/fork\".",
+  "source_file": "skills/graft-in/SKILL.md",
+  "source_sha": "7c9fcdef2e4826e918559ff04b46ba9f3e05c3788d6e1cc666a5d55a91b712c3",
+  "resources": [],
+  "provider_config": {
+    "model_core": "v2"
+  },
+  "inputs": [
+    {
+      "id": "chatInput",
+      "kind": "textarea",
+      "label": "Invoke the skill"
+    }
+  ]
+}

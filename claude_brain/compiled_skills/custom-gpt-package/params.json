@@ -1,0 +1,18 @@
+{
+  "skill": "custom-gpt-package",
+  "skill_name": "custom-gpt-package",
+  "description": "\"Converts a design idea, spine, or existing system prompt into a complete, copy-paste-ready ChatGPT Custom GPT package \u2014 Name, Description, Instructions (with a mandatory anti-drift block), Conversation Starters, and a Capabilities table. Takes a single input in one pass; does not interview unless the source material is genuinely missing something required to write the Instructions field. Invoke with /custom-gpt-package, 'build a custom GPT package', 'turn this into a custom GPT', 'package this for ChatGPT', 'custom GPT from this spine', or any request to render an existing prompt/idea/engine into ChatGPT's Custom GPT builder format.\"",
+  "source_file": "skills/custom-gpt-package/SKILL.md",
+  "source_sha": "904390f495356c869d9863b0ae1c4aa4386f419c7269ca317e74434843c7541f",
+  "resources": [],
+  "provider_config": {
+    "model_core": "v2"
+  },
+  "inputs": [
+    {
+      "id": "chatInput",
+      "kind": "textarea",
+      "label": "Invoke the skill"
+    }
+  ]
+}

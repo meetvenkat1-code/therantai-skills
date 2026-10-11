@@ -1,0 +1,18 @@
+{
+  "skill": "fan",
+  "skill_name": "fan",
+  "description": "Fires on jam-state \u2014 friction, cognitive dissonance, entanglement mid-session \u2014 and detonates a divergent fan of successor questions from the blocked node. Each branch routes through a named, exogenous framework (generated dynamically from session context), names the new dimension it opens, and exits as a question, not an answer. The recognition act \u2014 which branch is mine \u2014 stays with the person; the fan never picks. The committed branch re-enters the Flywheel mandate as a fresh seed. Divergent twin of /occam: where occam collapses many forks to the one that matters, fan explodes one jammed node into many structured escape routes. Invoke with /fan, \"fan this\", \"I'm stuck\", \"I need a way out of this\", \"diverge from here\", or any moment the session has hit a wall and refinement inside the current frame has run out of moves.",
+  "source_file": "skills/fan/SKILL.md",
+  "source_sha": "99f64f4a257b37f3d29a21ab9038a4aee778e541c1b5df040e1e55b24b62ac60",
+  "resources": [],
+  "provider_config": {
+    "model_core": "v2"
+  },
+  "inputs": [
+    {
+      "id": "chatInput",
+      "kind": "textarea",
+      "label": "Invoke the skill"
+    }
+  ]
+}

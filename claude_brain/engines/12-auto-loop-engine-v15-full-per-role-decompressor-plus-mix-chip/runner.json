@@ -1,0 +1,32 @@
+{
+  "engine": "12-auto-loop-engine-v15-full-per-role-decompressor-plus-mix-chip",
+  "version": "0.1.0-draft",
+  "source_file": "engines/incoming_batch/12-auto-loop-engine-v15-full-per-role-decompressor plus mix chip.html",
+  "review_required": true,
+  "model_core": {
+    "contract": "model-config-contract v2",
+    "canonical_config_url": "https://raw.githubusercontent.com/meetvenkat1-code/therantai-config/refs/heads/main/model.json"
+  },
+  "execution": {
+    "topology": "single-step projection (auto-draft)",
+    "steps": [
+      {
+        "id": "run",
+        "call": {
+          "system_from": "prompt:default",
+          "user_recipe": "joined non-empty inputs"
+        }
+      }
+    ]
+  },
+  "api_routing": {
+    "call_entry": "callModel({provider, system, user, onText})",
+    "mode": "curated chain-walk",
+    "proxy": {
+      "attempt_order": [
+        "/api/chat (if deployed)",
+        "direct provider endpoints (standalone BYOK)"
+      ]
+    }
+  }
+}

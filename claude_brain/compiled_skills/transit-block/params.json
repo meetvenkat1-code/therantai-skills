@@ -1,0 +1,18 @@
+{
+  "skill": "transit-block",
+  "skill_name": "transit-block",
+  "description": "Universal session capture skill \u2014 scans the current session, fills what it can, and emits a paste-ready context block that carries resolved understanding, decisions, rejections, pending threads, and contracts to any destination. Works from any project, any general chat, any tool. Destination-agnostic. Invoke with /transit-block, \"capture this session\", \"universal handoff\", \"carry this forward\", \"I need to transfer context\", \"session capture\", \"close and transit\". Does NOT trigger automatically \u2014 invoke only when ready to close or transit a session. On invocation, Claude reads the session first, fills every field it can from the conversation record, marks genuinely unresolved fields as [UNKNOWN] \u2014 never fabricates. Emits a pre-filled block, not a blank template. Distinct from /handoff (which compresses within the ecosystem) \u2014 transit-block is the outbound capture ritual for cross-boundary travel.",
+  "source_file": "skills/transit-block/SKILL.md",
+  "source_sha": "46b15ee8d08cd0cbca5aa5ceb570a25e8588df5a16d58687b94aec1aac2a503a",
+  "resources": [],
+  "provider_config": {
+    "model_core": "v2"
+  },
+  "inputs": [
+    {
+      "id": "chatInput",
+      "kind": "textarea",
+      "label": "Invoke the skill"
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "skill": "compress",
+  "skill_name": "compress",
+  "description": ">",
+  "source_file": "skills/compress/SKILL.md",
+  "source_sha": "2f2d407f904fb5d9d0e80b7b389860c65749db0e3c43412524fa34df3a0405ed",
+  "resources": [],
+  "provider_config": {
+    "model_core": "v2"
+  },
+  "inputs": [
+    {
+      "id": "chatInput",
+      "kind": "textarea",
+      "label": "Invoke the skill"
+    }
+  ]
+}

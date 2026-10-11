@@ -1,0 +1,2437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fan / Ramify / Flywheel — Axial Engine</title>
+<style>
+  :root {
+    --bg-void:        #0a0a0f;
+    --bg-surface:     #12121a;
+    --bg-elevated:    #1a1a28;
+    --bg-border:      #2a2a3d;
+    --text-primary:   #e8e8f0;
+    --text-secondary: #9090a8;
+    --text-muted:     #505068;
+    --accent-main:    #7c6ef5;
+    --accent-glow:    rgba(124,110,245,0.15);
+    --amber:          #f5a623;
+    --green:          #4caf82;
+    --coral:          #f56565;
+    --teal:           #38bdf8;
+    --orange-warn:    #f97316;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    height: 100%;
+    background: var(--bg-void);
+    color: var(--text-primary);
+    font-family: 'Georgia', 'Times New Roman', serif;
+    font-size: 16px;
+    line-height: 1.75;
+    overflow: hidden;
+  }
+
+  /* ══ HEADER — Zone A / B / C ══ */
+  .header {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    height: 52px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 1.5rem;
+    background: var(--bg-surface);
+    border-bottom: 1px solid var(--bg-border);
+    z-index: 100;
+    gap: 1rem;
+  }
+
+  .zone-a {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    flex-shrink: 0;
+    min-width: 0;
+  }
+
+  .engine-sigil {
+    width: 20px; height: 20px;
+    border-radius: 50%;
+    background: conic-gradient(from 0deg, var(--amber), var(--green), var(--accent-main), var(--amber));
+    box-shadow: 0 0 10px rgba(124,110,245,0.4);
+    flex-shrink: 0;
+    animation: spinSigil 7s linear infinite;
+  }
+  @keyframes spinSigil { to { transform: rotate(360deg); } }
+
+  .engine-name {
+    font-size: 0.86rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .engine-name span { color: var(--accent-main); }
+
+  .zone-b {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-shrink: 0;
+  }
+
+  .provider-selector {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    background: var(--bg-elevated);
+    border: 1px solid var(--bg-border);
+    border-radius: 6px;
+    padding: 0.28rem 0.55rem;
+  }
+  .provider-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    transition: background 0.2s;
+  }
+  select#providerSelect {
+    background: transparent;
+    color: var(--text-secondary);
+    border: none;
+    font-size: 0.78rem;
+    font-family: 'Courier New', monospace;
+    cursor: pointer;
+    outline: none;
+    appearance: none;
+    -webkit-appearance: none;
+    max-width: 150px;
+  }
+
+  .gear-btn {
+    background: none;
+    border: 1px solid var(--bg-border);
+    color: var(--text-muted);
+    border-radius: 6px;
+    width: 30px; height: 30px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.9rem;
+    transition: border-color 0.15s, color 0.15s;
+    flex-shrink: 0;
+  }
+  .gear-btn:hover { border-color: var(--accent-main); color: var(--text-primary); }
+
+  #configBadge {
+    font-size: 0.62rem;
+    font-family: 'Courier New', monospace;
+    color: var(--text-muted);
+    border: 1px solid var(--bg-border);
+    border-radius: 5px;
+    padding: 0.18rem 0.4rem;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  #configBadge.fallback { color: var(--amber); border-color: var(--amber); }
+
+  .zone-c {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    flex-shrink: 0;
+    line-height: 1.3;
+  }
+  .zone-c span {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    font-family: 'Courier New', monospace;
+  }
+  .zone-c a {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    font-family: 'Courier New', monospace;
+    text-decoration: none;
+  }
+  .zone-c a:hover { color: var(--text-secondary); }
+
+  /* ══ WARNING BANNER ══ */
+  .warn-banner {
+    position: fixed;
+    top: 52px; left: 0; right: 0;
+    background: rgba(249,115,22,0.10);
+    border-bottom: 1px solid rgba(249,115,22,0.28);
+    color: var(--orange-warn);
+    font-size: 0.78rem;
+    padding: 0.4rem 1.5rem;
+    text-align: center;
+    font-family: 'Courier New', monospace;
+    z-index: 99;
+    visibility: hidden;
+    pointer-events: none;
+    height: 0;
+    overflow: hidden;
+  }
+  .warn-banner.visible {
+    visibility: visible;
+    pointer-events: all;
+    height: auto;
+    padding: 0.4rem 1.5rem;
+  }
+
+  /* ══ GEAR DRAWER ══ */
+  .drawer-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 199;
+    visibility: hidden;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+  .drawer-backdrop.open { visibility: visible; pointer-events: all; opacity: 1; }
+
+  .gear-drawer {
+    position: fixed;
+    top: 52px; right: 0; bottom: 0;
+    width: 400px;
+    max-width: 92%;
+    background: var(--bg-elevated);
+    border-left: 1px solid var(--bg-border);
+    z-index: 200;
+    transform: translateX(100%);
+    transition: transform 0.25s ease;
+    overflow-y: auto;
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.2rem;
+  }
+  .gear-drawer.open { transform: translateX(0); }
+  #gearDrawer.open { transform: translateX(0); }
+  #axisPanel.open { transform: translateX(0); }
+
+  .drawer-title {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-muted);
+    font-family: 'Courier New', monospace;
+    border-bottom: 1px solid var(--bg-border);
+    padding-bottom: 0.75rem;
+  }
+  .drawer-field { display: flex; flex-direction: column; gap: 0.4rem; }
+  .drawer-field label {
+    font-size: 0.72rem;
+    color: var(--text-secondary);
+    font-family: 'Courier New', monospace;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .native-note {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    font-style: italic;
+    padding: 0.4rem 0.6rem;
+    background: var(--bg-surface);
+    border-radius: 5px;
+    border: 1px solid var(--bg-border);
+  }
+  .key-input-row { display: flex; gap: 0.4rem; }
+  .key-input {
+    flex: 1;
+    background: var(--bg-surface);
+    border: 1px solid var(--bg-border);
+    color: var(--text-primary);
+    border-radius: 5px;
+    padding: 0.35rem 0.6rem;
+    font-size: 0.78rem;
+    font-family: 'Courier New', monospace;
+    outline: none;
+  }
+  .key-input:focus { border-color: var(--accent-main); }
+  .save-btn {
+    background: var(--accent-main);
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    padding: 0.35rem 0.7rem;
+    font-size: 0.72rem;
+    cursor: pointer;
+    font-family: 'Courier New', monospace;
+    white-space: nowrap;
+    transition: opacity 0.15s;
+  }
+  .save-btn:hover { opacity: 0.85; }
+  .save-confirm {
+    font-size: 0.68rem;
+    color: var(--green);
+    display: none;
+    font-family: 'Courier New', monospace;
+  }
+  .drawer-divider { border: none; border-top: 1px solid var(--bg-border); margin: 0.2rem 0; }
+
+  /* ══ AXIS NAV PANEL (left overlay — Constraint 01) ══ */
+  .nav-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 149;
+    visibility: hidden;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+  .nav-backdrop.open { visibility: visible; pointer-events: all; opacity: 1; }
+
+  .axis-panel {
+    position: fixed;
+    top: 52px; left: 0; bottom: 0;
+    width: 300px;
+    background: var(--bg-elevated);
+    border-right: 1px solid var(--bg-border);
+    z-index: 150;
+    transform: translateX(-100%);
+    transition: transform 0.25s ease;
+    overflow-y: auto;
+    padding: 1.25rem 1.1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+  .axis-panel.open { transform: translateX(0); }
+
+  .axis-panel-title {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--text-muted);
+    font-family: 'Courier New', monospace;
+    padding-bottom: 0.7rem;
+    border-bottom: 1px solid var(--bg-border);
+    margin-bottom: 0.4rem;
+  }
+
+  .axis-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.65rem;
+    padding: 0.65rem 0.65rem;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.15s;
+    border: 1px solid transparent;
+  }
+  .axis-item:hover { background: var(--bg-surface); }
+
+  .axis-glyph {
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    border: 1.5px solid var(--bg-border);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.72rem;
+    flex-shrink: 0;
+    margin-top: 0.05rem;
+  }
+  .axis-item[data-axis="fan"] .axis-glyph     { border-color: var(--amber); color: var(--amber); }
+  .axis-item[data-axis="ramify"] .axis-glyph  { border-color: var(--green); color: var(--green); }
+  .axis-item[data-axis="flywheel"] .axis-glyph{ border-color: var(--accent-main); color: var(--accent-main); }
+
+  .axis-meta { display: flex; flex-direction: column; gap: 0.15rem; min-width: 0; }
+  .axis-name { font-size: 0.82rem; color: var(--text-primary); font-family: 'Courier New', monospace; }
+  .axis-desc { font-size: 0.68rem; color: var(--text-muted); line-height: 1.45; }
+
+  /* ══ RESPONSE LIBRARY (right overlay — Constraint 01/20/20B) ══ */
+  .resp-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 149;
+    visibility: hidden;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+  .resp-backdrop.open { visibility: visible; pointer-events: all; opacity: 1; }
+
+  .resp-panel {
+    position: fixed;
+    top: 52px; right: 0; bottom: 0;
+    width: 340px;
+    background: var(--bg-elevated);
+    border-left: 1px solid var(--bg-border);
+    z-index: 150;
+    transform: translateX(100%);
+    transition: transform 0.25s ease;
+    overflow-y: auto;
+    padding: 1.25rem 1.1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+  #respPanel.open { transform: translateX(0); }
+
+  .resp-panel-title {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--text-muted);
+    font-family: 'Courier New', monospace;
+    padding-bottom: 0.7rem;
+    border-bottom: 1px solid var(--bg-border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .resp-conn-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--text-muted);
+    display: inline-block;
+  }
+  .resp-conn-dot.connected { background: var(--green); box-shadow: 0 0 5px var(--green); }
+  .resp-conn-dot.reconnect { background: var(--amber); }
+
+  .resp-io-row { display: flex; gap: 0.4rem; }
+  .resp-io-btn {
+    flex: 1;
+    background: var(--bg-surface);
+    border: 1px solid var(--bg-border);
+    color: var(--text-secondary);
+    border-radius: 6px;
+    padding: 0.4rem 0.5rem;
+    font-size: 0.68rem;
+    font-family: 'Courier New', monospace;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.15s;
+  }
+  .resp-io-btn:hover { border-color: var(--accent-main); color: var(--text-primary); }
+  .resp-conn-btn.linked { border-color: var(--green); color: var(--green); }
+  .resp-conn-btn.needs-reconnect { border-color: var(--amber); color: var(--amber); }
+
+  .resp-search {
+    background: var(--bg-surface);
+    border: 1px solid var(--bg-border);
+    color: var(--text-primary);
+    border-radius: 6px;
+    padding: 0.4rem 0.6rem;
+    font-size: 0.76rem;
+    font-family: 'Courier New', monospace;
+    outline: none;
+    width: 100%;
+  }
+  .resp-search:focus { border-color: var(--accent-main); }
+
+  .resp-list { display: flex; flex-direction: column; gap: 0.4rem; margin-top: 0.2rem; }
+
+  .resp-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    padding: 0.6rem 0.65rem;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: border-color 0.15s;
+    border: 1px solid var(--bg-border);
+    background: var(--bg-surface);
+  }
+  .resp-item:hover { border-color: var(--accent-main); }
+  .resp-item-top { display: flex; align-items: center; justify-content: space-between; gap: 0.4rem; }
+  .resp-item-tag {
+    font-size: 0.6rem;
+    font-family: 'Courier New', monospace;
+    color: var(--teal);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    flex-shrink: 0;
+  }
+  .resp-item-time {
+    font-size: 0.6rem;
+    font-family: 'Courier New', monospace;
+    color: var(--text-muted);
+    flex-shrink: 0;
+  }
+  .resp-item-text {
+    font-size: 0.76rem;
+    color: var(--text-secondary);
+    font-family: 'Georgia', serif;
+    line-height: 1.4;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+  }
+  .resp-item-actions { display: flex; gap: 0.35rem; margin-top: 0.1rem; }
+  .resp-item-actions button {
+    background: none;
+    border: 1px solid var(--bg-border);
+    color: var(--text-muted);
+    border-radius: 4px;
+    padding: 0.15rem 0.5rem;
+    font-size: 0.62rem;
+    font-family: 'Courier New', monospace;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .resp-item-actions button:hover { border-color: var(--accent-main); color: var(--text-primary); }
+  .resp-item-actions .del-btn:hover { border-color: var(--coral); color: var(--coral); }
+
+  .resp-empty {
+    font-size: 0.76rem;
+    color: var(--text-muted);
+    font-style: italic;
+    padding: 0.5rem 0.2rem;
+  }
+
+  .replay-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.64rem;
+    font-family: 'Courier New', monospace;
+    color: var(--amber);
+    border: 1px solid rgba(245,166,35,0.35);
+    background: rgba(245,166,35,0.08);
+    border-radius: 6px;
+    padding: 0.25rem 0.6rem;
+    margin-bottom: 0.9rem;
+  }
+  .replay-badge button {
+    background: none;
+    border: none;
+    color: var(--amber);
+    text-decoration: underline;
+    cursor: pointer;
+    font-family: 'Courier New', monospace;
+    font-size: 0.64rem;
+    padding: 0;
+  }
+
+  /* ══ SANDWICH LAYOUT — Constraint 18A ══ */
+  .output-area {
+    position: fixed;
+    top: 52px;
+    bottom: 120px;
+    left: 0; right: 0;
+    overflow-y: auto;
+    padding: 1.75rem 1.5rem;
+  }
+  .output-area::-webkit-scrollbar { width: 5px; }
+  .output-area::-webkit-scrollbar-track { background: var(--bg-void); }
+  .output-area::-webkit-scrollbar-thumb { background: var(--bg-border); border-radius: 3px; }
+  .output-area::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+  .canvas-inner { width: 100%; max-width: none; }
+
+  /* ══ EMPTY STATE ══ */
+  .empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: calc(100vh - 52px - 120px - 3.5rem);
+    gap: 1.3rem;
+    text-align: center;
+    padding: 2rem;
+  }
+  .empty-sigil {
+    font-size: 2.1rem;
+    opacity: 0.22;
+    letter-spacing: 0.12em;
+    font-family: 'Courier New', monospace;
+  }
+  .empty-title {
+    font-size: 1.5rem;
+    font-weight: normal;
+    color: var(--text-secondary);
+    letter-spacing: -0.01em;
+    line-height: 1.4;
+  }
+  .empty-title em { color: var(--accent-main); font-style: italic; }
+  .empty-sub {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    font-style: italic;
+    max-width: 600px;
+    line-height: 1.7;
+  }
+
+  .axis-preview {
+    display: flex;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+    justify-content: center;
+    max-width: 640px;
+    margin-top: 0.3rem;
+  }
+  .axis-preview .seg {
+    font-size: 0.68rem;
+    font-family: 'Courier New', monospace;
+    padding: 0.22rem 0.7rem;
+    border: 1px solid var(--bg-border);
+    border-radius: 14px;
+    color: var(--text-muted);
+  }
+  .axis-preview .seg.fan { border-color: rgba(245,166,35,0.35); color: var(--amber); }
+  .axis-preview .seg.ramify { border-color: rgba(76,175,130,0.35); color: var(--green); }
+  .axis-preview .seg.flywheel { border-color: rgba(124,110,245,0.35); color: var(--accent-main); }
+
+  .empty-examples {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    justify-content: center;
+    max-width: 620px;
+    margin-top: 0.4rem;
+  }
+  .example-chip {
+    background: var(--bg-elevated);
+    border: 1px solid var(--bg-border);
+    color: var(--text-secondary);
+    border-radius: 20px;
+    padding: 0.3rem 0.85rem;
+    font-size: 0.76rem;
+    font-family: 'Courier New', monospace;
+    cursor: pointer;
+    transition: all 0.15s;
+    user-select: none;
+  }
+  .example-chip:hover { border-color: var(--accent-main); color: var(--accent-main); background: var(--accent-glow); }
+
+  /* ══ FRAGMENT HEADER (once run begins) ══ */
+  .fragment-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1.6rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--bg-border);
+    flex-wrap: wrap;
+  }
+  .fragment-block { display: flex; flex-direction: column; gap: 0.35rem; min-width: 0; flex: 1; }
+  .fragment-eyebrow {
+    font-size: 0.66rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    font-family: 'Courier New', monospace;
+    opacity: 0.85;
+  }
+  .fragment-text {
+    font-size: 1.05rem;
+    color: var(--text-secondary);
+    font-style: italic;
+    line-height: 1.6;
+    word-break: break-word;
+  }
+  .fragment-actions { display: flex; gap: 0.5rem; flex-shrink: 0; }
+  .copy-btn {
+    background: none;
+    border: 1px solid var(--bg-border);
+    color: var(--text-muted);
+    border-radius: 5px;
+    padding: 0.32rem 0.85rem;
+    font-size: 0.74rem;
+    cursor: pointer;
+    font-family: 'Courier New', monospace;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .copy-btn:hover { border-color: var(--accent-main); color: var(--text-primary); }
+
+  /* ══ AXIS GRID — three parallel, independent portals ══ */
+  .axis-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.1rem;
+    width: 100%;
+  }
+
+  .axis-card {
+    background: var(--bg-surface);
+    border: 1px solid var(--bg-border);
+    border-radius: 12px;
+    overflow: hidden;
+    transition: border-color 0.2s;
+    display: flex;
+    flex-direction: column;
+  }
+  .axis-card::before {
+    content: '';
+    display: block;
+    height: 2px;
+    width: 100%;
+  }
+  .axis-card[data-axis="fan"]::before      { background: var(--amber); }
+  .axis-card[data-axis="ramify"]::before   { background: var(--green); }
+  .axis-card[data-axis="flywheel"]::before { background: var(--accent-main); }
+
+  .axis-card.active-card { border-color: rgba(124,110,245,0.35); }
+
+  .axis-card-header {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    padding: 0.95rem 1.3rem;
+    background: var(--bg-elevated);
+    border-bottom: 1px solid var(--bg-border);
+  }
+  .axis-card-glyph {
+    width: 24px; height: 24px;
+    border-radius: 50%;
+    border: 1.5px solid var(--bg-border);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.78rem;
+    flex-shrink: 0;
+  }
+  .axis-card[data-axis="fan"] .axis-card-glyph      { border-color: var(--amber); color: var(--amber); }
+  .axis-card[data-axis="ramify"] .axis-card-glyph   { border-color: var(--green); color: var(--green); }
+  .axis-card[data-axis="flywheel"] .axis-card-glyph { border-color: var(--accent-main); color: var(--accent-main); }
+
+  .axis-card-title-block { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 0.1rem; }
+  .axis-card-title {
+    font-size: 0.82rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-primary);
+    font-family: 'Courier New', monospace;
+  }
+  .axis-card-sub {
+    font-size: 0.68rem;
+    color: var(--text-muted);
+    font-style: italic;
+  }
+
+  .axis-status-tag {
+    font-size: 0.62rem;
+    font-family: 'Courier New', monospace;
+    padding: 0.16rem 0.5rem;
+    border-radius: 12px;
+    border: 1px solid var(--bg-border);
+    color: var(--text-muted);
+    flex-shrink: 0;
+  }
+  .axis-status-tag.live { color: var(--teal); border-color: var(--teal); background: rgba(56,189,248,0.08); }
+  .axis-status-tag.done { color: var(--green); border-color: var(--green); background: rgba(76,175,130,0.08); }
+
+  .axis-card-copy {
+    background: none;
+    border: 1px solid var(--bg-border);
+    color: var(--text-muted);
+    border-radius: 5px;
+    padding: 0.18rem 0.55rem;
+    font-size: 0.64rem;
+    cursor: pointer;
+    font-family: 'Courier New', monospace;
+    transition: all 0.15s;
+    flex-shrink: 0;
+  }
+  .axis-card-copy:hover { border-color: var(--accent-main); color: var(--text-primary); }
+
+  .axis-card-body {
+    padding: 1.3rem 1.4rem;
+    font-family: 'Georgia', serif;
+    font-size: 0.97rem;
+    line-height: 1.85;
+    color: var(--text-primary);
+    width: 100%;
+    word-break: break-word;
+    flex: 1;
+  }
+  .axis-card-body p { margin-bottom: 0.85rem; }
+  .axis-card-body p:last-child { margin-bottom: 0; }
+  .axis-card-body strong { font-weight: 600; color: var(--text-primary); }
+  .axis-card-body em { font-style: italic; color: var(--text-secondary); }
+  .axis-card-body code {
+    font-family: 'Courier New', monospace;
+    font-size: 0.82em;
+    background: var(--bg-elevated);
+    padding: 0.1em 0.35em;
+    border-radius: 3px;
+    color: var(--teal);
+  }
+  .axis-card-body hr { border: none; border-top: 1px solid var(--bg-border); margin: 0.9rem 0; }
+  .axis-card-body ul, .axis-card-body ol { padding-left: 1.3rem; margin-bottom: 0.85rem; }
+  .axis-card-body li { margin-bottom: 0.35rem; }
+
+  .axis-card-body.streaming::after {
+    content: '▋';
+    animation: blink 0.7s step-end infinite;
+  }
+  .axis-card[data-axis="fan"] .axis-card-body.streaming::after      { color: var(--amber); }
+  .axis-card[data-axis="ramify"] .axis-card-body.streaming::after   { color: var(--green); }
+  .axis-card[data-axis="flywheel"] .axis-card-body.streaming::after { color: var(--accent-main); }
+  @keyframes blink { 50% { opacity: 0; } }
+
+  .axis-card-body.pending {
+    color: var(--text-muted);
+    font-style: italic;
+    font-size: 0.86rem;
+  }
+
+  @keyframes cardPulse { 0%, 100% { opacity: 0.55; } 50% { opacity: 1; } }
+  .axis-card.loading-card { animation: cardPulse 1.6s ease-in-out infinite; }
+
+  .error-inline {
+    color: var(--coral);
+    font-family: 'Courier New', monospace;
+    font-size: 0.82rem;
+  }
+
+  /* ══ INPUT BAR — Constraint 18A ══ */
+  .input-bar {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    height: 120px;
+    background: var(--bg-surface);
+    border-top: 1px solid var(--bg-border);
+    display: flex;
+    flex-direction: column;
+    z-index: 100;
+  }
+
+  .fragment-row {
+    flex: 1;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 0.85rem 1.5rem 0.5rem;
+  }
+
+  .fragment-textarea {
+    flex: 1;
+    background: var(--bg-elevated);
+    border: 1px solid var(--bg-border);
+    border-radius: 8px;
+    color: var(--text-primary);
+    font-family: 'Georgia', serif;
+    font-size: 0.95rem;
+    padding: 0.6rem 1rem;
+    outline: none;
+    resize: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    height: 56px;
+  }
+  .fragment-textarea:focus { border-color: var(--accent-main); box-shadow: 0 0 0 3px var(--accent-glow); }
+  .fragment-textarea::placeholder { color: var(--text-muted); font-style: italic; }
+
+  .run-btn {
+    background: linear-gradient(135deg, var(--accent-main), #5a4adb);
+    border: none;
+    border-radius: 8px;
+    color: #fff;
+    font-family: 'Courier New', monospace;
+    font-size: 0.8rem;
+    font-weight: 600;
+    padding: 0 1.25rem;
+    height: 56px;
+    cursor: pointer;
+    letter-spacing: 0.04em;
+    transition: all 0.2s;
+    white-space: nowrap;
+    display: flex; align-items: center; gap: 0.4rem;
+    flex-shrink: 0;
+  }
+  .run-btn:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 4px 16px rgba(124,110,245,0.35); }
+  .run-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+  .reset-btn {
+    background: none;
+    border: 1px solid var(--bg-border);
+    color: var(--text-muted);
+    border-radius: 8px;
+    font-family: 'Courier New', monospace;
+    font-size: 0.74rem;
+    padding: 0 0.95rem;
+    height: 56px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.15s;
+    flex-shrink: 0;
+    display: none;
+  }
+  .reset-btn:hover { border-color: var(--coral); color: var(--coral); }
+
+  .bottom-meta-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 1.5rem 0.7rem;
+  }
+  .hint-text {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    font-style: italic;
+  }
+
+  /* ══ MODEL CATALOG LANES (model-catalog-panel v3.2 Mode A, matrix variant) ══ */
+  .lane-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    background: var(--bg-elevated);
+    border: 1px solid var(--bg-border);
+    color: var(--text-secondary);
+    border-radius: 6px;
+    padding: 0.28rem 0.55rem;
+    font-size: 0.78rem;
+    font-family: 'Courier New', monospace;
+    cursor: pointer;
+    outline: none;
+    white-space: nowrap;
+    max-width: 220px;
+  }
+  .lane-btn:hover { border-color: var(--accent-main); color: var(--text-primary); }
+  .lane-btn #laneTxt { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .drawer-section-title {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-muted);
+    font-family: 'Courier New', monospace;
+    border-bottom: 1px solid var(--bg-border);
+    padding-bottom: 0.75rem;
+  }
+  .drawer-sub { font-size: 0.72rem; color: var(--text-secondary); font-family: 'Courier New', monospace; }
+  .key-note { font-size: 0.68rem; color: var(--text-muted); font-family: 'Courier New', monospace; line-height: 1.5; }
+  .tchip {
+    background: var(--bg-surface);
+    border: 1px solid var(--bg-border);
+    color: var(--text-secondary);
+    border-radius: 14px;
+    padding: 0.18rem 0.6rem;
+    font-size: 0.68rem;
+    font-family: 'Courier New', monospace;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .tchip:hover { border-color: var(--accent-main); color: var(--text-primary); }
+  .tchip.on { border-color: var(--accent-main); color: var(--accent-main); background: var(--accent-glow); }
+  .mrow {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    padding: 0.45rem 0.55rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.74rem;
+    font-family: 'Courier New', monospace;
+    color: var(--text-secondary);
+    border: 1px solid transparent;
+    line-height: 1.4;
+    word-break: break-word;
+  }
+  .mrow:hover { background: var(--bg-surface); }
+  .mrow.pinned { border-color: rgba(124,110,245,0.35); }
+  .mrow .meta { display: block; font-size: 0.64rem; color: var(--text-muted); margin-top: 0.15rem; }
+  .mrow input[type="checkbox"] { margin-top: 0.2rem; flex-shrink: 0; }
+  .mtag {
+    display: inline-block;
+    font-size: 0.6rem;
+    font-family: 'Courier New', monospace;
+    border: 1px solid var(--bg-border);
+    border-radius: 4px;
+    padding: 0.05rem 0.35rem;
+    margin-right: 0.25rem;
+    color: var(--text-muted);
+  }
+  .cat-status { font-size: 0.68rem; color: var(--text-muted); font-family: 'Courier New', monospace; line-height: 1.5; }
+  .pk-search, .cat-search {
+    background: var(--bg-surface);
+    border: 1px solid var(--bg-border);
+    color: var(--text-primary);
+    border-radius: 6px;
+    padding: 0.4rem 0.6rem;
+    font-size: 0.76rem;
+    font-family: 'Courier New', monospace;
+    outline: none;
+    width: 100%;
+  }
+  .pk-search:focus, .cat-search:focus { border-color: var(--accent-main); }
+  .prov-btns, .tier-chips, .cat-rows { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+  .cat-rows { flex-direction: column; flex-wrap: nowrap; max-height: 260px; overflow-y: auto; }
+  .drawer-btn-row { display: flex; gap: 0.4rem; }
+  .fan-btn {
+    background: var(--bg-elevated);
+    border: 1px solid var(--bg-border);
+    border-radius: 8px;
+    color: var(--text-secondary);
+    font-family: 'Courier New', monospace;
+    font-size: 0.8rem;
+    font-weight: 600;
+    padding: 0 1.1rem;
+    height: 56px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.15s;
+    flex-shrink: 0;
+  }
+  .fan-btn:hover:not(:disabled) { border-color: var(--accent-main); color: var(--accent-main); }
+  .fan-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .fan-group { margin-bottom: 1.4rem; }
+  .fan-h {
+    font-size: 0.72rem;
+    font-family: 'Courier New', monospace;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-muted);
+    margin-bottom: 0.6rem;
+  }
+  .cards-grid, .lane-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1rem;
+    width: 100%;
+  }
+  .lane-col {
+    background: var(--bg-surface);
+    border: 1px solid var(--bg-border);
+    border-radius: 10px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  .lane-col-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.6rem 0.9rem;
+    background: var(--bg-elevated);
+    border-bottom: 1px solid var(--bg-border);
+    font-size: 0.7rem;
+    font-family: 'Courier New', monospace;
+    color: var(--text-secondary);
+  }
+  .lane-col-header .served-tag { color: var(--teal); }
+  .lane-col-body { padding: 1rem 1.1rem; font-size: 0.92rem; line-height: 1.8; width: 100%; word-break: break-word; }
+  .lane-col-body p { margin-bottom: 0.8rem; }
+  #toast {
+    position: fixed;
+    bottom: 140px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--bg-elevated);
+    border: 1px solid var(--bg-border);
+    color: var(--text-primary);
+    font-size: 0.76rem;
+    font-family: 'Courier New', monospace;
+    border-radius: 8px;
+    padding: 0.5rem 1rem;
+    z-index: 300;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s;
+    max-width: 90%;
+  }
+  #toast.show { opacity: 1; }
+  .copy-btn{display:flex;align-items:center;gap:5px;background:none;border:1px solid var(--bg-border);color:var(--text-muted);font-size:.65rem;padding:4px 10px 5px;border-radius:5px;cursor:pointer;transition:all .2s;white-space:nowrap;flex-shrink:0} .copy-btn svg{width:11px;height:11px;stroke:currentColor;fill:none;stroke-width:1.8} .copy-btn:hover{border-color:var(--accent-main);color:var(--accent-main)} .copy-btn.copied{border-color:var(--green);color:var(--green)}
+  #configBadge[data-state="live"] { color: var(--green); border-color: var(--green); }
+  #configBadge[data-state="fallback"] { color: var(--amber); border-color: var(--amber); }
+</style>
+</head>
+<body>
+
+<!-- ══ HEADER ══ -->
+<header class="header">
+  <div class="zone-a">
+    <button class="nav-toggle gear-btn" id="navToggle" title="Axes">☰</button>
+    <div class="engine-sigil"></div>
+    <span class="engine-name">Fan <span>/ Ramify / Flywheel</span></span>
+    <span id="configBadge" data-state="fallback">Config: Local Fallback</span>
+  </div>
+  <div class="zone-b">
+    <div class="provider-selector">
+      <span class="provider-dot" id="providerDot"></span>
+      <select id="providerSelect"></select>
+    </div>
+    <button class="lane-btn" id="laneBtn" title="Model lanes — open settings">
+      <span class="provider-dot" id="laneDot"></span>
+      <span id="laneTxt">1 lane</span>
+    </button>
+    <button class="gear-btn" id="respToggle" title="Response library">▤</button>
+    <button class="gear-btn" id="gearBtn" title="Settings">⚙</button>
+  </div>
+  <div class="zone-c">
+    <span><i>crafted by</i></span>
+    <a href="mailto:meet.venkat1@gmail.com">meet.venkat1@gmail.com</a>
+  </div>
+</header>
+
+<!-- ══ WARNING BANNER ══ -->
+<div class="warn-banner" id="keyWarn">⚠ No API key configured. Open ⚙ Settings to add one.</div>
+
+<!-- ══ GEAR DRAWER ══ -->
+<div class="drawer-backdrop" id="drawerBackdrop"></div>
+<div class="gear-drawer" id="gearDrawer">
+  <div class="drawer-section-title">Lanes</div>
+  <div class="drawer-sub" id="laneCount">1 of 2 lanes active (max 12)</div>
+  <div id="laneList"></div>
+  <hr class="drawer-divider">
+  <div class="drawer-section-title">Model catalog</div>
+  <div class="prov-btns" id="provBtns"></div>
+  <input class="cat-search" id="catSearch" placeholder="Search or /regex/ — id, name…">
+  <div class="tier-chips" id="tierChips"></div>
+  <div class="cat-status" id="catStatus">Fetch a provider's live model list to browse it.</div>
+  <div class="cat-rows" id="catRows"></div>
+  <hr class="drawer-divider">
+  <div class="drawer-section-title">Keys</div>
+  <div id="keyFields"></div>
+  <div class="drawer-btn-row">
+    <button class="save-btn" id="saveKeysBtn">Save keys</button>
+    <button class="save-btn" id="clearKeysBtn" style="background:var(--bg-surface);border:1px solid var(--bg-border);color:var(--text-secondary);">Clear saved keys</button>
+  </div>
+  <div class="drawer-sub">Keys save to this device only (hek_ slots).</div>
+  <hr class="drawer-divider">
+  <div class="drawer-title">API Keys</div>
+  <div id="drawerKeyRows"></div>
+</div>
+
+<!-- ══ AXIS NAV PANEL (left overlay) ══ -->
+<div class="nav-backdrop" id="navBackdrop"></div>
+<div class="axis-panel" id="axisPanel">
+  <div class="axis-panel-title">Three Axes · One Fragment</div>
+  <div class="axis-item" data-axis="fan" onclick="scrollToAxis('fan')">
+    <div class="axis-glyph">F</div>
+    <div class="axis-meta">
+      <div class="axis-name">Fan</div>
+      <div class="axis-desc">Breadth. Spreads the fragment outward into adjacent reach — lateral, uncommitted, wide.</div>
+    </div>
+  </div>
+  <div class="axis-item" data-axis="ramify" onclick="scrollToAxis('ramify')">
+    <div class="axis-glyph">R</div>
+    <div class="axis-meta">
+      <div class="axis-name">Ramify</div>
+      <div class="axis-desc">Depth. Follows one branch of the fragment down into structure — vertical, committed, narrow.</div>
+    </div>
+  </div>
+  <div class="axis-item" data-axis="flywheel" onclick="scrollToAxis('flywheel')">
+    <div class="axis-glyph">⟳</div>
+    <div class="axis-meta">
+      <div class="axis-name">Flywheel</div>
+      <div class="axis-desc">Momentum. Returns the fragment to itself, cycled and reinforced — the same idea under accumulating force.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ RESPONSE LIBRARY (right overlay) ══ -->
+<div class="resp-backdrop" id="respBackdrop"></div>
+<div class="resp-panel" id="respPanel">
+  <div class="resp-panel-title">
+    <span>Response Library</span>
+    <span><span class="resp-conn-dot" id="respConnDot"></span></span>
+  </div>
+  <button class="resp-io-btn resp-conn-btn" id="respConnBtn" onclick="connectResponseFolder()">🗀 Connect folder</button>
+  <div class="resp-io-row">
+    <button class="resp-io-btn" onclick="exportResponses()">⭳ Export JSON</button>
+    <label class="resp-io-btn" style="margin:0;">
+      ⭱ Import JSON
+      <input type="file" accept="application/json" id="respImportFile" style="display:none;" onchange="importResponses(this.files[0])">
+    </label>
+  </div>
+  <input type="text" class="resp-search" id="respSearch" placeholder="Search saved runs…" oninput="renderResponseList()">
+  <div class="resp-list" id="respList"></div>
+</div>
+
+<!-- ══ OUTPUT AREA (sandwich middle) ══ -->
+<div class="output-area" id="outputArea">
+  <div class="canvas-inner">
+    <div class="empty-state" id="emptyState">
+      <div class="empty-sigil">◈ ◈ ◈</div>
+      <h1 class="empty-title">Drop a fragment.<br><em>Watch it fan, ramify, and turn.</em></h1>
+      <p class="empty-sub">
+        One intuition, three independent readings. Fan spreads it wide. Ramify drives it deep.
+        Flywheel sends it back through itself with force added. None of the three reads the
+        others' output — each takes the raw fragment and transforms it according to its own
+        nature. The unification happens in your head, not in the engine.
+      </p>
+      <div class="axis-preview">
+        <span class="seg fan">Fan — breadth</span>
+        <span class="seg ramify">Ramify — depth</span>
+        <span class="seg flywheel">Flywheel — momentum</span>
+      </div>
+      <div class="empty-examples">
+        <div class="example-chip" onclick="loadExample(this)">Trust is just predicted consistency</div>
+        <div class="example-chip" onclick="loadExample(this)">Most meetings are status anxiety wearing a calendar invite</div>
+        <div class="example-chip" onclick="loadExample(this)">A habit is a decision you've successfully hidden from yourself</div>
+      </div>
+    </div>
+    <div id="runWrapper" style="visibility:hidden;pointer-events:none;"></div>
+    <div id="fanOut"></div>
+  </div>
+</div>
+<div id="toast"></div>
+
+<!-- ══ INPUT BAR ══ -->
+<div class="input-bar">
+  <div class="fragment-row">
+    <textarea
+      class="fragment-textarea"
+      id="fragmentInput"
+      placeholder="Drop the intuition or idea fragment — a sentence, a half-formed thought, a tension you can't name yet…"
+      onkeydown="if((event.key==='Enter') && (event.metaKey || event.ctrlKey)){ event.preventDefault(); runEngine(); }"
+    ></textarea>
+    <button class="reset-btn" id="resetBtn" onclick="resetEngine()">Reset</button>
+    <button class="fan-btn" id="fanBtn" title="Run the fragment across ticked lanes (matrix: axes x lanes)">Fan out (1)</button>
+    <button class="run-btn" id="runBtn" onclick="runEngine()">
+      <span id="runBtnLabel">▶ Run Axes</span>
+    </button>
+  </div>
+  <div class="bottom-meta-row">
+    <span class="hint-text">⌘/Ctrl + Enter to run · fan, ramify, and flywheel fire in parallel</span>
+  </div>
+</div>
+
+<script>
+// ════════════════════════════════════════════════════════════════════════════
+// SPINE — shared frame given to all three axis portals so each one knows
+// what it is without knowing what the others are doing
+// ════════════════════════════════════════════════════════════════════════════
+
+const SPINE = `# AXIAL ENGINE — PORTABLE SPINE
+
+You are one of three independent portals built on the same spine. Each portal receives a single intuition or idea fragment — raw, often incomplete, sometimes just a tension that hasn't found its sentence yet — and transforms it according to one axis only. You do not know what the other two portals are doing with this same fragment, and you must not try to be them. Your job is to be completely, uncompromisingly yours.
+
+The fragment is not a topic to discuss. It is not a question to answer. It is a charge handed to you, and your axis is the only thing you are allowed to do to it.`;
+
+// ── FAN: breadth transform ──
+const FAN_SYSTEM = SPINE + `
+
+## YOUR AXIS: FAN
+
+You spread. Given the fragment, you do not go deeper into it — you go wider. Your only motion is outward: find where this same intuition is already alive in territory that has nothing obviously to do with where it started. Adjacent fields, unrelated domains, other people's problems, other centuries — anywhere the same underlying force shows up wearing a different coat.
+
+You do not commit to any single branch. You do not follow one thread to its conclusion — that is a different axis's job, and doing it here is a failure of your nature. Your value is reach, not resolution. Touch many surfaces lightly rather than one surface deeply.
+
+Produce 4-6 short bursts — each one a different adjacent territory where this fragment's force is already operating, named plainly, then shown in one or two sentences of how it operates there. No numbered list scaffolding, no headers — let each burst be its own short paragraph, separated by a blank line. The fragment should feel, by the end, like it was never really about where it started — it was always wider than that.
+
+Open directly with the first burst. No preamble, no "Let's explore," no meta-commentary about fanning.`;
+
+// ── RAMIFY: depth transform ──
+const RAMIFY_SYSTEM = SPINE + `
+
+## YOUR AXIS: RAMIFY
+
+You branch downward. Given the fragment, you do not spread across surfaces — you commit to going under one. Pick the single most load-bearing branch implicit in this intuition and follow it down through what it actually requires to be true, what it forces, what breaks if it's wrong, what structure has to exist beneath it for the surface claim to hold.
+
+You are not interested in breadth. Touching many adjacent ideas lightly is a different axis's job and a failure of yours. Your value is commitment — go far enough down one branch that the reader hits bedrock they didn't know was there, or hits a contradiction the surface fragment was quietly resting on.
+
+Structure your descent as a sequence of 3-5 short paragraphs, each one a further turn downward from the last — each paragraph should feel like it could only come after the one before it, not a parallel list of separate points. End at the deepest point you can honestly reach, even if that point is uncomfortable or unresolved. No headers, no numbered scaffolding — the descent itself is the structure.
+
+Open directly with the first turn downward. No preamble, no "Let's dig in," no meta-commentary about ramifying.`;
+
+// ── FLYWHEEL: momentum transform ──
+const FLYWHEEL_SYSTEM = SPINE + `
+
+## YOUR AXIS: FLYWHEEL
+
+You return the fragment to itself, but never unchanged — each pass through adds force. You are not spreading outward and you are not drilling down into one branch. You are cycling the same intuition back through itself, the way a flywheel doesn't go anywhere new but accumulates momentum precisely by staying on the same path and turning again.
+
+Take the fragment through 3-4 turns. Each turn restates the same core intuition — not as a paraphrase, but as the same claim seen with more force behind it: what was tentative on turn one becomes structural by turn three. By the final turn the fragment should land with weight the first sentence didn't have, even though nothing genuinely new was added — only return, only repetition that compounds rather than repeats.
+
+Write this as continuous prose, not discrete labeled turns — the turning should be felt in the rhythm and intensification of the sentences themselves, not announced. No headers, no "Turn 1 / Turn 2" scaffolding. The reader should feel something gathering speed, like the same wheel going around faster each pass.
+
+Open directly with the first pass. No preamble, no "Let's build momentum," no meta-commentary about the flywheel.`;
+
+const AXES = [
+  { key: 'fan',      label: 'Fan',      glyph: 'F', sub: 'breadth — lateral reach across adjacent territory',  system: FAN_SYSTEM },
+  { key: 'ramify',   label: 'Ramify',   glyph: 'R', sub: 'depth — one branch driven down into structure',       system: RAMIFY_SYSTEM },
+  { key: 'flywheel', label: 'Flywheel', glyph: '⟳', sub: 'momentum — the same fragment cycled with force added', system: FLYWHEEL_SYSTEM }
+];
+
+let currentFragment = '';
+let axisOutputs = {};
+let axisStatus  = {};
+let isRunning = false;
+
+// ════════════════════════════════════════════════════════════════════════════
+// STORAGE ABSTRACTION LAYER (Constraint 21)
+// ════════════════════════════════════════════════════════════════════════════
+
+function storageSet(key, value)   { localStorage.setItem(key, value); return true; }
+function storageGet(key)          { return localStorage.getItem(key); }
+function storageRemove(key)       { localStorage.removeItem(key); return true; }
+function storageList(prefix) {
+  const keys = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const k = localStorage.key(i);
+    if (k && k.startsWith(prefix)) keys.push(k);
+  }
+  return keys;
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// RESPONSE LIBRARY — auto-save, browse, recall, import/export (Constraints 20/20B/21/22/23)
+// One saved record = one completed run (fragment + all three axis outputs).
+// ════════════════════════════════════════════════════════════════════════════
+
+const ENGINE_ID = 'fan-ramify-flywheel';
+const RESP_PREFIX = 'resp:' + ENGINE_ID + ':';
+let dirHandle = null; // folder-connect handle, in-memory only (Constraint 23B)
+
+function newResponseId() { return 'r' + Date.now() + '_' + Math.random().toString(36).slice(2, 8); }
+
+function saveResponseRecord() {
+  const id = newResponseId();
+  const record = {
+    id: id,
+    engine: ENGINE_ID,
+    schemaVersion: 1,
+    fragment: currentFragment,
+    outputs: Object.assign({}, axisOutputs),
+    provider: (typeof getProvider === 'function' ? getProvider() : ''),
+    models: (typeof axisModel !== 'undefined' ? Object.assign({}, axisModel) : {}),
+    served: (typeof axisServed !== 'undefined' ? Object.assign({}, axisServed) : {}),
+    lanes: (typeof S !== 'undefined' && S.settings ? { lanes: S.settings.lanes.slice(), customLanes: S.settings.customLanes.slice() } : null),
+    fanCells: (typeof fanCells !== 'undefined' ? Object.assign({}, fanCells) : {}),
+    created: new Date().toISOString()
+  };
+  storageSet(RESP_PREFIX + id, JSON.stringify(record));
+  if (dirHandle) saveRecordToDisk(record); // additive mirror, never blocks/rolls back localStorage
+  renderResponseList();
+  return record;
+}
+
+function loadAllResponses() {
+  return storageList(RESP_PREFIX).map(k => {
+    try { return JSON.parse(storageGet(k)); } catch (e) { return null; }
+  }).filter(Boolean).sort((a, b) => (b.created || '').localeCompare(a.created || ''));
+}
+
+function deleteResponse(id, evt) {
+  if (evt) evt.stopPropagation();
+  storageRemove(RESP_PREFIX + id);
+  if (dirHandle) deleteRecordFromDisk(id);
+  renderResponseList();
+}
+
+function renderResponseList() {
+  const list = document.getElementById('respList');
+  if (!list) return;
+  const q = (document.getElementById('respSearch').value || '').toLowerCase();
+  const all = loadAllResponses().filter(r => !q || (r.fragment || '').toLowerCase().includes(q));
+  if (all.length === 0) {
+    list.innerHTML = '<div class="resp-empty">No saved runs yet — every completed run is saved here automatically.</div>';
+    return;
+  }
+  list.innerHTML = '';
+  all.forEach(r => {
+    const item = document.createElement('div');
+    item.className = 'resp-item';
+    item.onclick = () => { recallResponse(r.id); };
+    const time = r.created ? new Date(r.created).toLocaleString() : '';
+    item.innerHTML =
+      '<div class="resp-item-top">' +
+        '<span class="resp-item-tag">3-axis run</span>' +
+        '<span class="resp-item-time">' + escapeHtml(time) + '</span>' +
+      '</div>' +
+      '<div class="resp-item-text">' + escapeHtml(r.fragment || '') + '</div>' +
+      '<div class="resp-item-actions">' +
+        '<button class="del-btn" onclick="deleteResponse(' + JSON.stringify(r.id) + ', event)">Delete</button>' +
+      '</div>';
+    list.appendChild(item);
+  });
+}
+
+// Single-stage recall (Constraint 20B): rebuilds the three-card run shell from
+// the saved record's own fields only, tags it as a replay. Warns before
+// overwrite if a run is currently in flight (Constraint 20B in-progress guard).
+function recallResponse(id) {
+  const record = loadAllResponses().find(r => r.id === id);
+  if (!record) return;
+  if (isRunning) return;
+  if (currentFragment && Object.keys(axisOutputs).length && !confirm('Replace the current run on screen with this saved one?')) return;
+
+  document.getElementById('emptyState').style.display = 'none';
+  const wrapper = document.getElementById('runWrapper');
+  wrapper.style.visibility = 'visible';
+  wrapper.style.pointerEvents = 'all';
+
+  currentFragment = record.fragment;
+  axisOutputs = Object.assign({}, record.outputs);
+  axisStatus = {};
+  AXES.forEach(a => { axisStatus[a.key] = axisOutputs[a.key] ? 'done' : 'error'; });
+  if (typeof fanCells !== 'undefined') fanCells = Object.assign({}, (record.fanCells || {}));
+  var fo = document.getElementById('fanOut'); if (fo) fo.innerHTML = '';
+
+  buildRunShell(record.fragment);
+  const trailNote = document.createElement('div');
+  trailNote.className = 'replay-badge';
+  trailNote.innerHTML = '↺ from saved · ' + escapeHtml(record.created ? new Date(record.created).toLocaleString() : '') +
+    ' <button onclick="closeResp();">close library</button>';
+  document.getElementById('runWrapper').insertBefore(trailNote, document.getElementById('runWrapper').firstChild);
+
+  AXES.forEach(a => {
+    const body = document.getElementById('body-' + a.key);
+    const card = document.getElementById('card-' + a.key);
+    const btn = document.getElementById('copybtn-' + a.key);
+    if (!body) return;
+    body.classList.remove('streaming', 'pending');
+    body.innerHTML = axisOutputs[a.key] ? renderMarkdown(axisOutputs[a.key]) : '<span class="error-inline">(not generated)</span>';
+    if (card) card.classList.remove('loading-card');
+    if (btn) btn.style.display = axisOutputs[a.key] ? 'inline-block' : 'none';
+  });
+
+  document.getElementById('resetBtn').style.display = 'inline-block';
+  closeResp();
+}
+
+function exportResponses() {
+  const all = loadAllResponses();
+  const blob = new Blob([JSON.stringify(all, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = ENGINE_ID + '-responses.json';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function importResponses(file) {
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const arr = JSON.parse(reader.result);
+      if (!Array.isArray(arr)) throw new Error('not an array');
+      arr.forEach(r => {
+        if (!r || !r.id) return;
+        storageSet(RESP_PREFIX + r.id, JSON.stringify(r)); // merge, never overwrite whole store
+      });
+      renderResponseList();
+    } catch (e) {
+      alert('Could not import — file is not a valid response export.');
+    }
+  };
+  reader.readAsText(file);
+  document.getElementById('respImportFile').value = '';
+}
+
+// ── Folder-connect (Constraint 23/23B) — additive mirror on top of localStorage ──
+function setConnDotState(state) {
+  const dot = document.getElementById('respConnDot');
+  const btn = document.getElementById('respConnBtn');
+  dot.classList.remove('connected', 'reconnect');
+  btn.classList.remove('linked', 'needs-reconnect');
+  if (state === 'connected') { dot.classList.add('connected'); btn.classList.add('linked'); btn.textContent = '🗀 Folder connected'; }
+  else if (state === 'reconnect') { dot.classList.add('reconnect'); btn.classList.add('needs-reconnect'); btn.textContent = '🗀 Reconnect required'; }
+  else { btn.textContent = '🗀 Connect folder'; }
+}
+
+async function connectResponseFolder() {
+  const isArtifact = window.self !== window.top;
+  if (isArtifact) { alert('Folder-connect is a standalone-only feature — no real folder access from inside an artifact.'); return; }
+  if (!window.showDirectoryPicker) { alert('Your browser does not support folder access (File System Access API). Use JSON import/export instead.'); return; }
+  try {
+    dirHandle = await window.showDirectoryPicker();
+    setConnDotState('connected');
+    await backfillOnConnect();
+  } catch (e) { /* user cancelled picker */ }
+}
+
+async function backfillOnConnect() {
+  const local = loadAllResponses();
+  for (const record of local) { await saveRecordToDisk(record); }
+}
+
+async function saveRecordToDisk(record) {
+  if (!dirHandle) return;
+  try {
+    const fh = await dirHandle.getFileHandle(record.id + '.json', { create: true });
+    const w = await fh.createWritable();
+    await w.write(JSON.stringify(record, null, 2));
+    await w.close();
+  } catch (e) { /* folder write failure never rolls back localStorage */ }
+}
+
+async function deleteRecordFromDisk(id) {
+  if (!dirHandle) return;
+  try { await dirHandle.removeEntry(id + '.json'); } catch (e) { /* file may already be gone */ }
+}
+
+function openResp() {
+  document.getElementById('respPanel').classList.add('open');
+  document.getElementById('respBackdrop').classList.add('open');
+  renderResponseList();
+}
+function closeResp() {
+  document.getElementById('respPanel').classList.remove('open');
+  document.getElementById('respBackdrop').classList.remove('open');
+}
+document.getElementById('respToggle').addEventListener('click', openResp);
+document.getElementById('respBackdrop').addEventListener('click', closeResp);
+
+window.EnginePanels = { library: true, importExport: true, settings: true };
+
+// ════════════════════════════════════════════════════════════════════════════
+// MODEL CONFIG CONTRACT — config-driven provider/model layer
+// ════════════════════════════════════════════════════════════════════════════
+
+/* MODEL CORE v2 (model-config-contract). Paste verbatim. Edit only the three CONSTANTS. */
+var ENGINE_NAME = 'Fan / Ramify / Flywheel';                                   // CONSTANT 1: shown in X-Title
+var CANONICAL_CONFIG_URL = 'https://raw.githubusercontent.com/meetvenkat1-code/therantai-config/refs/heads/main/model.json';   // CONSTANT 2: never vary
+var LEGACY_KEY_SLOTS = {};                                       // CONSTANT 3: read-only fallbacks, e.g. { groq: ['rl.key.gq'], openrouter: ['rl.key.or'] }
+var DEFAULT_TIMEOUT_MS = 15000, DEFAULT_IDLE_MS = 3000;
+var isArtifact = window.self !== window.top;
+
+var LOCAL_FALLBACK_CONFIG = {                                    // mirrors the live model.json providers and defaultLanes (2026-10-03); model_aliases are deliberately not duplicated
+  native_model: 'claude-sonnet-4-6',
+  defaultLanes: ['groq::openai/gpt-oss-120b', 'or-auto::openrouter/free'],
+  providers: [
+    { id: 'claude', native: true, label: 'Claude · Native', dotColor: '#ef4444', requiresKey: false, defaultFor: ['artifact'] },
+    { id: 'groq', native: false, label: 'Groq', dotColor: '#22c55e', requiresKey: true, keyStorageName: 'groq', keyLabel: 'Groq API Key', keyPlaceholder: 'gsk_…', defaultFor: ['standalone'],
+      endpoint: 'https://api.groq.com/openai/v1/chat/completions', authHeader: 'Authorization', authPrefix: 'Bearer ', requestFormat: 'openai-chat', streamFormat: 'openai',
+      modelChain: ['openai/gpt-oss-120b', 'openai/gpt-oss-20b'], softFallback: { on: [429, 500, 502, 503], within: true }, hardFallback: 'or-auto', timeoutMs: 15000, idleMs: 3000 },
+    { id: 'or-auto', native: false, label: 'OR · Free Router', dotColor: '#f97316', requiresKey: true, keyStorageName: 'openrouter', keyLabel: 'OpenRouter API Key', keyPlaceholder: 'sk-or-…',
+      keyNote: 'Standalone only — OpenRouter has no CORS proxy inside claude.ai', standaloneOnly: true,
+      endpoint: 'https://openrouter.ai/api/v1/chat/completions', authHeader: 'Authorization', authPrefix: 'Bearer ',
+      extraHeaders: { 'HTTP-Referer': '$origin', 'X-Title': '$engineName' }, requestFormat: 'openai-chat', streamFormat: 'openai', modelChain: ['openrouter/free'], softFallback: { on: [429, 500, 502, 503], within: true }, timeoutMs: 45000, idleMs: 9000 }
+  ]
+};
+var liveModelConfig = LOCAL_FALLBACK_CONFIG;                     // boot on the floor, upgrade when the fetch lands
+
+var sleep = function (ms) { return new Promise(function (r) { setTimeout(r, ms); }); };
+function natCmp(a, b) { return a.localeCompare(b, undefined, { numeric: true }); }
+function cfgProviders() { return liveModelConfig.providers; }
+function P(id) { return cfgProviders().filter(function (p) { return p.id === id; })[0] || null; }
+function splitKey(k) { var i = k.indexOf('::'); return { provider: k.slice(0, i), model: k.slice(i + 2) }; }
+
+function isValidConfig(j) {
+  if (!j || !Array.isArray(j.providers) || !j.providers.length) return false;
+  var ids = {}, natives = 0, usable = false;
+  for (var i = 0; i < j.providers.length; i++) {
+    var p = j.providers[i];
+    if (!p || !p.id || !p.label || ids[p.id]) return false;
+    ids[p.id] = 1;
+    if (p.native === true) { natives++; if (isArtifact) usable = true; }
+    else if (p.endpoint && p.requestFormat === 'openai-chat' && !(p.standaloneOnly && isArtifact)) usable = true;
+  }
+  return natives <= 1 && usable;                                 // never adopt a half-valid config
+}
+function usableProviders() {                                     // native only inside claude.ai; standalone never routes it
+  return cfgProviders().filter(function (p) { return p.native === true ? isArtifact : !(p.standaloneOnly && isArtifact); });
+}
+function defaultLanes() {                                        // the floor: config's defaultLanes, else first model of the first usable provider
+  var ok = usableProviders().map(function (p) { return p.id; });
+  var list = (liveModelConfig.defaultLanes || []).filter(function (k) {
+    if (k.indexOf('::') < 1) return false; var s = splitKey(k); return ok.indexOf(s.provider) > -1 && !P(s.provider).native;
+  });
+  if (!list.length) {
+    var p = usableProviders().filter(function (x) { return !x.native && x.modelChain && x.modelChain.length; })[0];
+    if (p) list = [p.id + '::' + p.modelChain[0]];
+  }
+  return list;
+}
+
+function getKey(name) {
+  try {
+    var v = localStorage.getItem('hek_' + name); if (v) return v.trim();
+    var old = LEGACY_KEY_SLOTS[name] || [];
+    for (var i = 0; i < old.length; i++) { var o = localStorage.getItem(old[i]); if (o) return o.trim(); }
+  } catch (e) {}
+  return '';
+}
+function setKey(name, value) { try { localStorage.setItem('hek_' + name, (value || '').trim()); } catch (e) {} }
+function storeKey(storageName, v) { setKey(storageName, v); }
+
+function headersFor(cfg, key) {                                  // CHAT requests only (POST /chat/completions). The picker's GET /models does NOT use this: it uses catalogHeaders (model-catalog-panel v3.2), because these headers force a CORS preflight on a cross-origin GET
+  var h = { 'Content-Type': 'application/json' };
+  if (key && cfg.authHeader) h[cfg.authHeader] = (cfg.authPrefix || '') + key;
+  Object.keys(cfg.extraHeaders || {}).forEach(function (k) {
+    var v = cfg.extraHeaders[k];
+    h[k] = v === '$origin' ? (window.location.origin !== 'null' ? window.location.origin : 'http://localhost') : v === '$engineName' ? ENGINE_NAME : v;
+  });
+  return h;
+}
+function retryAfterSeconds(res, msg) {                           // header first, then Groq's "try again in 26.6s / 1m3.5s / 250ms"
+  var ra = parseFloat(res.headers && res.headers.get && res.headers.get('retry-after')); if (!isNaN(ra)) return ra;
+  var m = /try again in\s+([0-9hms.]+)/i.exec(msg || ''); if (!m) return null;
+  var t = 0; m[1].replace(/(\d+(?:\.\d+)?)(ms|h|m|s)/g, function (_, n, u) { t += parseFloat(n) * { ms: 0.001, s: 1, m: 60, h: 3600 }[u]; });
+  return t || null;
+}
+
+function buildRequest(cfg, modelId, system, user, stream, maxTokens) {
+  if (cfg.native === true) {                                     // HARDCODED BRANCH. Never built from cfg fields.
+    return { url: 'https://api.anthropic.com/v1/messages',
+      headers: { 'Content-Type': 'application/json', 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
+      body: { model: modelId, max_tokens: maxTokens || 4000, stream: stream, system: system || '', messages: [{ role: 'user', content: user }] } };
+  }
+  if (cfg.requestFormat !== 'openai-chat') throw new Error('Unknown requestFormat: ' + cfg.requestFormat);
+  var h = headersFor(cfg, getKey(cfg.keyStorageName));
+  var body = { model: modelId, stream: stream, messages: (system ? [{ role: 'system', content: system }] : []).concat([{ role: 'user', content: user }]) };
+  if (maxTokens) body.max_tokens = maxTokens;
+  return { url: cfg.endpoint, headers: h, body: body };
+}
+
+function readStream(res, format, onChunk, timeoutMs, idleMs, signal) {   // resolves { reason, error }; never rejects
+  var rd = res.body.getReader(), dec = new TextDecoder(), buf = '', done = false, idleT, hardT, reason = null, err = null;
+  timeoutMs = timeoutMs || DEFAULT_TIMEOUT_MS; idleMs = idleMs || DEFAULT_IDLE_MS;
+  return new Promise(function (resolve) {
+    function finish() { if (done) return; done = true; clearTimeout(idleT); clearTimeout(hardT); try { rd.cancel(); } catch (e) {} resolve({ reason: reason, error: err }); }
+    function resetIdle() { clearTimeout(idleT); idleT = setTimeout(finish, idleMs); }
+    hardT = setTimeout(finish, timeoutMs); resetIdle();
+    if (signal) { if (signal.aborted) return finish(); signal.addEventListener('abort', finish, { once: true }); }
+    (function pump() {
+      if (done) return;
+      rd.read().then(function (r) {
+        if (done) return;
+        if (r.done) return finish();
+        buf += dec.decode(r.value, { stream: true });
+        var lines = buf.split('\n'); buf = lines.pop();
+        for (var i = 0; i < lines.length; i++) {
+          var t = lines[i].trim();
+          if (format === 'anthropic' && t === 'event: message_stop') return finish();   // named event line precedes its data: line
+          if (t.indexOf('data:') !== 0) continue;
+          var d = t.slice(5).trim(); if (d === '[DONE]') return finish();
+          try {
+            var p = JSON.parse(d);
+            if (p.error) { err = (p.error.message || 'stream error'); return finish(); }
+            if (format === 'anthropic') {
+              if (p.type === 'content_block_delta' && p.delta && p.delta.text) { onChunk(p.delta.text, null); resetIdle(); }
+              else if (p.type === 'message_delta' && p.delta && p.delta.stop_reason) reason = p.delta.stop_reason === 'max_tokens' ? 'length' : p.delta.stop_reason;
+              else if (p.type === 'message_stop') return finish();
+            } else {
+              var c0 = p.choices && p.choices[0], dl = c0 && c0.delta;
+              if (c0 && c0.finish_reason) reason = c0.finish_reason;
+              if (dl && dl.content) { onChunk(dl.content, p.model || null); resetIdle(); }
+              else if (dl && (dl.reasoning || dl.reasoning_content)) resetIdle();   // thinking counts as alive
+            }
+          } catch (e) {}
+        }
+        pump();
+      }).catch(finish);
+    })();
+  });
+}
+
+/* ONE call layer, two modes.
+   curated: callModel({ provider, system, user, onText, validate })         -> walks modelChain, soft/hard fallback
+   strict : callModel({ provider, model, system, user, onText, maxTokens }) -> exactly that model, never falls through (lanes, panels)
+   onText(accumulatedText, servedModelOrNull) fires on every chunk. Returns { text, model, served, cut }. */
+async function callModel(o) {
+  var cfg = P(o.provider), strict = !!o.model;
+  if (!cfg) throw new Error('Unknown provider: ' + o.provider);
+  if (cfg.standaloneOnly && isArtifact) throw new Error(cfg.label + ' is standalone only. It has no proxy inside claude.ai.');
+  if (cfg.requiresKey && !getKey(cfg.keyStorageName)) throw new Error('No ' + (cfg.keyLabel || cfg.label) + ' saved. Open settings.');
+  var models = strict ? [o.model] : (o.chain || (cfg.native ? [liveModelConfig.native_model] : cfg.modelChain) || []);
+  var lastStatus = null, lastRetry = null;
+  function fail(m) { var e = new Error(m); e.status = lastStatus; e.retryAfter = lastRetry; return e; }   // lets a panel engine show a 429 countdown
+  function aborted() { if (o.signal && o.signal.aborted) { var e = new Error('Aborted'); e.name = 'AbortError'; throw e; } }
+  var advance = ((cfg.softFallback && cfg.softFallback.on) || [429, 500, 502, 503]).concat([400, 404, 422]);
+  var last = '';
+  for (var i = 0; i < models.length; i++) {
+    var retried = false, folded = false, fatal = null;
+    for (var a = 0; a < 3; a++) {
+      aborted();
+      var acc = '', served = null, res;
+      var sys = folded ? '' : o.system, usr = folded ? (o.system ? o.system + '\n\n---\n\n' : '') + o.user : o.user;
+      try {
+        var rq = buildRequest(cfg, models[i], sys, usr, true, o.maxTokens);
+        res = await fetch(rq.url, { method: 'POST', headers: rq.headers, body: JSON.stringify(rq.body), signal: o.signal });
+      } catch (e) { if (e && e.name === 'AbortError') throw e; last = cfg.id + ': network error ' + e.message; break; }
+      if (!res.ok) {
+        var msg = ''; try { var eb = await res.json(); msg = (eb.error && eb.error.message) || ''; } catch (e) {}
+        lastStatus = res.status; lastRetry = retryAfterSeconds(res, msg);
+        if (res.status === 429 && !retried) { retried = true; await sleep(1800); continue; }                       // one retry, then advance
+        if (res.status === 400 && !folded && /system|developer|instruction/i.test(msg)) { folded = true; continue; }   // model rejects the system role
+        last = cfg.id + ':' + res.status + (msg ? ' ' + String(msg).slice(0, 140) : '') + (res.status === 404 ? ' — model not found, refresh the catalog' : '');
+        if (advance.indexOf(res.status) < 0) fatal = last;                                                          // 401/402/403/413: another model will not heal it
+        break;
+      }
+      var out = await readStream(res, cfg.native === true ? 'anthropic' : (cfg.streamFormat || 'openai'), function (c, s) { acc += c; if (s) served = s; if (o.onText) o.onText(acc, served); }, cfg.timeoutMs, cfg.idleMs, o.signal);
+      aborted();
+      if (!acc.trim()) { last = cfg.id + ': empty reply' + (out.reason === 'length' ? ' — the token cap was spent on reasoning' : out.error ? ' — ' + out.error : ''); break; }
+      if (o.validate && !cfg.native) { try { o.validate(acc); } catch (e) { last = cfg.id + ': rejected — ' + e.message; break; } }
+      return { text: acc, model: models[i], served: served, cut: out.reason === 'length' };
+    }
+    if (fatal) throw fail(fatal);                                                                              // stops everything, hardFallback included
+  }
+  var hf = !strict && !o._noHard && cfg.hardFallback ? P(cfg.hardFallback) : null;                                 // strict calls never reach here: lane honesty
+  if (hf) {
+    if (hf.standaloneOnly && isArtifact) throw new Error('All providers exhausted (' + last + '). The fallback (' + hf.label + ') is standalone only.');
+    if (hf.requiresKey && !getKey(hf.keyStorageName)) throw new Error('Provider unavailable (' + last + '). Fallback ' + hf.label + ' has no key.');
+    return callModel({ provider: hf.id, chain: hf.modelChain, system: o.system, user: o.user, onText: o.onText, validate: o.validate, maxTokens: o.maxTokens, _noHard: true });
+  }
+  throw fail(strict ? last : 'Provider unavailable (' + last + ')');
+}
+
+function fetchModelConfig(onApplied) {                           // call once on load, after rendering from the floor
+  return fetch(CANONICAL_CONFIG_URL + '?v=' + Date.now())
+    .then(function (r) { if (!r.ok) throw new Error('Config fetch failed: ' + r.status); return r.json(); })
+    .then(function (j) { if (!isValidConfig(j)) throw new Error('Malformed config'); liveModelConfig = j; return 'live'; })
+    .catch(function () { liveModelConfig = LOCAL_FALLBACK_CONFIG; return 'fallback'; })
+    .then(function (src) { if (onApplied) onApplied(src); return src; });
+}
+
+var KNOWN_MODEL_ALIASES = { 'mistralai/mistral-large': 'mistralai/mistral-large-2411', 'meta-llama/llama-3-70b-instruct': 'meta-llama/llama-3.3-70b-instruct' };
+function modelAliases() { return Object.assign({}, KNOWN_MODEL_ALIASES, liveModelConfig.model_aliases || {}); }
+function modelIdBase(id) { var q = id.split('-'); while (q.length > 1 && /^(v?\d[\d.]*|\d{4,})$/i.test(q[q.length - 1])) q.pop(); return q.join('-'); }
+function resolveModelId(id, live) {                              // only against a catalog the user actually fetched; never across providers
+  if (!live || !live.length || live.indexOf(id) > -1) return { id: id, status: 'ok' };
+  var al = modelAliases()[id]; if (al && live.indexOf(al) > -1) return { id: al, status: 'alias' };
+  var base = modelIdBase(id), c = live.filter(function (x) { return modelIdBase(x) === base; });
+  if (c.length) return { id: c.sort(natCmp).reverse()[0], status: 'fuzzy' };
+  return { id: id, status: 'unresolved' };
+}
+
+/* ───────── Glue: Model Core -> picker (model-catalog-panel v3.2 §1a) ───────── */
+var CAT_KEY = 'fan-ramify-flywheel.v1:catalog';
+var PROVIDERS = {}, DEFAULT_MODELS = [], configSource = 'fallback', uiReady = false;
+var keyOf = function (cfg) { return getKey(cfg.keyStorageName || cfg.id); };
+var isDefault = function (v) { return DEFAULT_MODELS.some(function (d) { return d[0] === v; }); };
+function applyConfigToPicker(src) {
+  configSource = src; Object.keys(PROVIDERS).forEach(function (k) { delete PROVIDERS[k]; });
+  usableProviders().filter(function (p) { return !p.native; }).forEach(function (p) { PROVIDERS[p.id] = { id: p.id, label: p.label, url: p.endpoint, cfg: p }; });
+  DEFAULT_MODELS = defaultLanes().map(function (k) { var s = splitKey(k); return [k, PROVIDERS[s.provider].label + ' · ' + s.model, s.provider]; });
+  if (uiReady) renderConfigUI();
+}
+function defaultModel() { return DEFAULT_MODELS.length ? DEFAULT_MODELS[0][0] : ''; }
+/* ───────── Engine plumbing the Lanes blocks assume ───────── */
+var $id = function (id) { return document.getElementById(String(id).replace(/^#/, '')); };
+var h = function (tag, cls, txt) { var e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; };
+var lsGet = function (k, d) { try { var v = JSON.parse(localStorage.getItem(k)); return v == null ? d : v; } catch (e) { return d; } };
+var lsSet = function (k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
+var MAX_LANES = 12, MAX_CELLS = 12, SETTINGS_KEY = 'fan-ramify-flywheel.v1:settings';
+var S = { settings: Object.assign({ lanes: [], customLanes: [], lanesTouched: false }, lsGet(SETTINGS_KEY, {})) };
+(function migrateLaneKeys() {
+  var s = S.settings, changed = false;
+  if (s.customLanes && s.customLanes.length && typeof s.customLanes[0] === 'string') {
+    s.customLanes = s.customLanes.map(function (k) {
+      var key = String(k).replace(/^openrouter::/, 'or-auto::').replace(/\|/g, '::').replace(/^(pin::)+/, '');
+      return { key: key, provider: splitKey(key).provider, model: splitKey(key).model };
+    });
+    changed = true;
+  }
+  ['lanes'].forEach(function (f) {
+    if (Array.isArray(s[f])) {
+      s[f] = s[f].map(function (k) { return String(k).replace(/^openrouter::/, 'or-auto::').replace(/\|/g, '::').replace(/^(pin::)+/, ''); });
+      changed = true;
+    }
+  });
+  if (changed) lsSet(SETTINGS_KEY, s);
+})();
+var save = function () { lsSet(SETTINGS_KEY, S.settings); };
+function toast(m) { var t = $id('toast'); if (!t) return; t.textContent = m; t.classList.add('show'); clearTimeout(toast._t); toast._t = setTimeout(function () { t.classList.remove('show'); }, 3500); }
+/* ───────── Catalog GET helpers (shared by Lanes and Panel) ───────── */
+var catalogHeaders = function (cfg, k) {
+  if (!k || /openrouter\.ai/.test(cfg.endpoint)) return {};     // OpenRouter's /models is public: no key, no headers, no preflight
+  var hh = headersFor(cfg, k), o = {};
+  var an = (cfg.authHeader || 'Authorization').toLowerCase();
+  Object.keys(hh).forEach(function (n) { if (n.toLowerCase() === an) o[n] = hh[n]; });
+  return o;
+};
+var inflight = {};                                             // one catalog fetch per provider at a time
+
+function setConfigBadge(state) {
+  var el = document.getElementById('configBadge');
+  if (!el) return;
+  if (state === 'live') { el.textContent = 'Config: Live'; el.dataset.state = 'live'; }
+  else { el.textContent = 'Config: Local Fallback'; el.dataset.state = 'fallback'; }
+}
+function getProviderCfg() {
+  var sel = document.getElementById('providerSelect');
+  var id = (sel && sel.value) || (liveModelConfig.providers[0] && liveModelConfig.providers[0].id);
+  return P(id) || liveModelConfig.providers[0];
+}
+function getProvider() { return getProviderCfg().id; }
+function getSelectedProvider() { return getProvider(); }
+function providerBlockedHere(id) { var p = P(id); return !!(p && p.standaloneOnly && isArtifact); }
+
+function updateProviderDot() {
+  var el = document.getElementById('providerDot');
+  if (el) el.style.background = (getProviderCfg().dotColor) || '#9090a8';
+}
+
+function updateWarning() {
+  var cfg = getProviderCfg();
+  var w = document.getElementById('keyWarn');
+  if (!w) return;
+  if (!cfg.requiresKey) { w.classList.remove('visible'); return; }
+  w.classList.toggle('visible', !getKey(cfg.keyStorageName));
+}
+
+function saveKey(storageName) {
+  var el = document.getElementById('keyfield_' + storageName);
+  if (!el) return;
+  setKey(storageName, el.value.trim());
+  var conf = document.getElementById('saved_' + storageName);
+  if (conf) { conf.style.display = 'block'; setTimeout(function () { conf.style.display = 'none'; }, 1500); }
+  updateWarning();
+  setTimeout(function () { closeDrawer(); }, 1600);
+}
+
+/* callAI: unchanged contract (hybrid-engine-contract), everything underneath is the Model Core (curated mode) */
+async function callAI(systemPrompt, userMessage, onChunk) {
+  var prev = 0;
+  await callModel({ provider: getSelectedProvider(), system: systemPrompt, user: userMessage,
+    onText: function (acc) { if (acc.length < prev) prev = 0; onChunk(acc.slice(prev)); prev = acc.length; } });
+}
+
+document.getElementById('providerSelect').addEventListener('change', function () {
+  updateProviderDot();
+  updateWarning();
+});
+
+// ── DYNAMIC PROVIDER SELECTOR (matrix variant keeps it for the curated Run) ──
+function renderProviderSelector() {
+  var select = document.getElementById('providerSelect');
+  select.innerHTML = '';
+  usableProviders().forEach(function (p) {
+    var opt = document.createElement('option');
+    opt.value = p.id;
+    opt.textContent = p.label;
+    select.appendChild(opt);
+  });
+  var want = isArtifact ? 'artifact' : 'standalone';
+  var match = usableProviders().filter(function (p) { return (p.defaultFor || []).indexOf(want) > -1; })[0] || usableProviders()[0];
+  if (match) select.value = match.id;
+  updateProviderDot();
+}
+function afterConfigUI() { renderProviderSelector(); }
+
+// ── DYNAMIC DRAWER KEY ROWS (legacy block, kept for the API-Keys section) ──
+function buildNativeNoteRow(p) {
+  var div = document.createElement('div');
+  div.className = 'drawer-field';
+  var lab = document.createElement('label'); lab.textContent = p.label;
+  var note = document.createElement('div'); note.className = 'native-note'; note.textContent = 'No key needed — platform routes natively.';
+  div.appendChild(lab); div.appendChild(note);
+  return div;
+}
+function buildKeyInputRow(p) {
+  var div = document.createElement('div');
+  div.className = 'drawer-field';
+  var lab = document.createElement('label'); lab.textContent = p.keyLabel || (p.label + ' Key');
+  var row = document.createElement('div'); row.className = 'key-input-row';
+  var inp = document.createElement('input'); inp.className = 'key-input'; inp.type = 'password';
+  inp.id = 'keyfield_' + p.keyStorageName; inp.placeholder = p.keyPlaceholder || ''; inp.autocomplete = 'off';
+  inp.value = getKey(p.keyStorageName);
+  var btn = document.createElement('button'); btn.className = 'save-btn'; btn.textContent = 'Save';
+  btn.addEventListener('click', function () { saveKey(p.keyStorageName); });
+  row.appendChild(inp); row.appendChild(btn);
+  div.appendChild(lab); div.appendChild(row);
+  var conf = document.createElement('div'); conf.className = 'save-confirm'; conf.id = 'saved_' + p.keyStorageName; conf.textContent = '✓ Saved';
+  div.appendChild(conf);
+  if (p.keyNote) { var n = document.createElement('div'); n.className = 'native-note'; n.textContent = p.keyNote; div.appendChild(n); }
+  return div;
+}
+function renderDrawerKeyRows() {
+  var container = document.getElementById('drawerKeyRows');
+  if (!container) return;
+  container.innerHTML = '';
+  usableProviders().forEach(function (p) {
+    container.appendChild(!p.requiresKey ? buildNativeNoteRow(p) : buildKeyInputRow(p));
+    var hr = document.createElement('hr');
+    hr.className = 'drawer-divider';
+    container.appendChild(hr);
+  });
+}
+
+/* ───────── Lanes (model-catalog-panel v3.2 Mode A: A1 + A4 + A5 base set) ───────── */
+var catalog = lsGet(CAT_KEY, {}), tierSel = 'all', activeProv = null;
+var TIERS = ['free', 'cheap', 'medium', 'premium', 'n/a'];
+function tierOf(m) {
+  if (/:free$/.test(m.id) || m.price === 0) return 'free';
+  if (m.price == null) return 'n/a';
+  if (m.price * 1e6 < 0.5) return 'cheap';
+  if (m.price * 1e6 < 3) return 'medium';
+  return 'premium';
+}
+function laneList() {
+  var seen = {}, out = [];
+  function add(key, pinned) { var s = splitKey(key); if (seen[key] || !PROVIDERS[s.provider]) return; seen[key] = 1; out.push({ key: key, pid: s.provider, m: s.model, pinned: pinned }); }
+  defaultLanes().forEach(function (k) { add(k, false); });
+  (S.settings.customLanes || []).forEach(function (c) { add(c.key, true); });
+  return out;
+}
+function activeKeys() {
+  var all = laneList().map(function (l) { return l.key; });
+  if (!S.settings.lanesTouched) { var d = defaultLanes()[0]; return d && all.indexOf(d) > -1 ? [d] : []; }
+  return S.settings.lanes.filter(function (k) { return all.indexOf(k) > -1; });
+}
+function setLane(key, on) {
+  var cur = activeKeys().slice(), i = cur.indexOf(key);
+  if (on && i < 0) { if (cur.length >= MAX_LANES) { toast('Max ' + MAX_LANES + ' lanes — deselect one first'); return false; } cur.push(key); }
+  else if (!on && i > -1) cur.splice(i, 1);
+  S.settings.lanes = cur; S.settings.lanesTouched = true; save(); return true;
+}
+function togglePin(pid, m, cb) {
+  var key = pid + '::' + m.id, cl = S.settings.customLanes, i = cl.map(function (c) { return c.key; }).indexOf(key);
+  if (cb.checked) {
+    if (!setLane(key, true)) { cb.checked = false; return; }
+    if (i < 0) cl.push({ key: key, provider: pid, model: m.id });
+  } else { setLane(key, false); if (i > -1) cl.splice(i, 1); }
+  save(); renderLanes(); renderCatalog();
+  if (cb.closest) { var r = cb.closest('.mrow'); if (r) r.classList.toggle('pinned', cb.checked); }
+}
+function resolveCustom(lanes) {
+  var moved = [];
+  lanes.forEach(function (l) {
+    if (!l.pinned || !catalog[l.pid]) return;
+    var r = resolveModelId(l.m, catalog[l.pid].models.map(function (m) { return m.id; }));
+    if (r.status === 'alias' || r.status === 'fuzzy') { moved.push(l.m.split('/').pop() + ' → ' + r.id.split('/').pop()); l.m = r.id; }
+  });
+  if (moved.length) toast('Model id updated: ' + moved.join(', '));
+}
+async function fetchCatalog(pid) {
+  if (inflight[pid]) return; inflight[pid] = true;
+  var pv = PROVIDERS[pid], st = $id('catStatus');
+  if (st) st.textContent = 'Fetching ' + pv.label + '…';
+  try {
+    var k = keyOf(pv.cfg);
+    var r = await fetch(pv.url.replace(/\/chat\/completions\/?$/, '/models'), { headers: catalogHeaders(pv.cfg, k) });
+    if (r.status === 401 || r.status === 403) throw new Error(pv.label + ' catalog needs a saved key (Keys below).');
+    if (!r.ok) throw new Error(pv.label + ' catalog failed (' + r.status + ')');
+    var j = await r.json();
+    var list = (j.data || []).map(function (m) {
+      if (!m || !m.id) return null;
+      if (/whisper|tts|orpheus|embed|guard|moderation|playai/i.test(m.id)) return null;
+      var pIn = null;
+      if (m.pricing && m.pricing.prompt != null) { pIn = parseFloat(m.pricing.prompt); if (isNaN(pIn) || pIn < 0) pIn = null; }
+      if (pIn === null && /:free$/.test(m.id)) pIn = 0;
+      return { id: m.id, name: m.name || '', ctx: m.context_length || m.context_window || null, price: pIn };
+    }).filter(Boolean);
+    list.forEach(function (m) { m.tier = tierOf(m); });
+    list.sort(function (a, b) { return TIERS.indexOf(a.tier) - TIERS.indexOf(b.tier) || natCmp(a.id, b.id); });
+    if (!list.length) throw new Error('no chat models returned');
+    catalog[pid] = { t: Date.now(), models: list }; lsSet(CAT_KEY, catalog);
+    if (st) st.textContent = list.length + ' models from ' + pv.label + '.';
+  } catch (e) { if (st) st.textContent = e.message; }
+  finally { delete inflight[pid]; }
+  renderCatalog();
+}
+function matcher(q) {
+  q = q.trim(); if (!q) return function () { return true; };
+  var m = q.match(/^\/(.+)\/([a-z]*)$/);
+  if (m) { try { var re = new RegExp(m[1], m[2]); return function (s) { return re.test(s); }; } catch (e) { return function () { return false; }; } }
+  q = q.toLowerCase();
+  return function (s) { return s.toLowerCase().indexOf(q) > -1; };
+}
+function chip(txt, on, fn) {
+  var b = document.createElement('button'); b.type = 'button';
+  b.className = 'tchip' + (on ? ' on' : ''); b.textContent = txt;
+  b.addEventListener('click', fn); return b;
+}
+function renderCatalog() {
+  var pb = $id('provBtns'); if (!pb) return;
+  pb.innerHTML = '';
+  Object.values(PROVIDERS).forEach(function (p) {
+    var n = catalog[p.id] ? catalog[p.id].models.length : 0;
+    pb.appendChild(chip(p.label + (n ? ' (' + n + ') ↻' : ' — fetch'), activeProv === p.id, function () {
+      var was = activeProv === p.id; activeProv = p.id; renderCatalog();
+      if (!catalog[p.id] || was) fetchCatalog(p.id);
+    }));
+  });
+  var tc = $id('tierChips'); tc.innerHTML = '';
+  ['all', 'pinned'].concat(TIERS).forEach(function (t) {
+    tc.appendChild(chip(t === 'pinned' ? 'Pinned (' + S.settings.customLanes.length + ')' : t, tierSel === t, function () { tierSel = t; renderCatalog(); }));
+  });
+  var box = $id('catRows'); box.innerHTML = '';
+  var c = catalog[activeProv]; if (!c) { var st0 = $id('catStatus'); if (st0 && !st0.textContent) st0.textContent = 'Fetch this provider\u2019s live model list to browse it.'; return; }
+  var test = matcher($id('catSearch').value || ''), act = activeKeys();
+  var isPin = function (id) { return S.settings.customLanes.some(function (x) { return x.key === activeProv + '::' + id; }); };
+  var rows = c.models.filter(function (m) { return (tierSel === 'all' || (tierSel === 'pinned' ? isPin(m.id) : m.tier === tierSel)) && test(m.id + ' ' + m.name); });
+  rows.slice(0, 150).forEach(function (m) {
+    var lab = document.createElement('label'); lab.className = 'mrow' + (isPin(m.id) ? ' pinned' : '');
+    var cb = document.createElement('input'); cb.type = 'checkbox'; cb.checked = act.indexOf(activeProv + '::' + m.id) > -1;
+    cb.addEventListener('change', function () { togglePin(activeProv, m, cb); });
+    var txt = document.createElement('span'); txt.textContent = m.id;
+    var meta = document.createElement('span'); meta.className = 'meta';
+    meta.textContent = [m.ctx ? Math.round(m.ctx / 1000) + 'k ctx' : '', m.tier === 'free' ? 'FREE' : (m.price != null ? '$' + (m.price * 1e6).toFixed(2) + '/M in' : '')].filter(Boolean).join(' · ');
+    lab.appendChild(cb); lab.appendChild(txt); lab.appendChild(meta); box.appendChild(lab);
+  });
+  if (rows.length > 150) { var f = document.createElement('div'); f.className = 'key-note'; f.textContent = 'Showing 150 of ' + rows.length + ' — narrow with search.'; box.appendChild(f); }
+  var st = $id('catStatus');
+  if (st && c) st.textContent = rows.length + ' shown · fetched ' + new Date(c.t).toLocaleTimeString();
+}
+var laneLabel = function (l) { return (PROVIDERS[l.pid] ? PROVIDERS[l.pid].label : l.pid) + ' · ' + l.m; };
+function updateRunControls() {
+  var act = laneList().filter(function (l) { return activeKeys().indexOf(l.key) > -1; }), first = act[0];
+  var fb = $id('fanBtn'); if (fb) { fb.textContent = 'Fan out (' + act.length + ')'; fb.disabled = false; }
+  var lt = $id('laneTxt'); if (lt) lt.textContent = !act.length ? 'no lane' : act.length === 1 ? laneLabel(first) : act.length + ' lanes';
+  var ld = $id('laneDot'); if (ld) ld.style.background = (first && PROVIDERS[first.pid] && PROVIDERS[first.pid].cfg.dotColor) || '#9090a8';
+}
+function renderLanes() {
+  var box = $id('laneList'); if (!box) return;
+  box.innerHTML = ''; var act = activeKeys();
+  laneList().forEach(function (l) {
+    var lab = document.createElement('label'); lab.className = 'mrow' + (l.pinned ? ' pinned' : '');
+    var cb = document.createElement('input'); cb.type = 'checkbox'; cb.checked = act.indexOf(l.key) > -1;
+    cb.addEventListener('change', function () { if (!setLane(l.key, cb.checked)) cb.checked = false; renderLanes(); renderCatalog(); });
+    var dot = document.createElement('span'); dot.className = 'provider-dot';
+    dot.style.cssText = 'display:inline-block;margin-right:6px;background:' + ((PROVIDERS[l.pid] && PROVIDERS[l.pid].cfg.dotColor) || '#9090a8');
+    lab.appendChild(cb); lab.appendChild(dot); lab.appendChild(document.createTextNode((l.pinned ? '★ ' : '') + laneLabel(l)));
+    if (l.pinned) {
+      var x = document.createElement('span'); x.textContent = '  ×'; x.style.color = 'var(--red, #ef4444)';
+      x.addEventListener('click', function (e) { e.preventDefault(); e.stopPropagation(); S.settings.customLanes = S.settings.customLanes.filter(function (cc) { return cc.key !== l.key; }); setLane(l.key, false); renderLanes(); renderCatalog(); });
+      lab.appendChild(x);
+    }
+    box.appendChild(lab);
+  });
+  var n = act.length, lc = $id('laneCount');
+  if (lc) lc.textContent = n + ' of ' + laneList().length + ' lanes active (max ' + MAX_LANES + ')' + (n > 6 ? ' · large fan-outs can hit provider rate limits' : '');
+  updateRunControls();
+}
+function renderKeyRows() {
+  var box = $id('keyFields'); if (!box) return;
+  box.innerHTML = '';
+  usableProviders().filter(function (p) { return !p.native && p.requiresKey; }).forEach(function (p) {
+    var wrap = document.createElement('div'); wrap.className = 'drawer-field';
+    var lab = document.createElement('label'); lab.textContent = p.keyLabel || (p.label + ' Key');
+    var inp = document.createElement('input'); inp.className = 'key-input'; inp.type = 'password'; inp.autocomplete = 'off';
+    inp.placeholder = p.keyPlaceholder || ''; inp.id = 'keyInput_' + p.keyStorageName; inp.value = getKey(p.keyStorageName);
+    wrap.appendChild(lab); wrap.appendChild(inp);
+    if (p.keyNote) { var nn = document.createElement('div'); nn.className = 'key-note'; nn.textContent = p.keyNote; wrap.appendChild(nn); }
+    box.appendChild(wrap);
+  });
+}
+function wireKeys() {
+  var sv = $id('saveKeysBtn'), cl = $id('clearKeysBtn'), cs = $id('catSearch');
+  if (sv) sv.addEventListener('click', function () {
+    usableProviders().filter(function (p) { return !p.native && p.requiresKey; }).forEach(function (p) {
+      var el = $id('keyInput_' + p.keyStorageName); if (el) setKey(p.keyStorageName, el.value);
+    });
+    toast('Keys saved'); updateWarning(); closeDrawer();
+  });
+  if (cl) cl.addEventListener('click', function () {
+    usableProviders().filter(function (p) { return !p.native; }).forEach(function (p) {
+      try { localStorage.removeItem('hek_' + p.keyStorageName); } catch (e) {}
+      (LEGACY_KEY_SLOTS[p.keyStorageName] || []).forEach(function (k) { try { localStorage.removeItem(k); } catch (e) {} });
+    });
+    renderKeyRows(); renderDrawerKeyRows(); toast('Saved keys cleared from this device');
+  });
+  if (cs) cs.addEventListener('input', renderCatalog);
+}
+function renderConfigUI() {
+  setConfigBadge(configSource);
+  if (!activeProv || !PROVIDERS[activeProv]) activeProv = Object.keys(PROVIDERS)[0];
+  renderLanes(); renderCatalog(); renderKeyRows(); renderDrawerKeyRows();
+  updateWarning();
+  if (typeof afterConfigUI === 'function') afterConfigUI();
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// GEAR DRAWER (Constraint 06)
+// ════════════════════════════════════════════════════════════════════════════
+
+function openDrawer() {
+  renderLanes(); renderCatalog(); renderKeyRows();
+  usableProviders().forEach(function (p) {
+    if (!p.requiresKey) return;
+    var el = document.getElementById('keyfield_' + p.keyStorageName);
+    if (el) el.value = getKey(p.keyStorageName);
+    var el2 = $id('keyInput_' + p.keyStorageName);
+    if (el2) el2.value = getKey(p.keyStorageName);
+  });
+  document.getElementById('gearDrawer').classList.add('open');
+  document.getElementById('drawerBackdrop').classList.add('open');
+}
+function closeDrawer() {
+  document.getElementById('gearDrawer').classList.remove('open');
+  document.getElementById('drawerBackdrop').classList.remove('open');
+}
+document.getElementById('gearBtn').addEventListener('click', openDrawer);
+document.getElementById('drawerBackdrop').addEventListener('click', closeDrawer);
+
+// ════════════════════════════════════════════════════════════════════════════
+// AXIS NAV PANEL (Constraint 01 — collapsible overlay)
+// ════════════════════════════════════════════════════════════════════════════
+
+function openNav() {
+  document.getElementById('axisPanel').classList.add('open');
+  document.getElementById('navBackdrop').classList.add('open');
+}
+function closeNav() {
+  document.getElementById('axisPanel').classList.remove('open');
+  document.getElementById('navBackdrop').classList.remove('open');
+}
+document.getElementById('navToggle').addEventListener('click', openNav);
+document.getElementById('navBackdrop').addEventListener('click', closeNav);
+
+function scrollToAxis(key) {
+  const card = document.getElementById('card-' + key);
+  if (card) card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  closeNav();
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// MARKDOWN RENDERER (Constraint 02)
+// ════════════════════════════════════════════════════════════════════════════
+
+function renderMarkdown(raw) {
+  let s = raw
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+
+  s = s.replace(/```([\s\S]*?)```/g, (_, code) => '<pre><code>' + code.trim() + '</code></pre>');
+  s = s.replace(/\*\*\*(.*?)\*\*\*/g, '<strong><em>$1</em></strong>');
+  s = s.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+  s = s.replace(/\*(.*?)\*/g, '<em>$1</em>');
+  s = s.replace(/_(.*?)_/g, '<em>$1</em>');
+  s = s.replace(/`([^`]+)`/g, '<code>$1</code>');
+  s = s.replace(/^---$/gm, '<hr>');
+  s = s.replace(/^### (.+)$/gm, '<h3>$1</h3>');
+  s = s.replace(/^## (.+)$/gm, '<h2>$1</h2>');
+  s = s.replace(/^# (.+)$/gm, '<h1>$1</h1>');
+  s = s.replace(/^[-*] (.+)$/gm, '<li>$1</li>');
+  s = s.replace(/(<li>[\s\S]*?<\/li>)/g, '<ul>$1</ul>');
+  s = s.replace(/^\d+\. (.+)$/gm, '<li>$1</li>');
+
+  const paras = s.split(/\n{2,}/);
+  s = paras.map(p => {
+    p = p.trim();
+    if (!p) return '';
+    if (/^<(h[1-3]|ul|ol|li|hr|pre)/.test(p)) return p;
+    return '<p>' + p.replace(/\n/g, '<br>') + '</p>';
+  }).filter(Boolean).join('');
+
+  return s;
+}
+
+function escapeHtml(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// CANONICAL COPY (Constraint 05 — sole transport law)
+// ════════════════════════════════════════════════════════════════════════════
+
+function copyToClipboard(text, btn) {
+  if (!text || !text.trim()) return;
+  var origHTML = btn.innerHTML;
+  var ICON_CHECK = '<svg viewBox="0 0 24 24" style="width:11px;height:11px;stroke:currentColor;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+  function onSuccess() { btn.innerHTML = ICON_CHECK + ' Copied'; btn.classList.add('copied'); setTimeout(function(){ btn.innerHTML=origHTML; btn.classList.remove('copied'); },2000); }
+  function onFail() { btn.textContent = '✗ Failed'; setTimeout(function(){ btn.innerHTML=origHTML; },2000); }
+  function execCopy() {
+    var ta = document.createElement('textarea'); ta.value = text;
+    ta.style.cssText = 'position:fixed;left:-9999px;top:-9999px;opacity:0;font-size:12px;pointer-events:none;';
+    ta.setAttribute('readonly','');
+    document.body.appendChild(ta); ta.focus(); ta.select(); ta.setSelectionRange(0,text.length);
+    var ok=false; try{ ok=document.execCommand('copy'); }catch(e){}
+    document.body.removeChild(ta); ok ? onSuccess() : onFail();
+  }
+  if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(text).then(onSuccess).catch(execCopy); }
+  else { execCopy(); }
+}
+
+function copyAxis(key) {
+  var btn = document.getElementById('copybtn-' + key);
+  var text = axisOutputs[key] || '';
+  if (btn && text) copyToClipboard(text, btn);
+}
+
+function copyAll() {
+  var btn = document.getElementById('copyAllBtn');
+  if (!btn) return;
+  var live = document.getElementById('runWrapper');
+  var text;
+  if (live && live.innerText && live.innerText.trim()) {
+    text = live.innerText;
+  } else {
+    text = '— Fragment —\n\n' + currentFragment + '\n';
+    AXES.forEach(function (a, i) {
+      text += '\n\n— Stage ' + ('0' + (i + 1)).slice(-2) + ': ' + a.label + ' —\n\n';
+      text += (axisOutputs[a.key] || '(not generated)');
+    });
+  }
+  copyToClipboard(text, btn);
+}
+
+function copyCell(key) {
+  var btn = document.getElementById('copy-' + key);
+  var el = document.getElementById('cell-' + key);
+  var text = (el && el.innerText) || fanCells[key] || '';
+  if (btn && text) copyToClipboard(text, btn);
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// STREAMING + CALLS — owned by the Model Core v2 above (readStream, buildRequest, callModel).
+// Curated path uses the callAI wrapper; lanes use strict callModel per lane (lane honesty).
+// No engine-local readStream / request builder / chain-walk lives here.
+// ════════════════════════════════════════════════════════════════════════════
+
+// ════════════════════════════════════════════════════════════════════════════
+// SHELL — fragment header + three parallel axis cards
+// ════════════════════════════════════════════════════════════════════════════
+
+function buildRunShell(fragment) {
+  const wrapper = document.getElementById('runWrapper');
+  wrapper.innerHTML = '';
+
+  const header = document.createElement('div');
+  header.className = 'fragment-header';
+  header.innerHTML =
+    '<div class="fragment-block"><span class="fragment-eyebrow">Fragment Fed In</span>' +
+    '<span class="fragment-text">' + escapeHtml(fragment) + '</span></div>' +
+    '<div class="fragment-actions"><button class="copy-btn" id="copyAllBtn" onclick="copyAll(this)"><svg viewBox="0 0 24 24" style="width:11px;height:11px;stroke:currentColor;fill:none;stroke-width:1.8"><path d="M9 9h11v11H9z"/><path d="M5 15V4h11"/></svg> Copy All Axes</button></div>';
+  wrapper.appendChild(header);
+
+  const grid = document.createElement('div');
+  grid.className = 'axis-grid';
+
+  AXES.forEach(a => {
+    const card = document.createElement('div');
+    card.className = 'axis-card';
+    card.id = 'card-' + a.key;
+    card.dataset.axis = a.key;
+    card.innerHTML =
+      '<div class="axis-card-header">' +
+        '<div class="axis-card-glyph">' + a.glyph + '</div>' +
+        '<div class="axis-card-title-block"><div class="axis-card-title">' + a.label + '</div>' +
+        '<div class="axis-card-sub">' + a.sub + '</div></div>' +
+        '<span class="axis-status-tag" id="tag-' + a.key + '">pending</span>' +
+        '<button class="copy-btn" id="copybtn-' + a.key + '" data-key="' + a.key + '" onclick="copyAxis(this.dataset.key)" style="display:none;"><svg viewBox="0 0 24 24" style="width:11px;height:11px;stroke:currentColor;fill:none;stroke-width:1.8"><path d="M9 9h11v11H9z"/><path d="M5 15V4h11"/></svg> Copy</button>' +
+      '</div>' +
+      '<div class="axis-card-body pending" id="body-' + a.key + '">Awaiting the turn…</div>';
+    grid.appendChild(card);
+  });
+
+  wrapper.appendChild(grid);
+}
+
+function setAxisUI(key, state) {
+  const card = document.getElementById('card-' + key);
+  const tag  = document.getElementById('tag-' + key);
+  const copyBtn = document.getElementById('copybtn-' + key);
+  if (!card || !tag) return;
+
+  card.classList.remove('active-card', 'loading-card');
+  tag.classList.remove('live', 'done');
+
+  if (state === 'active') {
+    card.classList.add('active-card', 'loading-card');
+    tag.textContent = 'turning';
+    tag.classList.add('live');
+  } else if (state === 'done') {
+    tag.textContent = 'complete';
+    tag.classList.add('done');
+    if (copyBtn) copyBtn.style.display = 'inline-block';
+  } else if (state === 'error') {
+    tag.textContent = 'error';
+  }
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// AXIS EXECUTION — each portal runs independently, in parallel
+// ════════════════════════════════════════════════════════════════════════════
+
+var axisServed = {}, axisModel = {};
+var fanCells = {}, fanRunning = false;
+
+async function runAxis(axis, fragment) {
+  const key = axis.key;
+  axisStatus[key] = 'active';
+  setAxisUI(key, 'active');
+
+  const body = document.getElementById('body-' + key);
+  body.classList.remove('pending');
+  body.classList.add('streaming');
+  body.innerHTML = '';
+
+  const userMessage = 'Fragment: "' + fragment + '"\n\nRun your axis on this fragment.';
+  let accumulated = '';
+
+  try {
+    var prov = getSelectedProvider();
+    var s = splitKey(prov.indexOf('::') > -1 ? prov : prov + '::x');
+    if (provBlockedHere(s.provider)) throw new Error(P(s.provider).label + ' is standalone only. It has no proxy inside claude.ai.');
+    var r = await callModel({ provider: getProvider(), system: axis.system, user: userMessage,
+      onText: function (acc, served) { accumulated = acc; body.innerHTML = renderMarkdown(accumulated); if (served) axisServed[key] = served; } });
+    axisModel[key] = r.model; if (r.served) axisServed[key] = r.served;
+
+    body.classList.remove('streaming');
+    axisOutputs[key] = accumulated.trim();
+    axisStatus[key] = 'done';
+    setAxisUI(key, 'done');
+    var tag = document.getElementById('tag-' + key);
+    if (tag && axisServed[key]) tag.textContent = 'complete · served: ' + axisServed[key];
+    document.getElementById('card-' + key).classList.remove('loading-card');
+
+  } catch (err) {
+    body.classList.remove('streaming');
+    body.innerHTML = '<span class="error-inline">⚠ ' + escapeHtml(err.message) + '</span>';
+    axisStatus[key] = 'error';
+    setAxisUI(key, 'error');
+    document.getElementById('card-' + key).classList.remove('loading-card');
+  }
+}
+
+/* ───────── Matrix dispatch: cells = axes x lanes (model-catalog-panel v3.2 A3d) ───────── */
+function getInput() { return (document.getElementById('fragmentInput').value || '').trim(); }
+function getUnits() { return AXES.map(function (a) { return { key: a.key, label: a.label, sub: a.sub, system: a.system }; }); }
+function laneCaller(l, cellKey) {
+  return function (system, user, onPartial) {
+    return callModel({ provider: l.pid, model: l.m, system: system, user: user,
+      onText: function (acc, served) { onPartial(acc); if (served && served !== l.m) markServed(cellKey, served); } }).then(function (r) { return r.text; });
+  };
+}
+function markServed(cellKey, served) {
+  var hd = document.getElementById('head-' + cellKey);
+  if (hd && hd.getAttribute('data-served') !== '1') {
+    hd.setAttribute('data-served', '1');
+    var sp = document.createElement('span'); sp.className = 'served-tag'; sp.textContent = ' → served: ' + served;
+    hd.appendChild(sp);
+  }
+}
+function buildCell(grid, cellKey, label, sub) {
+  var col = document.createElement('div'); col.className = 'lane-col';
+  var hd = document.createElement('div'); hd.className = 'lane-col-header'; hd.id = 'head-' + cellKey;
+  var dot = document.createElement('span'); dot.className = 'provider-dot';
+  hd.appendChild(dot); hd.appendChild(document.createTextNode(label));
+  var bd = document.createElement('div'); bd.className = 'lane-col-body'; bd.id = 'cell-' + cellKey; bd.textContent = 'Queued…';
+  var cp = document.createElement('button'); cp.className = 'copy-btn'; cp.id = 'copy-' + cellKey;
+  cp.innerHTML = 'Copy'; cp.addEventListener('click', function () { copyCell(cellKey); });
+  col.appendChild(hd); col.appendChild(bd); col.appendChild(cp);
+  grid.appendChild(col);
+  return { dot: dot, body: bd };
+}
+async function runUnit(cellKey, unit, call, input) {
+  var bd = document.getElementById('cell-' + cellKey);
+  var user = 'Fragment: "' + input + '"\n\nRun your axis on this fragment.';
+  try {
+    var final = await call(unit.system, user, function (acc) { bd.innerHTML = renderMarkdown(acc); fanCells[cellKey] = acc; });
+    fanCells[cellKey] = final;
+    bd.innerHTML = renderMarkdown(final);
+  } catch (e) {
+    fanCells[cellKey] = String(e.message || e);
+    bd.innerHTML = '<span class="error-inline">⚠ ' + escapeHtml(String(e.message || e)) + '</span>';
+  }
+}
+async function fanOut() {
+  if (isRunning || fanRunning) return;
+  var input = getInput(); if (!input) return;
+  var lanes = laneList().filter(function (l) { return activeKeys().indexOf(l.key) > -1; });
+  if (!lanes.length) { toast('Select lanes in settings'); openDrawer(); return; }
+  var units = getUnits(), cells = units.length * lanes.length;
+  if (cells > MAX_CELLS) { toast(units.length + ' axes × ' + lanes.length + ' lanes = ' + cells + ' runs, max ' + MAX_CELLS); return; }
+  resolveCustom(lanes);
+  fanRunning = true;
+  var fb = document.getElementById('fanBtn'); if (fb) fb.disabled = true;
+  document.getElementById('emptyState').style.display = 'none';
+  var wrapper = document.getElementById('runWrapper');
+  wrapper.style.visibility = 'visible'; wrapper.style.pointerEvents = 'all';
+  var out = document.getElementById('fanOut'); out.innerHTML = '';
+  fanCells = {};
+  currentFragment = input;
+  var keyOf2 = function (u, li) { return 'fan-' + u.key + '-' + li; };
+  units.forEach(function (u) {
+    var g = document.createElement('div'); g.className = 'fan-group';
+    var hh = document.createElement('div'); hh.className = 'fan-h'; hh.textContent = u.label + ' × ' + lanes.length + ' lanes';
+    g.appendChild(hh);
+    var grid = document.createElement('div'); grid.className = 'cards-grid'; g.appendChild(grid); out.appendChild(g);
+    lanes.forEach(function (l, li) {
+      var refs = buildCell(grid, keyOf2(u, li), laneLabel(l), u.sub);
+      refs.dot.style.background = ((PROVIDERS[l.pid] && PROVIDERS[l.pid].cfg.dotColor) || '#9090a8');
+    });
+  });
+  await Promise.allSettled(lanes.map(function (l, li) {
+    return sleep(li * 220).then(async function () {
+      for (var ui = 0; ui < units.length; ui++) {
+        var u = units[ui], k = keyOf2(u, li);
+        await runUnit(k, u, laneCaller(l, k), input);
+      }
+    });
+  }));
+  fanRunning = false;
+  if (fb) fb.disabled = false;
+  renderLanes();
+  document.getElementById('resetBtn').style.display = 'inline-block';
+}
+
+async function runEngine() {
+  if (isRunning || fanRunning) return;
+  const fragment = document.getElementById('fragmentInput').value.trim();
+  if (!fragment) return;
+
+  var selProv = getProvider();
+  if (providerBlockedHere(selProv)) { toast(P(selProv).label + ' is standalone only inside claude.ai — switch provider.'); return; }
+  var pcfg = P(selProv);
+  if (pcfg && pcfg.requiresKey && !getKey(pcfg.keyStorageName)) { openDrawer(); return; }
+
+  isRunning = true;
+  currentFragment = fragment;
+  axisOutputs = {};
+  axisStatus  = {};
+  axisServed = {}; axisModel = {};
+  document.getElementById('fanOut').innerHTML = ''; fanCells = {};
+
+  const runBtn = document.getElementById('runBtn');
+  const runBtnLabel = document.getElementById('runBtnLabel');
+  const resetBtn = document.getElementById('resetBtn');
+  runBtn.disabled = true;
+  runBtnLabel.textContent = '⟳ Turning…';
+  resetBtn.style.display = 'none';
+
+  document.getElementById('emptyState').style.display = 'none';
+  const wrapper = document.getElementById('runWrapper');
+  wrapper.style.visibility = 'visible';
+  wrapper.style.pointerEvents = 'all';
+
+  buildRunShell(fragment);
+
+  // Fire all three axes in parallel — none reads the others' output.
+  // Sequential on Claude Native (shared artifact proxy budget); parallel elsewhere.
+  if (selProv === 'claude' && isArtifact) {
+    for (const a of AXES) { await runAxis(a, fragment); }
+  } else {
+    await Promise.all(AXES.map(a => runAxis(a, fragment)));
+  }
+
+  saveResponseRecord(); // Constraint 20 — auto-save on completion, never opt-in
+
+  isRunning = false;
+  runBtn.disabled = false;
+  runBtnLabel.textContent = '▶ Run Axes';
+  resetBtn.style.display = 'inline-block';
+}
+
+function resetEngine() {
+  if (isRunning || fanRunning) return;
+  currentFragment = '';
+  axisOutputs = {};
+  axisStatus = {};
+  fanCells = {};
+  document.getElementById('runWrapper').innerHTML = '';
+  document.getElementById('runWrapper').style.visibility = 'hidden';
+  document.getElementById('runWrapper').style.pointerEvents = 'none';
+  document.getElementById('fanOut').innerHTML = '';
+  document.getElementById('emptyState').style.display = '';
+  document.getElementById('resetBtn').style.display = 'none';
+  document.getElementById('fragmentInput').value = '';
+}
+
+function loadExample(el) {
+  document.getElementById('fragmentInput').value = el.textContent;
+  runEngine();
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// INIT — render from the floor first, then upgrade to the live config
+// ════════════════════════════════════════════════════════════════════════════
+
+(function init() {
+  applyConfigToPicker('fallback');
+  wireKeys();
+  renderProviderSelector();
+  renderDrawerKeyRows();
+  updateWarning();
+  setConnDotState('disconnected');
+  renderResponseList();
+  uiReady = true;
+  renderConfigUI();
+  var lb = document.getElementById('laneBtn');
+  if (lb) lb.addEventListener('click', openDrawer);
+  var fanB = document.getElementById('fanBtn');
+  if (fanB) fanB.addEventListener('click', fanOut);
+  fetchModelConfig(function (src) { applyConfigToPicker(src); });
+})();
+</script>
+</body>
+</html>

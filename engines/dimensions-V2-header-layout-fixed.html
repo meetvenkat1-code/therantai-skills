@@ -1,0 +1,2368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dimensions • Cognitive Portal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&amp;family=Space+Grotesk:wght@500;600&amp;display=swap');
+        
+        :root {
+            --accent: #6366f1;
+        }
+        
+        body {
+            font-family: 'Inter', system_ui, sans-serif;
+        }
+        
+        .font-display {
+            font-family: 'Space Grotesk', 'Inter', sans-serif;
+            font-weight: 600;
+            letter-spacing: -0.025em;
+        }
+
+        .dimension-nav {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .dimension-nav:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+        }
+        
+        .dimension-nav.active {
+            background-color: #312e81;
+            border-color: #6366f1;
+            box-shadow: 0 0 0 1px #6366f1;
+        }
+
+        .section-heading {
+            font-size: 1.5rem;
+            line-height: 1.2;
+            font-weight: 600;
+            letter-spacing: -0.025em;
+            color: white;
+        }
+
+        .prose-custom p {
+            color: #a1a1aa;
+            line-height: 1.75;
+        }
+        
+        .prose-custom strong {
+            color: #e4e4e7;
+            font-weight: 600;
+        }
+
+        .model-card {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .model-card:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+        }
+
+        .portal-glow {
+            box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.1);
+        }
+
+        .thinking-text {
+            font-size: 1.05rem;
+            line-height: 1.8;
+        }
+
+        .nav-number {
+            width: 2.25rem;
+            height: 2.25rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.95rem;
+            transition: all 0.2s ease;
+        }
+
+        .content-pane {
+            animation: fadeInUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(12px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .reflection-textarea {
+            resize: vertical;
+            min-height: 120px;
+            font-size: 0.95rem;
+            line-height: 1.7;
+        }
+
+        .subtle-border {
+            border-color: #27251f;
+        }
+
+        .dimension-icon {
+            width: 3.5rem;
+            height: 3.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 9999px;
+            background: linear-gradient(145deg, #312e81, #1e1b4b);
+        }
+
+        .metric {
+            font-variant-numeric: tabular-nums;
+        }
+
+        /* ---- Model catalog / Lanes layer (UI Contract 06 width exception + 01B) ---- */
+        #settings-drawer.open { transform: translateX(0); }
+        .copy-btn {
+            display: flex; align-items: center; gap: 5px;
+            background: none; border: 1px solid #3f3f46; color: #a1a1aa;
+            font-size: .65rem; padding: 4px 10px 5px; border-radius: 5px;
+            cursor: pointer; transition: all .2s; white-space: nowrap; flex-shrink: 0;
+        }
+        .copy-btn svg { width: 11px; height: 11px; stroke: currentColor; fill: none; stroke-width: 1.8; }
+        .copy-btn:hover { border-color: #6366f1; color: #6366f1; }
+        .copy-btn.copied { border-color: #10b981; color: #10b981; }
+        .tchip {
+            background: none; border: 1px solid #3f3f46; color: #a1a1aa;
+            font-size: .7rem; padding: 2px 8px; border-radius: 10px; margin: 0 4px 4px 0; cursor: pointer;
+        }
+        .tchip.on { border-color: #6366f1; color: #6366f1; }
+        .mrow {
+            display: flex; align-items: center; gap: 6px; padding: 4px 2px;
+            font-size: .78rem; overflow-wrap: anywhere; color: #d4d4d8;
+        }
+        .mrow.pinned { background: rgba(99,102,241,.12); border-radius: 8px; padding-left: 6px; padding-right: 6px; }
+        .mrow .meta { margin-left: auto; color: #71717a; font-size: .68rem; white-space: nowrap; }
+        .provider-dot { width: 9px; height: 9px; border-radius: 50%; background: #9090a8; display: inline-block; flex-shrink: 0; }
+        .mtag { font-size: .62rem; padding: 1px 6px; border-radius: 8px; border: 1px solid #3f3f46; color: #a1a1aa; margin-left: 4px; white-space: nowrap; }
+        .mtag.free { color: #10b981; border-color: #065f46; }
+        .lanes-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 12px; width: 100%; }
+        .lane-card { background: #09090b; border: 1px solid #27272a; border-radius: 1rem; min-width: 0; overflow: hidden; }
+        .lane-card.error { border-color: #7f1d1d; }
+        #toast {
+            position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+            background: #27272a; border: 1px solid #3f3f46; padding: 6px 14px; border-radius: 8px;
+            font-size: .8rem; opacity: 0; pointer-events: none; transition: opacity .2s; z-index: 300; color: #e4e4e7;
+        }
+        #toast.show { opacity: 1; }
+        .zone-c { font-size: .72rem; color: #71717a; text-align: right; line-height: 1.3; display: flex; flex-direction: column; flex-shrink: 0; }
+        .zone-c a { color: #71717a; text-decoration: none; }
+        .zone-c i { font-style: italic; }
+    </style>
+</head>
+<body class="bg-zinc-950 text-zinc-200">
+    <!-- Header -->
+    <header class="border-b border-zinc-800 bg-zinc-950/95 backdrop-blur-lg sticky top-0 z-50">
+        <div class="max-w-screen-2xl mx-auto">
+            <div class="px-8 py-4 grid grid-cols-[1fr_auto_1fr] items-center gap-x-6">
+                <!-- Left zone: brand + dimensions library toggle -->
+                <div class="flex items-center justify-self-start gap-x-4 min-w-0">
+                    <!-- Logo -->
+                    <div class="flex items-center gap-x-2.5">
+                        <div class="w-8 h-8 rounded-xl bg-gradient-to-br from-indigo-500 via-violet-500 to-fuchsia-500 flex items-center justify-center shadow-inner flex-shrink-0">
+                            <i class="fa-solid fa-infinity text-white text-sm"></i>
+                        </div>
+                        <div>
+                            <span class="font-display text-base font-semibold tracking-tight leading-none">Dimensions</span>
+                            <span class="text-[10px] text-zinc-500 font-mono tracking-[2px] block leading-none mt-0.5">COGNITIVE PORTAL</span>
+                        </div>
+                    </div>
+
+                    <button onclick="toggleLeftPanel()" title="Dimensions library"
+                            class="flex items-center justify-center w-9 h-9 rounded-2xl border border-zinc-700 hover:bg-zinc-900 transition-colors text-zinc-400 hover:text-zinc-300 flex-shrink-0">
+                        <i class="fa-solid fa-bars text-sm"></i>
+                    </button>
+                </div>
+
+                <!-- Center zone: runtime/config state + lanes picker (Mode A single-path: exactly one control chooses the model) -->
+                <div class="flex items-center justify-center gap-x-2">
+                    <span id="config-badge" data-state="fallback" class="hidden sm:inline text-[10px] font-mono tracking-wider px-2 py-1 rounded-lg border border-zinc-700 text-zinc-500"></span>
+
+                    <button id="laneBtn" onclick="toggleSettingsDrawer()" title="Choose lanes — one input through many models"
+                            class="flex items-center gap-x-2 pl-2.5 pr-3 py-2 text-xs font-medium rounded-2xl border border-zinc-700 bg-zinc-900 hover:bg-zinc-800 transition-colors text-zinc-300 cursor-pointer">
+                        <span id="laneDot" class="w-1.5 h-1.5 rounded-full inline-block" style="background:#9090a8"></span>
+                        <span id="laneTxt">no lane</span>
+                    </button>
+                </div>
+
+                <!-- Right zone: response library + settings + reset + Zone C maker's mark -->
+                <div class="flex items-center justify-self-end gap-x-2">
+                    <button onclick="toggleRightPanel()" title="Response library"
+                            class="flex items-center justify-center w-9 h-9 rounded-2xl border border-zinc-700 hover:bg-zinc-900 transition-colors text-zinc-400 hover:text-zinc-300">
+                        <i class="fa-solid fa-table-cells-large text-sm"></i>
+                    </button>
+
+                    <button onclick="toggleSettingsDrawer()"
+                            class="flex items-center justify-center w-9 h-9 rounded-2xl border border-zinc-700 hover:bg-zinc-900 transition-colors text-zinc-400 hover:text-zinc-300">
+                        <i class="fa-solid fa-gear text-sm"></i>
+                    </button>
+
+                    <button onclick="resetProgress()" title="Reset progress"
+                            class="flex items-center justify-center w-9 h-9 rounded-2xl border border-zinc-700 hover:bg-zinc-900 transition-colors text-zinc-400 hover:text-zinc-300">
+                        <i class="fa-solid fa-undo text-xs"></i>
+                    </button>
+
+                    <div class="zone-c hidden md:flex ml-1">
+                        <i>crafted by</i>
+                        <a href="mailto:meet.venkat1@gmail.com">meet.venkat1@gmail.com</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Settings Drawer: Lanes catalog drawer (UI Contract 06 — 400px width exception, ID-level open rule) -->
+    <div id="settings-backdrop" onclick="closeSettingsDrawer()" class="fixed inset-0 bg-black/50 z-[90]" style="visibility:hidden;opacity:0;pointer-events:none;transition:opacity .2s ease"></div>
+    <div id="settings-drawer" class="fixed top-0 right-0 bottom-0 w-[400px] max-w-[92%] bg-zinc-900 border-l border-zinc-800 z-[95] flex flex-col" style="transform:translateX(100%);transition:transform .25s ease">
+        <div class="px-6 py-5 border-b border-zinc-800 flex items-center justify-between">
+            <span class="font-display text-lg tracking-tight">Models &amp; Keys</span>
+            <button onclick="closeSettingsDrawer()" class="text-zinc-400 hover:text-white p-1"><i class="fa-solid fa-times"></i></button>
+        </div>
+        <div class="flex-1 overflow-y-auto px-6 py-6 space-y-7">
+            <div>
+                <div class="text-xs tracking-[2px] text-zinc-500 mb-1">LANES</div>
+                <div id="laneCount" class="text-[11px] text-zinc-500 mb-2"></div>
+                <div id="laneList" class="space-y-1"></div>
+            </div>
+            <div>
+                <div class="text-xs tracking-[2px] text-zinc-500 mb-2">MODEL CATALOG</div>
+                <div id="provBtns" class="mb-2"></div>
+                <input id="catSearch" placeholder="Search or /regex/ — id, name…"
+                       class="w-full bg-zinc-950 border border-zinc-700 focus:border-indigo-500 rounded-xl px-3 py-2 text-xs mb-2">
+                <div id="tierChips" class="mb-2"></div>
+                <div id="catStatus" class="text-[11px] text-zinc-500 mb-2">Pick a provider to fetch its live model list.</div>
+                <div id="catRows" class="space-y-0.5" style="max-height:260px;overflow-y:auto"></div>
+            </div>
+            <div>
+                <div class="text-xs tracking-[2px] text-zinc-500 mb-2">KEYS</div>
+                <div id="drawerKeyRows" class="space-y-4"></div>
+                <div class="flex gap-x-2 mt-3">
+                    <button id="saveKeysBtn" class="flex-1 py-2 text-xs rounded-xl bg-indigo-600 hover:bg-indigo-500 transition-colors font-medium">Save keys</button>
+                    <button id="clearKeysBtn" class="flex-1 py-2 text-xs rounded-xl border border-zinc-700 hover:bg-zinc-800 transition-colors">Clear saved keys</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="toast"></div>
+
+    <!-- Left Panel: Dimensions Library (Constraint 01) -->
+    <div id="left-backdrop" onclick="closeLeftPanel()" class="fixed inset-0 bg-black/50 z-[90]" style="visibility:hidden;opacity:0;pointer-events:none;transition:opacity .2s ease"></div>
+    <div id="left-panel" class="fixed top-0 left-0 bottom-0 w-full sm:w-[420px] bg-zinc-950 border-r border-zinc-800 z-[95] flex flex-col" style="transform:translateX(-100%);transition:transform .25s ease">
+        <div class="px-6 py-5 border-b border-zinc-800 flex items-center justify-between">
+            <div>
+                <span class="text-xs tracking-[2px] text-zinc-500">THE SIX PORTALS</span>
+                <div class="font-display text-lg tracking-tight">Choose your dimension</div>
+            </div>
+            <button onclick="closeLeftPanel()" class="text-zinc-400 hover:text-white p-1"><i class="fa-solid fa-times"></i></button>
+        </div>
+        <div class="px-6 pt-4 text-xs text-zinc-500">Recommended path: 01 → 06 • Click any to explore</div>
+        <div id="left-panel-list" class="flex-1 overflow-y-auto px-6 py-4 space-y-3"></div>
+    </div>
+
+    <!-- Right Panel: Response Library (Constraint 01, 20) -->
+    <div id="right-backdrop" onclick="closeRightPanel()" class="fixed inset-0 bg-black/50 z-[90]" style="visibility:hidden;opacity:0;pointer-events:none;transition:opacity .2s ease"></div>
+    <div id="right-panel" class="fixed top-0 right-0 bottom-0 w-full sm:w-[420px] bg-zinc-950 border-l border-zinc-800 z-[95] flex flex-col" style="transform:translateX(100%);transition:transform .25s ease">
+        <div class="px-6 py-5 border-b border-zinc-800 flex items-center justify-between">
+            <div>
+                <span class="text-xs tracking-[2px] text-zinc-500">SAVED</span>
+                <div class="font-display text-lg tracking-tight">Response Library</div>
+            </div>
+            <button onclick="closeRightPanel()" class="text-zinc-400 hover:text-white p-1"><i class="fa-solid fa-times"></i></button>
+        </div>
+        <div class="px-6 py-3 border-b border-zinc-800 flex items-center gap-x-2">
+            <button onclick="exportResponseLibrary()" class="flex-1 flex items-center justify-center gap-x-2 text-xs font-medium px-3 py-2 rounded-xl border border-zinc-700 hover:bg-zinc-900 transition-colors text-zinc-300">
+                <i class="fa-solid fa-arrow-up-from-bracket text-[11px]"></i> Export
+            </button>
+            <label class="flex-1 flex items-center justify-center gap-x-2 text-xs font-medium px-3 py-2 rounded-xl border border-zinc-700 hover:bg-zinc-900 transition-colors text-zinc-300 cursor-pointer">
+                <i class="fa-solid fa-arrow-down-to-bracket text-[11px]"></i> Import
+                <input type="file" accept="application/json" onchange="importResponseLibrary(event)" class="hidden">
+            </label>
+        </div>
+        <div id="right-panel-list" class="flex-1 overflow-y-auto px-6 py-4 space-y-3"></div>
+    </div>
+
+    <div class="max-w-screen-2xl mx-auto px-8 pt-8 pb-12">
+        
+        <!-- Hero / Welcome -->
+        <div id="welcome-screen" class="max-w-3xl mx-auto text-center mb-12">
+            <div class="inline-flex items-center gap-x-2 px-4 py-1 rounded-full bg-zinc-900 border border-zinc-800 text-xs tracking-[2px] text-indigo-400 mb-6">
+                <i class="fa-solid fa-compass"></i>
+                <span>A PROGRESSIVE JOURNEY THROUGH THINKING</span>
+            </div>
+            
+            <h1 class="font-display text-6xl tracking-tighter leading-none mb-4">
+                Six Dimensions.<br>
+                <span class="bg-gradient-to-r from-white via-zinc-200 to-zinc-400 bg-clip-text text-transparent">One transformed mind.</span>
+            </h1>
+            
+            <p class="text-xl text-zinc-400 max-w-md mx-auto">
+                This is not a course about mental models.<br>
+                It is a portal that rewires how you perceive reality.
+            </p>
+            
+            <div class="mt-8 flex justify-center gap-x-3">
+                <button onclick="startJourney()" 
+                        class="px-8 py-3.5 rounded-3xl bg-white text-zinc-950 font-semibold flex items-center gap-x-3 hover:bg-zinc-100 active:scale-[0.985] transition-all shadow-xl shadow-black/40">
+                    <span>Begin the Journey</span>
+                    <i class="fa-solid fa-arrow-right"></i>
+                </button>
+                <button onclick="openLeftPanel()" 
+                        class="px-6 py-3.5 rounded-3xl border border-zinc-700 hover:bg-zinc-900 transition-colors font-medium">
+                    Explore Dimensions
+                </button>
+            </div>
+            
+            <div class="mt-6 text-xs text-zinc-500 flex items-center justify-center gap-x-2">
+                <div class="w-px h-3 bg-zinc-700"></div>
+                <span>Offline • Private • Yours forever</span>
+                <div class="w-px h-3 bg-zinc-700"></div>
+            </div>
+        </div>
+
+        <!-- Map My Thinking -->
+        <div id="map-thinking" class="max-w-4xl mx-auto mb-14">
+            <div class="bg-zinc-900 border border-zinc-800 rounded-3xl p-8">
+                <div class="flex items-center gap-x-3 mb-2">
+                    <i class="fa-solid fa-crosshairs text-indigo-400"></i>
+                    <h2 class="font-display text-2xl tracking-tight">Map My Thinking</h2>
+                </div>
+                <p class="text-sm text-zinc-400 mb-5">Drop in a tension, conflict, insight, or fragment. It runs through every ticked lane side by side — one input, many models — and gets mapped against all six dimensions. Pick lanes under the header lane button (gear drawer → Lanes + Model catalog).</p>
+
+                <textarea id="map-input" class="reflection-textarea w-full bg-zinc-950 border border-zinc-700 focus:border-indigo-500 rounded-2xl p-5 text-sm" placeholder="e.g. I keep saying yes to projects that don't matter because I'm afraid of the short-term discomfort of saying no..."></textarea>
+
+                <button onclick="runMapping()" id="map-btn"
+                        class="mt-4 w-full py-3.5 rounded-2xl bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 transition-colors font-medium flex items-center justify-center gap-x-2">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i>
+                    <span>Map This</span>
+                </button>
+
+                <div id="map-error" class="mt-3 text-xs text-rose-400 hidden"></div>
+                <div id="map-results" class="mt-6 hidden"></div>
+            </div>
+        </div>
+
+        <!-- Saved Response Viewer (opened from Response Library) -->
+        <div id="response-viewer" class="max-w-4xl mx-auto mb-10 hidden">
+            <div class="bg-zinc-900 border border-zinc-800 rounded-3xl p-9 lg:p-12 shadow-2xl">
+                <div class="flex items-start justify-between mb-6 gap-x-4">
+                    <div>
+                        <span class="text-xs tracking-[2px] text-zinc-500" id="response-viewer-label">SAVED RESPONSE</span>
+                        <div class="font-display text-2xl tracking-tight mt-1" id="response-viewer-title"></div>
+                        <div class="text-xs text-zinc-500 mt-1" id="response-viewer-meta"></div>
+                    </div>
+                    <div class="flex items-center gap-x-2 flex-shrink-0">
+                        <button class="copy-btn" onclick="copyToClipboard(document.getElementById('response-viewer-fragment').textContent + '\n\n' + document.getElementById('response-viewer-body').innerText, this)">
+                            <i class="fa-solid fa-copy"></i> Copy
+                        </button>
+                        <button onclick="closeResponseViewer()" class="text-zinc-400 hover:text-white p-1"><i class="fa-solid fa-times"></i></button>
+                    </div>
+                </div>
+                <div id="response-viewer-fragment" class="hidden text-sm text-zinc-400 italic border-l-2 border-indigo-500 pl-4 mb-6"></div>
+                <div id="response-viewer-body" class="prose-custom text-sm"></div>
+            </div>
+        </div>
+
+        <!-- Main Content Area -->
+        <div id="content-area" class="max-w-4xl mx-auto hidden">
+            <div id="content-pane" class="content-pane bg-zinc-900 border border-zinc-800 rounded-3xl p-9 lg:p-12 shadow-2xl">
+                <!-- Dynamic content injected here by JS -->
+            </div>
+            
+            <!-- Dimension Footer Actions -->
+            <div class="max-w-4xl mx-auto mt-6 flex items-center justify-between px-2 text-sm">
+                <button onclick="markDimensionComplete()" 
+                        id="complete-btn"
+                        class="flex items-center gap-x-2 px-5 py-2.5 rounded-2xl bg-emerald-600 hover:bg-emerald-500 transition-colors text-white font-medium text-sm">
+                    <i class="fa-solid fa-check-double"></i>
+                    <span>Mark Dimension Complete</span>
+                </button>
+                
+                <div class="flex items-center gap-x-2 text-xs text-zinc-500">
+                    <i class="fa-solid fa-lock text-emerald-500"></i>
+                    <span>Progress saved locally</span>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <footer class="max-w-screen-2xl mx-auto px-8 py-8 border-t border-zinc-800 text-center">
+        <div class="text-xs text-zinc-500">
+            Built as a transformative artifact • Your progress, saved responses, and Thinking OS stay in your browser • No data leaves your device
+        </div>
+    </footer>
+
+    <script>
+        // Tailwind script
+        function initializeTailwind() {
+            document.documentElement.style.setProperty('--accent', '#6366f1');
+            
+            tailwind.config = {
+                theme: {
+                    extend: {
+                        fontFamily: {
+                            'display': ['Space Grotesk', 'Inter', 'system-ui', 'sans-serif']
+                        }
+                    }
+                }
+            };
+        }
+
+        // Storage abstraction layer (never scatter raw localStorage calls)
+        function storageSet(key, value) { localStorage.setItem(key, value); return true; }
+        function storageGet(key) { return localStorage.getItem(key); }
+        function storageRemove(key) { localStorage.removeItem(key); return true; }
+        function storageList(prefix) {
+            const keys = [];
+            for (let i = 0; i < localStorage.length; i++) {
+                const k = localStorage.key(i);
+                if (k && k.startsWith(prefix)) keys.push(k);
+            }
+            return keys;
+        }
+
+        // State
+        let currentDimension = null;
+        let currentResponseEntryId = null; // library entry the live "Map This" card is currently backed by
+        let progress = { completed: [] };
+
+        // Dimension Data
+        const dimensions = [
+            {
+                id: 1,
+                number: "01",
+                name: "Foundations of Thinking",
+                tagline: "Precision, distinctions & clarity",
+                icon: "fa-solid fa-search",
+                color: "#6366f1",
+                outcome: "From vague → High-resolution thinking"
+            },
+            {
+                id: 2,
+                number: "02",
+                name: "Core Mental Models",
+                tagline: "Rewiring fundamental perception",
+                icon: "fa-solid fa-eye",
+                color: "#a855f7",
+                outcome: "From default → Multi-dimensional seeing"
+            },
+            {
+                id: 3,
+                number: "03",
+                name: "Powerful Frameworks",
+                tagline: "Structured approaches to complexity",
+                icon: "fa-solid fa-project-diagram",
+                color: "#ec4899",
+                outcome: "From reactive → Systematic thinking"
+            },
+            {
+                id: 4,
+                number: "04",
+                name: "Interconnections & Trade-offs",
+                tagline: "Seeing the web of reality",
+                icon: "fa-solid fa-project-diagram",
+                color: "#f43f5e",
+                outcome: "From isolated → Systems thinking"
+            },
+            {
+                id: 5,
+                number: "05",
+                name: "Application & Shadow",
+                tagline: "Wise use, limitations & failure modes",
+                icon: "fa-solid fa-exclamation-triangle",
+                color: "#f59e0b",
+                outcome: "From naive → Discernment"
+            },
+            {
+                id: 6,
+                number: "06",
+                name: "Meta & Meta-Meta Thinking",
+                tagline: "Architecting your own mind",
+                icon: "fa-solid fa-infinity",
+                color: "#10b981",
+                outcome: "From user → Architect of thinking"
+            }
+        ];
+
+        // Taxonomy the classifier ranks against — every named model/framework, tagged to its dimension
+        const taxonomy = [
+            { dim: 1, name: "Necessary vs. Sufficient Conditions" },
+            { dim: 1, name: "Ladder of Inference" },
+            { dim: 1, name: "Facts vs. Interpretations vs. Judgments" },
+            { dim: 2, name: "Inversion" },
+            { dim: 2, name: "Second-Order Thinking" },
+            { dim: 2, name: "Incentives" },
+            { dim: 2, name: "Compounding" },
+            { dim: 2, name: "Opportunity Cost" },
+            { dim: 2, name: "Circle of Competence" },
+            { dim: 2, name: "Hanlon's Razor" },
+            { dim: 2, name: "Availability Heuristic" },
+            { dim: 2, name: "Lindy Effect" },
+            { dim: 2, name: "Via Negativa" },
+            { dim: 2, name: "Map vs. Territory" },
+            { dim: 3, name: "OODA Loop" },
+            { dim: 3, name: "First Principles Thinking" },
+            { dim: 3, name: "Eisenhower Matrix" },
+            { dim: 3, name: "Feynman Technique" },
+            { dim: 3, name: "Pre-Mortem Analysis" },
+            { dim: 3, name: "Regret Minimization Framework" },
+            { dim: 4, name: "Interconnections & Trade-offs (systems view)" },
+            { dim: 5, name: "Application & Shadow (limitations, failure modes)" },
+            { dim: 6, name: "Meta & Meta-Meta Thinking (thinking about your thinking)" }
+        ];
+
+        /* MODEL CORE v2 (model-config-contract). Pasted verbatim; only the three CONSTANTS edited. */
+        /* This engine [maps raw thinking fragments against six cognitive dimensions] so that [a learner] can [see which mental models drive their thinking and apply them]. */
+        var ENGINE_NAME = 'Dimensions';                                   // CONSTANT 1: shown in X-Title
+        var CANONICAL_CONFIG_URL = 'https://raw.githubusercontent.com/meetvenkat1-code/therantai-config/refs/heads/main/model.json';   // CONSTANT 2: never vary
+        var LEGACY_KEY_SLOTS = {};                                       // CONSTANT 3: read-only fallbacks
+        var DEFAULT_TIMEOUT_MS = 15000, DEFAULT_IDLE_MS = 3000;
+        var isArtifact = window.self !== window.top;
+        window.EnginePanels = { library: false, importExport: false, settings: true };
+
+        var LOCAL_FALLBACK_CONFIG = {                                    // mirrors the live model.json providers and defaultLanes (2026-10-03)
+            native_model: 'claude-sonnet-4-6',
+            defaultLanes: ['groq::openai/gpt-oss-120b', 'or-auto::openrouter/free'],
+            providers: [
+                { id: 'claude', native: true, label: 'Claude · Native', dotColor: '#ef4444', requiresKey: false, defaultFor: ['artifact'] },
+                { id: 'groq', native: false, label: 'Groq', dotColor: '#22c55e', requiresKey: true, keyStorageName: 'groq', keyLabel: 'Groq API Key', keyPlaceholder: 'gsk_…', defaultFor: ['standalone'],
+                    endpoint: 'https://api.groq.com/openai/v1/chat/completions', authHeader: 'Authorization', authPrefix: 'Bearer ', requestFormat: 'openai-chat', streamFormat: 'openai',
+                    modelChain: ['openai/gpt-oss-120b', 'openai/gpt-oss-20b'], softFallback: { on: [429, 500, 502, 503], within: true }, hardFallback: 'or-auto', timeoutMs: 15000, idleMs: 3000 },
+                { id: 'or-auto', native: false, label: 'OR · Free Router', dotColor: '#f97316', requiresKey: true, keyStorageName: 'openrouter', keyLabel: 'OpenRouter API Key', keyPlaceholder: 'sk-or-…',
+                    keyNote: 'Standalone only — OpenRouter has no CORS proxy inside claude.ai', standaloneOnly: true,
+                    endpoint: 'https://openrouter.ai/api/v1/chat/completions', authHeader: 'Authorization', authPrefix: 'Bearer ',
+                    extraHeaders: { 'HTTP-Referer': '$origin', 'X-Title': '$engineName' }, requestFormat: 'openai-chat', streamFormat: 'openai', modelChain: ['openrouter/free'], softFallback: { on: [429, 500, 502, 503], within: true }, timeoutMs: 45000, idleMs: 9000 }
+            ]
+        };
+        var liveModelConfig = LOCAL_FALLBACK_CONFIG;                     // boot on the floor, upgrade when the fetch lands
+
+        var sleep = function (ms) { return new Promise(function (r) { setTimeout(r, ms); }); };
+        function natCmp(a, b) { return a.localeCompare(b, undefined, { numeric: true }); }
+        function cfgProviders() { return liveModelConfig.providers; }
+        function P(id) { return cfgProviders().filter(function (p) { return p.id === id; })[0] || null; }
+        function splitKey(k) { var i = k.indexOf('::'); return { provider: k.slice(0, i), model: k.slice(i + 2) }; }
+
+        function isValidConfig(j) {
+            if (!j || !Array.isArray(j.providers) || !j.providers.length) return false;
+            var ids = {}, natives = 0, usable = false;
+            for (var i = 0; i < j.providers.length; i++) {
+                var p = j.providers[i];
+                if (!p || !p.id || !p.label || ids[p.id]) return false;
+                ids[p.id] = 1;
+                if (p.native === true) { natives++; if (isArtifact) usable = true; }
+                else if (p.endpoint && p.requestFormat === 'openai-chat' && !(p.standaloneOnly && isArtifact)) usable = true;
+            }
+            return natives <= 1 && usable;
+        }
+        function usableProviders() {
+            return cfgProviders().filter(function (p) { return p.native === true ? isArtifact : !(p.standaloneOnly && isArtifact); });
+        }
+        function defaultLanes() {
+            var ok = usableProviders().map(function (p) { return p.id; });
+            var list = (liveModelConfig.defaultLanes || []).filter(function (k) {
+                if (k.indexOf('::') < 1) return false; var s = splitKey(k); return ok.indexOf(s.provider) > -1 && !P(s.provider).native;
+            });
+            if (!list.length) {
+                var p = usableProviders().filter(function (x) { return !x.native && x.modelChain && x.modelChain.length; })[0];
+                if (p) list = [p.id + '::' + p.modelChain[0]];
+            }
+            return list;
+        }
+
+        function getKey(name) {
+            try {
+                var v = storageGet('hek_' + name); if (v) return String(v).trim();
+                var old = LEGACY_KEY_SLOTS[name] || [];
+                for (var i = 0; i < old.length; i++) { var o = storageGet(old[i]); if (o) return String(o).trim(); }
+            } catch (e) {}
+            return '';
+        }
+        function setKey(name, value) { try { storageSet('hek_' + name, (value || '').trim()); } catch (e) {} }
+
+        function headersFor(cfg, key) {
+            var h = { 'Content-Type': 'application/json' };
+            if (key && cfg.authHeader) h[cfg.authHeader] = (cfg.authPrefix || '') + key;
+            Object.keys(cfg.extraHeaders || {}).forEach(function (k) {
+                var v = cfg.extraHeaders[k];
+                h[k] = v === '$origin' ? (window.location.origin !== 'null' ? window.location.origin : 'http://localhost') : v === '$engineName' ? ENGINE_NAME : v;
+            });
+            return h;
+        }
+        function retryAfterSeconds(res, msg) {
+            var ra = parseFloat(res.headers && res.headers.get && res.headers.get('retry-after')); if (!isNaN(ra)) return ra;
+            var m = /try again in\s+([0-9hms.]+)/i.exec(msg || ''); if (!m) return null;
+            var t = 0; m[1].replace(/(\d+(?:\.\d+)?)(ms|h|m|s)/g, function (_, n, u) { t += parseFloat(n) * { ms: 0.001, s: 1, m: 60, h: 3600 }[u]; });
+            return t || null;
+        }
+
+        function buildRequest(cfg, modelId, system, user, stream, maxTokens) {
+            if (cfg.native === true) {                                     // HARDCODED BRANCH. Never built from cfg fields.
+                return { url: 'https://api.anthropic.com/v1/messages',
+                    headers: { 'Content-Type': 'application/json', 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
+                    body: { model: modelId, max_tokens: maxTokens || 4000, stream: stream, system: system || '', messages: [{ role: 'user', content: user }] } };
+            }
+            if (cfg.requestFormat !== 'openai-chat') throw new Error('Unknown requestFormat: ' + cfg.requestFormat);
+            var h = headersFor(cfg, getKey(cfg.keyStorageName));
+            var body = { model: modelId, stream: stream, messages: (system ? [{ role: 'system', content: system }] : []).concat([{ role: 'user', content: user }]) };
+            if (maxTokens) body.max_tokens = maxTokens;
+            return { url: cfg.endpoint, headers: h, body: body };
+        }
+
+        function readStream(res, format, onChunk, timeoutMs, idleMs, signal) {
+            var rd = res.body.getReader(), dec = new TextDecoder(), buf = '', done = false, idleT, hardT, reason = null, err = null;
+            timeoutMs = timeoutMs || DEFAULT_TIMEOUT_MS; idleMs = idleMs || DEFAULT_IDLE_MS;
+            return new Promise(function (resolve) {
+                function finish() { if (done) return; done = true; clearTimeout(idleT); clearTimeout(hardT); try { rd.cancel(); } catch (e) {} resolve({ reason: reason, error: err }); }
+                function resetIdle() { clearTimeout(idleT); idleT = setTimeout(finish, idleMs); }
+                hardT = setTimeout(finish, timeoutMs); resetIdle();
+                if (signal) { if (signal.aborted) return finish(); signal.addEventListener('abort', finish, { once: true }); }
+                (function pump() {
+                    if (done) return;
+                    rd.read().then(function (r) {
+                        if (done) return;
+                        if (r.done) return finish();
+                        buf += dec.decode(r.value, { stream: true });
+                        var lines = buf.split('\n'); buf = lines.pop();
+                        for (var i = 0; i < lines.length; i++) {
+                            var t = lines[i].trim();
+                            if (format === 'anthropic' && t === 'event: message_stop') return finish();
+                            if (t.indexOf('data:') !== 0) continue;
+                            var d = t.slice(5).trim(); if (d === '[DONE]') return finish();
+                            try {
+                                var p = JSON.parse(d);
+                                if (p.error) { err = (p.error.message || 'stream error'); return finish(); }
+                                if (format === 'anthropic') {
+                                    if (p.type === 'content_block_delta' && p.delta && p.delta.text) { onChunk(p.delta.text, null); resetIdle(); }
+                                    else if (p.type === 'message_delta' && p.delta && p.delta.stop_reason) reason = p.delta.stop_reason === 'max_tokens' ? 'length' : p.delta.stop_reason;
+                                    else if (p.type === 'message_stop') return finish();
+                                } else {
+                                    var c0 = p.choices && p.choices[0], dl = c0 && c0.delta;
+                                    if (c0 && c0.finish_reason) reason = c0.finish_reason;
+                                    if (dl && dl.content) { onChunk(dl.content, p.model || null); resetIdle(); }
+                                    else if (dl && (dl.reasoning || dl.reasoning_content)) resetIdle();
+                                }
+                            } catch (e) {}
+                        }
+                        pump();
+                    }).catch(finish);
+                })();
+            });
+        }
+
+        /* ONE call layer, two modes.
+           curated: callModel({ provider, system, user, onText, validate })         -> walks modelChain, soft/hard fallback
+           strict : callModel({ provider, model, system, user, onText, maxTokens }) -> exactly that model, never falls through (lanes) */
+        async function callModel(o) {
+            var cfg = P(o.provider), strict = !!o.model;
+            if (!cfg) throw new Error('Unknown provider: ' + o.provider);
+            if (cfg.standaloneOnly && isArtifact) throw new Error(cfg.label + ' is standalone only. It has no proxy inside claude.ai.');
+            if (cfg.requiresKey && !getKey(cfg.keyStorageName)) throw new Error('No ' + (cfg.keyLabel || cfg.label) + ' saved. Open settings.');
+            var models = strict ? [o.model] : (o.chain || (cfg.native ? [liveModelConfig.native_model] : cfg.modelChain) || []);
+            var lastStatus = null, lastRetry = null;
+            function fail(m) { var e = new Error(m); e.status = lastStatus; e.retryAfter = lastRetry; return e; }
+            function aborted() { if (o.signal && o.signal.aborted) { var e = new Error('Aborted'); e.name = 'AbortError'; throw e; } }
+            var advance = ((cfg.softFallback && cfg.softFallback.on) || [429, 500, 502, 503]).concat([400, 404, 422]);
+            var last = '';
+            for (var i = 0; i < models.length; i++) {
+                var retried = false, folded = false, fatal = null;
+                for (var a = 0; a < 3; a++) {
+                    aborted();
+                    var acc = '', served = null, res;
+                    var sys = folded ? '' : o.system, usr = folded ? (o.system ? o.system + '\n\n---\n\n' : '') + o.user : o.user;
+                    try {
+                        var rq = buildRequest(cfg, models[i], sys, usr, true, o.maxTokens);
+                        res = await fetch(rq.url, { method: 'POST', headers: rq.headers, body: JSON.stringify(rq.body), signal: o.signal });
+                    } catch (e) { if (e && e.name === 'AbortError') throw e; last = cfg.id + ': network error ' + e.message; break; }
+                    if (!res.ok) {
+                        var msg = ''; try { var eb = await res.json(); msg = (eb.error && eb.error.message) || ''; } catch (e) {}
+                        lastStatus = res.status; lastRetry = retryAfterSeconds(res, msg);
+                        if (res.status === 429 && !retried) { retried = true; await sleep(1800); continue; }
+                        if (res.status === 400 && !folded && /system|developer|instruction/i.test(msg)) { folded = true; continue; }
+                        last = cfg.id + ':' + res.status + (msg ? ' ' + String(msg).slice(0, 140) : '') + (res.status === 404 ? ' — model not found, refresh the catalog' : '');
+                        if (advance.indexOf(res.status) < 0) fatal = last;
+                        break;
+                    }
+                    var out = await readStream(res, cfg.native === true ? 'anthropic' : (cfg.streamFormat || 'openai'), function (c, s) { acc += c; if (s) served = s; if (o.onText) o.onText(acc, served); }, cfg.timeoutMs, cfg.idleMs, o.signal);
+                    aborted();
+                    if (!acc.trim()) { last = cfg.id + ': empty reply' + (out.reason === 'length' ? ' — the token cap was spent on reasoning' : out.error ? ' — ' + out.error : ''); break; }
+                    if (o.validate && !cfg.native) { try { o.validate(acc); } catch (e) { last = cfg.id + ': rejected — ' + e.message; break; } }
+                    return { text: acc, model: models[i], served: served, cut: out.reason === 'length' };
+                }
+                if (fatal) throw fail(fatal);
+            }
+            var hf = !strict && !o._noHard && cfg.hardFallback ? P(cfg.hardFallback) : null;
+            if (hf) {
+                if (hf.standaloneOnly && isArtifact) throw new Error('All providers exhausted (' + last + '). The fallback (' + hf.label + ') is standalone only.');
+                if (hf.requiresKey && !getKey(hf.keyStorageName)) throw new Error('Provider unavailable (' + last + '). Fallback ' + hf.label + ' has no key.');
+                return callModel({ provider: hf.id, chain: hf.modelChain, system: o.system, user: o.user, onText: o.onText, validate: o.validate, maxTokens: o.maxTokens, _noHard: true });
+            }
+            throw fail(strict ? last : 'Provider unavailable (' + last + ')');
+        }
+
+        function fetchModelConfig(onApplied) {
+            return fetch(CANONICAL_CONFIG_URL + '?v=' + Date.now())
+                .then(function (r) { if (!r.ok) throw new Error('Config fetch failed: ' + r.status); return r.json(); })
+                .then(function (j) { if (!isValidConfig(j)) throw new Error('Malformed config'); liveModelConfig = j; return 'live'; })
+                .catch(function () { liveModelConfig = LOCAL_FALLBACK_CONFIG; return 'fallback'; })
+                .then(function (src) { if (onApplied) onApplied(src); return src; });
+        }
+
+        var KNOWN_MODEL_ALIASES = { 'mistralai/mistral-large': 'mistralai/mistral-large-2411', 'meta-llama/llama-3-70b-instruct': 'meta-llama/llama-3.3-70b-instruct' };
+        function modelAliases() { return Object.assign({}, KNOWN_MODEL_ALIASES, liveModelConfig.model_aliases || {}); }
+        function modelIdBase(id) { var q = id.split('-'); while (q.length > 1 && /^(v?\d[\d.]*|\d{4,})$/i.test(q[q.length - 1])) q.pop(); return q.join('-'); }
+        function resolveModelId(id, live) {
+            if (!live || !live.length || live.indexOf(id) > -1) return { id: id, status: 'ok' };
+            var al = modelAliases()[id]; if (al && live.indexOf(al) > -1) return { id: al, status: 'alias' };
+            var base = modelIdBase(id), c = live.filter(function (x) { return modelIdBase(x) === base; });
+            if (c.length) return { id: c.sort(natCmp).reverse()[0], status: 'fuzzy' };
+            return { id: id, status: 'unresolved' };
+        }
+
+        /* ───────── Glue: Model Core -> picker (model-catalog-panel 1a) ───────── */
+        const CAT_KEY = "dimensions.v1:catalog";
+        const PROVIDERS = {}; let DEFAULT_MODELS = [], configSource = "fallback", uiReady = false;
+        const keyOf = cfg => getKey(cfg.keyStorageName || cfg.id);
+        const isDefault = v => DEFAULT_MODELS.some(d => d[0] === v);
+        function applyConfigToPicker(src) {
+            configSource = src; Object.keys(PROVIDERS).forEach(k => delete PROVIDERS[k]);
+            usableProviders().filter(p => !p.native).forEach(p => { PROVIDERS[p.id] = { id: p.id, label: p.label, url: p.endpoint, cfg: p }; });
+            DEFAULT_MODELS = defaultLanes().map(k => { const s = splitKey(k); return [k, (PROVIDERS[s.provider] ? PROVIDERS[s.provider].label : s.provider) + " · " + s.model, s.provider]; });
+            setConfigBadge(src);
+            if (uiReady) renderConfigUI();
+        }
+        function setConfigBadge(state) {
+            const el = document.getElementById('config-badge');
+            if (!el) return;
+            el.dataset.state = state;
+            if (state === 'live') {
+                el.textContent = 'Config: Live';
+                el.classList.remove('text-zinc-500');
+                el.classList.add('text-emerald-500', 'border-emerald-800');
+            } else {
+                el.textContent = 'Config: Local Fallback';
+                el.classList.remove('text-emerald-500', 'border-emerald-800');
+                el.classList.add('text-zinc-500');
+            }
+        }
+
+        /* ───────── Engine plumbing the Lanes blocks assume ───────── */
+        const $ = id => document.getElementById(String(id).replace(/^#/, ""));
+        const h = (tag, cls, txt) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; };
+        const lsGet = (k, d) => { try { const v = JSON.parse(storageGet(k)); return v == null ? d : v; } catch (e) { return d; } };
+        const lsSet = (k, v) => { try { storageSet(k, JSON.stringify(v)); } catch (e) {} };
+        const MAX_LANES = 12, SETTINGS_KEY = "dimensions.v1:settings";
+        const S = { settings: Object.assign({ lanes: [], customLanes: [], lanesTouched: false }, lsGet(SETTINGS_KEY, {})) };
+        const save = () => lsSet(SETTINGS_KEY, S.settings);
+        function toast(m) { const t = $("toast"); if (!t) { alert(m); return; } t.textContent = m; t.classList.add("show"); clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.remove("show"), 3500); }
+        function migrateLaneKeys() {
+            // v2 key migration: provider|model and pin|provider|model -> providerId::modelId; openrouter:: -> or-auto::
+            const conv = k => {
+                if (!k) return k;
+                if (k.indexOf('openrouter::') === 0) return 'or-auto::' + k.slice('openrouter::'.length);
+                if (k.indexOf('::') > 0) return k;
+                const parts = String(k).split('|').filter(Boolean);
+                const last2 = parts.slice(-2);
+                if (last2.length === 2) return last2[0] + '::' + last2[1];
+                return k;
+            };
+            if (Array.isArray(S.settings.lanes)) S.settings.lanes = S.settings.lanes.map(conv);
+            if (Array.isArray(S.settings.customLanes)) {
+                S.settings.customLanes = S.settings.customLanes.map(c => {
+                    if (typeof c === 'string') { const kk = conv(c); const s = kk.indexOf('::') > 0 ? splitKey(kk) : { provider: '', model: kk }; return { key: kk, provider: s.provider, model: s.model }; }
+                    const kk = conv(c.key); const s = kk.indexOf('::') > 0 ? splitKey(kk) : { provider: c.provider || '', model: c.model || '' };
+                    return { key: kk, provider: s.provider, model: s.model };
+                });
+            }
+            save();
+        }
+
+        /* ───────── Catalog GET helpers (shared by Lanes and Panel) ───────── */
+        const catalogHeaders = (cfg, k) => {
+            if (!k || /openrouter\.ai/.test(cfg.endpoint)) return {};
+            const hh = headersFor(cfg, k), o = {};
+            const an = (cfg.authHeader || "Authorization").toLowerCase();
+            Object.keys(hh).forEach(n => { if (n.toLowerCase() === an) o[n] = hh[n]; });
+            return o;
+        };
+        const inflight = {};
+
+        /* ───────── Lanes (Mode A single-path) ───────── */
+        function laneList() {
+            var seen = {}, out = [];
+            function add(key, pinned) { var s = splitKey(key); if (seen[key] || !PROVIDERS[s.provider]) return; seen[key] = 1; out.push({ key: key, pid: s.provider, m: s.model, pinned: pinned }); }
+            defaultLanes().forEach(function (k) { add(k, false); });
+            (S.settings.customLanes || []).forEach(function (c) { add(c.key, true); });
+            return out;
+        }
+        function activeKeys() {
+            var all = laneList().map(function (l) { return l.key; });
+            if (!S.settings.lanesTouched) { var d = defaultLanes()[0]; return d && all.indexOf(d) > -1 ? [d] : []; }
+            return S.settings.lanes.filter(function (k) { return all.indexOf(k) > -1; });
+        }
+        function setLane(key, on) {
+            var cur = activeKeys().slice(), i = cur.indexOf(key);
+            if (on && i < 0) { if (cur.length >= MAX_LANES) { toast('Max ' + MAX_LANES + ' lanes — deselect one first'); return false; } cur.push(key); }
+            else if (!on && i > -1) cur.splice(i, 1);
+            S.settings.lanes = cur; S.settings.lanesTouched = true; save(); return true;
+        }
+        function togglePin(pid, m, cb) {
+            var key = pid + '::' + m.id, cl = S.settings.customLanes, i = cl.map(function (c) { return c.key; }).indexOf(key);
+            if (cb.checked) {
+                if (!setLane(key, true)) { cb.checked = false; return; }
+                if (i < 0 && !laneList().some(function (l) { return l.key === key; })) cl.push({ key: key, provider: pid, model: m.id });
+            } else { setLane(key, false); if (i > -1) cl.splice(i, 1); }
+            save(); renderLanes(); if (cb.closest('.mrow')) cb.closest('.mrow').classList.toggle('pinned', cb.checked);
+        }
+        function resolveCustom(lanes) {
+            var moved = [];
+            lanes.forEach(function (l) {
+                if (!l.pinned || !catalog[l.pid]) return;
+                var r = resolveModelId(l.m, catalog[l.pid].models.map(function (m) { return m.id; }));
+                if (r.status === 'alias' || r.status === 'fuzzy') { moved.push(l.m.split('/').pop() + ' → ' + r.id.split('/').pop()); l.m = r.id; }
+            });
+            if (moved.length) toast('Model id updated: ' + moved.join(', '));
+        }
+        const laneLabel = l => (PROVIDERS[l.pid] ? PROVIDERS[l.pid].label : l.pid) + " · " + l.m;
+        function updateRunControls() {
+            const act = laneList().filter(l => activeKeys().includes(l.key)), first = act[0];
+            const lt = $("laneTxt"); if (lt) lt.textContent = !act.length ? "no lane" : act.length === 1 ? laneLabel(first) : act.length + " lanes";
+            const ld = $("laneDot"); if (ld) ld.style.background = (first && PROVIDERS[first.pid] && PROVIDERS[first.pid].cfg.dotColor) || "#9090a8";
+        }
+
+        /* ───────── Lanes drawer: catalog, lanes, keys (base set) ───────── */
+        let catalog = lsGet(CAT_KEY, {}), tierSel = "all", activeProv = null;
+        const TIERS = ["free", "cheap", "medium", "premium", "n/a"];
+        const tierOf = m => /:free$/.test(m.id) || m.price === 0 ? "free" : m.price == null ? "n/a" : m.price * 1e6 < 0.5 ? "cheap" : m.price * 1e6 < 3 ? "medium" : "premium";
+        async function fetchCatalog(pid) {
+            if (inflight[pid]) return; inflight[pid] = true;
+            const pv = PROVIDERS[pid], st = $("catStatus"); if (st) st.textContent = "Fetching " + pv.label + "…";
+            try {
+                const k = keyOf(pv.cfg), r = await fetch(pv.url.replace(/\/chat\/completions\/?$/, "/models"), { headers: catalogHeaders(pv.cfg, k) });
+                if (r.status === 401 || r.status === 403) throw new Error(pv.label + " catalog needs a saved key (Keys below).");
+                if (!r.ok) throw new Error(pv.label + " catalog failed (" + r.status + ")");
+                const j = await r.json(), list = (j.data || []).map(m => ({ id: m.id, name: m.name || "", ctx: m.context_length || m.context_window || null, price: m.pricing && m.pricing.prompt != null ? parseFloat(m.pricing.prompt) : null }));
+                list.forEach(m => m.tier = tierOf(m)); list.sort((a, b) => TIERS.indexOf(a.tier) - TIERS.indexOf(b.tier) || natCmp(a.id, b.id));
+                if (!list.length) throw new Error("no chat models returned");
+                catalog[pid] = { t: Date.now(), models: list }; lsSet(CAT_KEY, catalog); if (st) st.textContent = list.length + " models from " + pv.label + ".";
+            } catch (e) { if (st) st.textContent = e.message; }
+            finally { delete inflight[pid]; }
+            renderCatalog();
+        }
+        function matcher(q) { q = q.trim(); if (!q) return () => true; const m = q.match(/^\/(.+)\/([a-z]*)$/); if (m) { try { const re = new RegExp(m[1], m[2]); return s => re.test(s); } catch (e) {} } q = q.toLowerCase(); return s => s.toLowerCase().includes(q); }
+        function chip(txt, on, fn) { const b = document.createElement("button"); b.type = "button"; b.className = "tchip" + (on ? " on" : ""); b.textContent = txt; b.addEventListener("click", fn); return b; }
+        function renderCatalog() {
+            const pb = $("provBtns"); if (!pb) return; pb.innerHTML = "";
+            Object.values(PROVIDERS).forEach(p => { const n = catalog[p.id] ? catalog[p.id].models.length : 0; pb.appendChild(chip(p.label + (n ? " (" + n + ") ↻" : " — fetch"), activeProv === p.id, () => { const was = activeProv === p.id; activeProv = p.id; renderCatalog(); if (!catalog[p.id] || was) fetchCatalog(p.id); })); });
+            const tc = $("tierChips"); tc.innerHTML = "";
+            ["all", "pinned"].concat(TIERS).forEach(t => tc.appendChild(chip(t === "pinned" ? "Pinned (" + S.settings.customLanes.length + ")" : t, tierSel === t, () => { tierSel = t; renderCatalog(); })));
+            const box = $("catRows"); box.innerHTML = ""; const c = catalog[activeProv]; if (!c) return;
+            const test = matcher($("catSearch").value), act = activeKeys(), isPin = id => S.settings.customLanes.some(x => x.key === activeProv + "::" + id);
+            const rows = c.models.filter(m => (tierSel === "all" || (tierSel === "pinned" ? isPin(m.id) : m.tier === tierSel)) && test(m.id + " " + m.name));
+            rows.slice(0, 150).forEach(m => {
+                const lab = document.createElement("label"); lab.className = "mrow" + (isPin(m.id) ? " pinned" : "");
+                const cb = document.createElement("input"); cb.type = "checkbox"; cb.checked = act.includes(activeProv + "::" + m.id);
+                const pv = activeProv; cb.addEventListener("change", () => togglePin(pv, m, cb));
+                const meta = document.createElement("span"); meta.className = "meta";
+                meta.textContent = [m.ctx ? Math.round(m.ctx / 1000) + "k ctx" : "", m.tier === "free" ? "FREE" : m.price != null ? "$" + (m.price * 1e6).toFixed(2) + "/M in" : ""].filter(Boolean).join(" · ");
+                lab.appendChild(cb); lab.appendChild(document.createTextNode(m.id)); lab.appendChild(meta); box.appendChild(lab);
+            });
+            if (rows.length > 150) { const f = document.createElement("div"); f.className = "text-[11px] text-zinc-500"; f.textContent = "Showing 150 of " + rows.length + " — narrow with search."; box.appendChild(f); }
+        }
+        function renderLanes() {
+            const box = $("laneList"); if (!box) return; box.innerHTML = ""; const act = activeKeys();
+            laneList().forEach(l => {
+                const lab = document.createElement("label"); lab.className = "mrow" + (l.pinned ? " pinned" : "");
+                const cb = document.createElement("input"); cb.type = "checkbox"; cb.checked = act.includes(l.key);
+                cb.addEventListener("change", () => { if (!setLane(l.key, cb.checked)) cb.checked = false; renderLanes(); renderCatalog(); });
+                const dot = document.createElement("span"); dot.className = "provider-dot"; dot.style.background = ((PROVIDERS[l.pid] && PROVIDERS[l.pid].cfg.dotColor) || "#9090a8");
+                lab.appendChild(cb); lab.appendChild(dot); lab.appendChild(document.createTextNode((l.pinned ? "★ " : "") + laneLabel(l)));
+                if (l.pinned) { const x = document.createElement("span"); x.textContent = "  ×"; x.style.color = "#ef4444"; x.style.cursor = "pointer";
+                    x.addEventListener("click", e => { e.preventDefault(); e.stopPropagation(); S.settings.customLanes = S.settings.customLanes.filter(c => c.key !== l.key); setLane(l.key, false); renderLanes(); renderCatalog(); }); lab.appendChild(x); }
+                box.appendChild(lab);
+            });
+            const n = act.length; const lc = $("laneCount");
+            if (lc) lc.textContent = n + " of " + laneList().length + " lanes active (max " + MAX_LANES + ")" + (n > 6 ? " · large fan-outs can hit provider rate limits" : "");
+            updateRunControls();
+        }
+        function renderKeyRows() {
+            const box = $("drawerKeyRows"); if (!box) return; box.innerHTML = "";
+            usableProviders().filter(p => !p.native).forEach(p => {
+                const wrap = document.createElement("div");
+                if (!p.requiresKey) { const d = document.createElement("div"); d.className = "text-[11px] text-zinc-500"; d.textContent = p.label + " — no key needed"; box.appendChild(d); return; }
+                const lab = document.createElement("div"); lab.className = "text-xs font-medium text-zinc-300 mb-1.5"; lab.textContent = p.keyLabel || p.label + " Key";
+                const inp = document.createElement("input"); inp.type = "password"; inp.autocomplete = "off"; inp.placeholder = p.keyPlaceholder || ""; inp.id = "keyInput_" + p.keyStorageName; inp.value = getKey(p.keyStorageName);
+                inp.className = "w-full bg-zinc-950 border border-zinc-700 focus:border-indigo-500 rounded-xl px-3 py-2 text-xs";
+                wrap.appendChild(lab); wrap.appendChild(inp);
+                if (p.keyNote) { const nn = document.createElement("div"); nn.className = "text-[10px] text-orange-400 mt-1.5"; nn.textContent = p.keyNote; wrap.appendChild(nn); }
+                box.appendChild(wrap);
+            });
+        }
+        function wireKeys() {
+            const sv = $("saveKeysBtn");
+            if (sv) sv.addEventListener("click", () => { usableProviders().filter(p => !p.native && p.requiresKey).forEach(p => { const el = $("keyInput_" + p.keyStorageName); if (el) setKey(p.keyStorageName, el.value); }); sv.textContent = "✓ Saved"; updateRunControls(); setTimeout(() => { sv.textContent = "Save keys"; closeSettingsDrawer(); }, 800); });
+            const cl = $("clearKeysBtn");
+            if (cl) cl.addEventListener("click", () => { usableProviders().filter(p => !p.native).forEach(p => { try { storageRemove("hek_" + p.keyStorageName); } catch (e) {} (LEGACY_KEY_SLOTS[p.keyStorageName] || []).forEach(k => { try { storageRemove(k); } catch (e) {} }); }); renderKeyRows(); toast("Saved keys cleared from this device"); });
+            const cs = $("catSearch");
+            if (cs) cs.addEventListener("input", renderCatalog);
+        }
+        function renderConfigUI() {
+            const b = $("config-badge");
+            if (b) { b.textContent = configSource === "live" ? "Config: Live" : "Config: Local Fallback"; b.dataset.state = configSource; }
+            if (!activeProv || !PROVIDERS[activeProv]) activeProv = Object.keys(PROVIDERS)[0];
+            renderLanes(); renderCatalog(); renderKeyRows();
+        }
+
+        function toggleSettingsDrawer() {
+            const drawer = document.getElementById('settings-drawer');
+            const backdrop = document.getElementById('settings-backdrop');
+            const isOpen = drawer.classList.contains('open') || drawer.style.transform === 'translateX(0px)' || drawer.style.transform === 'translateX(0)';
+            if (isOpen) { closeSettingsDrawer(); return; }
+            drawer.classList.add('open');
+            drawer.style.transform = 'translateX(0)';
+            backdrop.style.visibility = 'visible';
+            backdrop.style.opacity = '1';
+            backdrop.style.pointerEvents = 'all';
+        }
+
+        function closeSettingsDrawer() {
+            const drawer = document.getElementById('settings-drawer');
+            const backdrop = document.getElementById('settings-backdrop');
+            drawer.classList.remove('open');
+            drawer.style.transform = 'translateX(100%)';
+            backdrop.style.visibility = 'hidden';
+            backdrop.style.opacity = '0';
+            backdrop.style.pointerEvents = 'none';
+        }
+
+        // ============================================================
+        // LEFT PANEL — Dimensions Library (Constraint 01)
+        // ============================================================
+        function openLeftPanel() {
+            document.getElementById('left-panel').style.transform = 'translateX(0)';
+            const backdrop = document.getElementById('left-backdrop');
+            backdrop.style.visibility = 'visible';
+            backdrop.style.opacity = '1';
+            backdrop.style.pointerEvents = 'all';
+        }
+        function closeLeftPanel() {
+            document.getElementById('left-panel').style.transform = 'translateX(-100%)';
+            const backdrop = document.getElementById('left-backdrop');
+            backdrop.style.visibility = 'hidden';
+            backdrop.style.opacity = '0';
+            backdrop.style.pointerEvents = 'none';
+        }
+        function toggleLeftPanel() {
+            const panel = document.getElementById('left-panel');
+            const isOpen = panel.style.transform === 'translateX(0px)' || panel.style.transform === 'translateX(0)';
+            isOpen ? closeLeftPanel() : openLeftPanel();
+        }
+
+        // ============================================================
+        // RIGHT PANEL — Response Library (Constraint 01, 20)
+        // ============================================================
+        function openRightPanel() {
+            renderResponseLibrary();
+            document.getElementById('right-panel').style.transform = 'translateX(0)';
+            const backdrop = document.getElementById('right-backdrop');
+            backdrop.style.visibility = 'visible';
+            backdrop.style.opacity = '1';
+            backdrop.style.pointerEvents = 'all';
+        }
+        function closeRightPanel() {
+            document.getElementById('right-panel').style.transform = 'translateX(100%)';
+            const backdrop = document.getElementById('right-backdrop');
+            backdrop.style.visibility = 'hidden';
+            backdrop.style.opacity = '0';
+            backdrop.style.pointerEvents = 'none';
+        }
+        function toggleRightPanel() {
+            const panel = document.getElementById('right-panel');
+            const isOpen = panel.style.transform === 'translateX(0px)' || panel.style.transform === 'translateX(0)';
+            isOpen ? closeRightPanel() : openRightPanel();
+        }
+
+        // ---- Response Library storage (Constraint 20, 21) ----
+        const RESPONSE_LIB_PREFIX = 'dimensions_response:';
+
+        function saveResponseEntry(entry) {
+            // entry: {id, fragment, matches, createdAt}
+            storageSet(RESPONSE_LIB_PREFIX + entry.id, JSON.stringify(entry));
+        }
+
+        // Patches a single match's expanded/applied text into an already-saved entry,
+        // so Expand/Apply results generated after the initial save aren't lost.
+        function patchResponseEntryMatch(entryId, matchPos, field, text) {
+            if (!entryId) return;
+            const raw = storageGet(RESPONSE_LIB_PREFIX + entryId);
+            if (!raw) return;
+            try {
+                const entry = JSON.parse(raw);
+                if (entry.matches && entry.matches[matchPos]) {
+                    entry.matches[matchPos][field] = text;
+                    saveResponseEntry(entry);
+                }
+            } catch (e) { /* corrupt entry — skip patch silently */ }
+        }
+
+        function loadResponseEntries() {
+            const keys = storageList(RESPONSE_LIB_PREFIX);
+            return keys
+                .map(k => { try { return JSON.parse(storageGet(k)); } catch (e) { return null; } })
+                .filter(Boolean)
+                .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+        }
+
+        function deleteResponseEntry(id) {
+            storageRemove(RESPONSE_LIB_PREFIX + id);
+            renderResponseLibrary();
+        }
+
+        function renderResponseLibrary() {
+            const list = document.getElementById('right-panel-list');
+            if (!list) return;
+            const entries = loadResponseEntries();
+            const esc = s => String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+            if (entries.length === 0) {
+                list.innerHTML = `<div class="text-sm text-zinc-500 text-center py-10">No saved responses yet.<br>Run "Map This" to start building your library.</div>`;
+                return;
+            }
+
+            list.innerHTML = entries.map(entry => {
+                const topMatch = (entry.matches && entry.matches[0]) || null;
+                const preview = entry.fragment.length > 90 ? entry.fragment.slice(0, 90) + '…' : entry.fragment;
+                const date = entry.createdAt ? new Date(entry.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '';
+                const laneTag = entry.provider ? esc(entry.provider) + ' · ' + esc(entry.model || '') + (entry.served ? ' → ' + esc(entry.served) : '') : '';
+                return `
+                    <div onclick="openResponseFromLibrary('${entry.id}')" class="cursor-pointer bg-zinc-900 border border-zinc-800 hover:border-zinc-600 rounded-2xl p-4 transition-colors">
+                        <div class="flex items-start justify-between gap-x-2">
+                            <div class="text-sm text-zinc-200 leading-snug">${esc(preview)}</div>
+                            <button onclick="event.stopPropagation(); deleteResponseEntry('${entry.id}')" class="text-zinc-600 hover:text-rose-400 flex-shrink-0 p-1"><i class="fa-solid fa-trash text-xs"></i></button>
+                        </div>
+                        ${laneTag ? `<div class="text-[10px] font-mono text-zinc-500 mt-1.5 truncate" title="${laneTag}">${laneTag}</div>` : ''}
+                        <div class="flex items-center gap-x-2 mt-2">
+                            ${topMatch ? `<span class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-indigo-900/40 text-indigo-400 border border-indigo-800">${esc(topMatch.name)}</span>` : ''}
+                            <span class="text-[10px] text-zinc-500">${date}</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function openResponseFromLibrary(id) {
+            const entries = loadResponseEntries();
+            const entry = entries.find(e => e.id === id);
+            if (!entry) return;
+
+            closeRightPanel();
+            document.getElementById('welcome-screen').classList.add('hidden');
+            document.getElementById('content-area').classList.add('hidden');
+
+            document.getElementById('response-viewer-title').textContent = 'Mapping result';
+            const date = entry.createdAt ? new Date(entry.createdAt).toLocaleString() : '';
+            const laneLine = entry.provider ? (entry.provider + ' · ' + (entry.model || '') + (entry.served ? ' → served: ' + entry.served : '')) : '';
+            document.getElementById('response-viewer-meta').textContent = (laneLine ? laneLine + ' · ' : '') + date;
+            currentResponseEntryId = entry.id;
+
+            const fragEl = document.getElementById('response-viewer-fragment');
+            fragEl.textContent = '"' + entry.fragment + '"';
+            fragEl.classList.remove('hidden');
+
+            const bodyEl = document.getElementById('response-viewer-body');
+            bodyEl.innerHTML = (entry.matches || []).map(m => `
+                <div class="bg-zinc-950 border border-zinc-800 rounded-2xl p-4 mb-3">
+                    <div class="flex items-center justify-between mb-1.5">
+                        <div class="font-semibold text-sm text-white">${m.name}</div>
+                        <span class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-400 border border-zinc-700">${(m.strength || '').toUpperCase()}</span>
+                    </div>
+                    <div class="text-xs text-zinc-500 mb-2">${m.dimLabel || ''}</div>
+                    <div class="text-sm text-zinc-300">${m.reason || ''}</div>
+                    ${m.expanded ? `
+                    <div class="mt-3 pt-3 border-t border-zinc-800">
+                        <div class="text-[10px] tracking-wider text-indigo-400 mb-1.5"><i class="fa-solid fa-arrow-down-wide-short"></i> EXPANDED CONNECTION</div>
+                        <div class="text-sm text-zinc-300 leading-relaxed">${m.expanded}</div>
+                    </div>` : ''}
+                    ${m.applied ? `
+                    <div class="mt-3 pt-3 border-t border-zinc-800">
+                        <div class="text-[10px] tracking-wider text-emerald-400 mb-1.5"><i class="fa-solid fa-wand-magic-sparkles"></i> APPLIED PROTOCOL</div>
+                        <div class="text-sm text-zinc-300 leading-relaxed whitespace-pre-line">${m.applied}</div>
+                    </div>` : ''}
+                </div>
+            `).join('');
+
+            document.getElementById('response-viewer').classList.remove('hidden');
+        }
+
+        function closeResponseViewer() {
+            document.getElementById('response-viewer').classList.add('hidden');
+            document.getElementById('welcome-screen').classList.remove('hidden');
+        }
+
+        // ---- Import / Export symmetry (Constraint 20) ----
+        function exportResponseLibrary() {
+            const entries = loadResponseEntries();
+            const blob = new Blob([JSON.stringify(entries, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'dimensions-response-library.json';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function importResponseLibrary(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const imported = JSON.parse(e.target.result);
+                    if (!Array.isArray(imported)) throw new Error('Expected a JSON array');
+                    const existingIds = new Set(loadResponseEntries().map(en => en.id));
+                    let added = 0;
+                    imported.forEach(entry => {
+                        if (entry && entry.id && !existingIds.has(entry.id)) {
+                            saveResponseEntry(entry);
+                            added++;
+                        }
+                    });
+                    renderResponseLibrary();
+                    alert(`Imported ${added} new response${added === 1 ? '' : 's'} (merged, duplicates skipped).`);
+                } catch (err) {
+                    alert('Import failed: ' + err.message);
+                }
+            };
+            reader.readAsText(file);
+            event.target.value = '';
+        }
+
+        /* Canonical copy (UI Contract 05 — sole transport law) + markdown (UI Contract 02) */
+        function copyToClipboard(text, btn) {
+            if (!text || !text.trim()) return;
+            var origHTML = btn.innerHTML;
+            var ICON_CHECK = '<svg viewBox="0 0 24 24" style="width:11px;height:11px;stroke:currentColor;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+            function onSuccess() { btn.innerHTML = ICON_CHECK + ' Copied'; btn.classList.add('copied'); setTimeout(function(){ btn.innerHTML=origHTML; btn.classList.remove('copied'); },2000); }
+            function onFail() { btn.textContent = '✗ Failed'; setTimeout(function(){ btn.innerHTML=origHTML; },2000); }
+            function execCopy() {
+                var ta = document.createElement('textarea'); ta.value = text;
+                ta.style.cssText = 'position:fixed;left:-9999px;top:-9999px;opacity:0;font-size:12px;pointer-events:none;';
+                ta.setAttribute('readonly','');
+                document.body.appendChild(ta); ta.focus(); ta.select(); ta.setSelectionRange(0,text.length);
+                var ok=false; try{ ok=document.execCommand('copy'); }catch(e){}
+                document.body.removeChild(ta); ok ? onSuccess() : onFail();
+            }
+            if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(text).then(onSuccess).catch(execCopy); }
+            else { execCopy(); }
+        }
+        function renderMarkdown(src) {
+            var e = String(src == null ? '' : src).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+            var out = [], list = null;
+            var inl = function(s){ return s.replace(/`([^`]+)`/g,'<code>$1</code>').replace(/\*\*\*(.+?)\*\*\*/g,'<strong><em>$1</em></strong>').replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/(^|[^*\w])[*_]([^*_\n]+)[*_](?![*\w])/g,'$1<em>$2</em>'); };
+            function close(){ if(list){ out.push('</'+list+'>'); list=null; } }
+            e.split('\n').forEach(function(l){
+                var m;
+                if (m=/^(#{1,3})\s+(.*)/.exec(l)){ close(); out.push('<h'+m[1].length+'>'+inl(m[2])+'</h'+m[1].length+'>'); }
+                else if (/^---+$/.test(l.trim())){ close(); out.push('<hr>'); }
+                else if (m=/^\s*[-*]\s+(.*)/.exec(l)){ if(list!=='ul'){ close(); out.push('<ul>'); list='ul'; } out.push('<li>'+inl(m[1])+'</li>'); }
+                else if (m=/^\s*\d+\.\s+(.*)/.exec(l)){ if(list!=='ol'){ close(); out.push('<ol>'); list='ol'; } out.push('<li>'+inl(m[1])+'</li>'); }
+                else if (!l.trim()){ close(); }
+                else { close(); out.push('<p>'+inl(l)+'</p>'); }
+            });
+            close();
+            return out.join('').replace(/<\/p><p>/g,'<br>').replace(/^<p>|<\/p>$/g,'').replace(/<p><\/p>/g,'<p><br></p>');
+        }
+        function copyAllLanes(btn) {
+            // Universal button (UI Contract 04): reads live DOM, never gated on lastResults
+            var cards = document.querySelectorAll('#map-results .lane-card');
+            var text;
+            if (cards.length) {
+                text = Array.prototype.map.call(cards, function(c, i){
+                    var title = c.querySelector('.lane-title'); var body = c.querySelector('.lane-body');
+                    return '— Lane ' + ('0'+(i+1)).slice(-2) + ': ' + (title ? title.textContent : '') + ' —\n\n' + (body ? body.innerText : '');
+                }).join('\n\n');
+            } else {
+                var fallback = document.getElementById('map-results');
+                text = fallback ? fallback.innerText : '';
+            }
+            copyToClipboard(text, btn);
+        }
+
+        /* callAI: unchanged contract, everything underneath is the Model Core (curated mode for Dimensions prose/JSON gates) */
+        async function callAI(systemPrompt, userMessage, validate) {
+            var pid = (function(){ var ks = activeKeys(); if (ks.length) return splitKey(ks[0]).provider; var dl = defaultLanes(); return dl.length ? splitKey(dl[0]).provider : (usableProviders()[0] || {}).id; })();
+            var prev = 0, acc = '';
+            var r = await callModel({ provider: pid, system: systemPrompt, user: userMessage,
+                onText: function (a) { acc = a; }, validate: validate });
+            return r.text;
+        }
+        async function callLaneStrict(lane, systemPrompt, userMessage) {
+            var r = await callModel({ provider: lane.pid, model: lane.m, system: systemPrompt, user: userMessage,
+                onText: function () {} });
+            return r;
+        }
+
+        function jsonValidator(text) {
+            const parsed = parseJSON(text);
+            if (!parsed) {
+                const preview = (text || '').trim().slice(0, 200);
+                const err = new Error('Unparseable JSON from model. Raw response started with: "' + preview + (text && text.length > 200 ? '…' : '') + '"');
+                err.rawText = text;
+                throw err;
+            }
+            return parsed;
+        }
+
+        // Lenient JSON parse — strips code fences, extracts first {...}/[...] block
+        function parseJSON(text) {
+            if (!text) return null;
+            let cleaned = text.trim().replace(/^```(?:json)?/i, '').replace(/```$/, '').trim();
+            try { return JSON.parse(cleaned); } catch (e) {}
+            const match = cleaned.match(/(\{[\s\S]*\}|\[[\s\S]*\])/);
+            if (match) {
+                try { return JSON.parse(match[1]); } catch (e) {}
+            }
+            return null;
+        }
+
+        // Full Content for each dimension (deep, high-quality)
+        const dimensionContent = {
+            1: `
+                <div class="max-w-3xl mx-auto">
+                    <div class="flex items-center gap-x-4 mb-6">
+                        <div class="dimension-icon text-indigo-400">
+                            <i class="fa-solid fa-search text-3xl"></i>
+                        </div>
+                        <div>
+                            <div class="text-xs tracking-[3px] text-indigo-400 font-mono">DIMENSION 01 / 06</div>
+                            <h1 class="font-display text-5xl tracking-tighter">Foundations of Thinking</h1>
+                        </div>
+                    </div>
+                    
+                    <p class="text-xl text-zinc-300 leading-relaxed">
+                        Before you can use powerful models, you must learn to see. Most people think they are thinking when they are merely rearranging their prejudices. 
+                        This dimension sharpens the blade of your attention.
+                    </p>
+                    
+                    <div class="mt-10">
+                        <h2 class="section-heading mb-6 flex items-center gap-x-3">
+                            <span>Core Distinctions</span>
+                            <div class="flex-1 h-px bg-gradient-to-r from-zinc-700 to-transparent"></div>
+                        </h2>
+                        
+                        <div class="space-y-8">
+                            <!-- Distinction 1 -->
+                            <div class="border-l-2 border-indigo-500 pl-6">
+                                <div class="font-semibold text-lg text-white">Necessary vs. Sufficient Conditions</div>
+                                <p class="mt-2 text-zinc-300">A condition is <strong>necessary</strong> if the outcome cannot happen without it. It is <strong>sufficient</strong> if its presence guarantees the outcome.</p>
+                                <p class="mt-3 text-sm text-zinc-400">Most failures in reasoning come from confusing the two. People chase sufficient conditions (a silver bullet) when they have not secured the necessary ones (basic hygiene factors).</p>
+                                <div class="mt-3 text-xs px-3 py-2 bg-zinc-950 border border-zinc-800 rounded-xl text-emerald-400">
+                                    <strong>Cognitive Shift:</strong> You stop wasting energy on "motivation hacks" when sleep, clarity of goal, and environment are not yet necessary conditions.
+                                </div>
+                            </div>
+                            
+                            <!-- Distinction 2 -->
+                            <div class="border-l-2 border-indigo-500 pl-6">
+                                <div class="font-semibold text-lg text-white">The Ladder of Inference</div>
+                                <p class="mt-2 text-zinc-300">We do not experience raw reality. We <strong>select</strong> data, <strong>interpret</strong> it, <strong>assume</strong> meaning, <strong>conclude</strong>, adopt <strong>beliefs</strong>, and then <strong>act</strong>. Most of us live permanently at the top of this ladder.</p>
+                                <p class="mt-3 text-sm text-zinc-400">The discipline is to consciously climb back down: "What observable data am I actually seeing? What am I adding to it?"</p>
+                                <div class="mt-3 text-xs px-3 py-2 bg-zinc-950 border border-zinc-800 rounded-xl text-emerald-400">
+                                    <strong>Cognitive Shift:</strong> You catch yourself constructing stories from thin data and develop the rare habit of asking "What else could this mean?"
+                                </div>
+                            </div>
+                            
+                            <!-- Distinction 3 -->
+                            <div class="border-l-2 border-indigo-500 pl-6">
+                                <div class="font-semibold text-lg text-white">Facts vs. Interpretations vs. Judgments</div>
+                                <p class="mt-2 text-zinc-300">A fact is verifiable. An interpretation is a story about the fact. A judgment is an evaluation layered on top.</p>
+                                <p class="mt-3 text-sm text-zinc-400">Clear thinkers habitually label their statements: "The data shows X (fact). I interpret this as Y because... (interpretation). This feels frustrating (judgment)."</p>
+                                <div class="mt-3 text-xs px-3 py-2 bg-zinc-950 border border-zinc-800 rounded-xl text-emerald-400">
+                                    <strong>Cognitive Shift:</strong> Communication becomes surgical. Conflict decreases because people stop arguing interpretations as if they were facts.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-12">
+                        <h2 class="section-heading mb-6 flex items-center gap-x-3">
+                            <span>Why This Dimension Matters</span>
+                            <div class="flex-1 h-px bg-gradient-to-r from-zinc-700 to-transparent"></div>
+                        </h2>
+                        <div class="prose-custom text-[15px]">
+                            <p>Without these foundations, every subsequent mental model becomes a blunt instrument. You cannot use inversion effectively if you cannot distinguish what is necessary from what is merely desirable. You cannot practice second-order thinking if your perception is already distorted by unexamined assumptions.</p>
+                            <p class="mt-4">This is the difference between someone who has read about mental models and someone who has begun to <em>think</em> with them.</p>
+                        </div>
+                    </div>
+                </div>
+            `,
+            
+            2: `
+                <div class="max-w-3xl mx-auto">
+                    <div class="flex items-center gap-x-4 mb-6">
+                        <div class="dimension-icon text-violet-400">
+                            <i class="fa-solid fa-eye text-3xl"></i>
+                        </div>
+                        <div>
+                            <div class="text-xs tracking-[3px] text-violet-400 font-mono">DIMENSION 02 / 06</div>
+                            <h1 class="font-display text-5xl tracking-tighter">Core Mental Models</h1>
+                        </div>
+                    </div>
+                    
+                    <p class="text-xl text-zinc-300 leading-relaxed">
+                        These eleven models are not tools to add to your belt. They are lenses that, once internalized, permanently change what you notice in the world.
+                    </p>
+                    
+                    <div class="mt-10 space-y-4">
+                        <h2 class="section-heading mb-2">The 11 High-Leverage Models</h2>
+                        <p class="text-sm text-zinc-400">Each model contains a hidden reversal of default thinking. Click to expand.</p>
+                    </div>
+                    
+                    <!-- Models as native details for clean progressive disclosure -->
+                    <div class="mt-6 space-y-3">
+                        
+                        <details class="model-card group bg-zinc-950 border border-zinc-800 rounded-2xl px-6 py-1">
+                            <summary class="font-semibold text-lg py-4 cursor-pointer flex items-center justify-between list-none">
+                                <span>1. Inversion</span>
+                                <span class="text-xs px-3 py-1 rounded-full bg-zinc-900 text-zinc-400 group-open:rotate-180 transition-transform"><i class="fa-solid fa-chevron-down"></i></span>
+                            </summary>
+                            <div class="pb-6 text-sm text-zinc-300 space-y-3">
+                                <p>Instead of asking how to succeed, ask what would guarantee failure — then systematically eliminate those paths.</p>
+                                <div class="bg-zinc-900 border-l-2 border-violet-500 pl-4 py-1 text-xs">
+                                    <strong>Why it shifts cognition:</strong> Default thinking is positive and additive. Inversion reveals the negative space and hidden risks that optimism conceals.
+                                </div>
+                                <p class="text-xs"><strong>Example:</strong> Before launching a product, list 15 ways it could fail catastrophically. Address each one. This is how antifragile systems are built.</p>
+                            </div>
+                        </details>
+                        
+                        <details class="model-card group bg-zinc-950 border border-zinc-800 rounded-2xl px-6 py-1">
+                            <summary class="font-semibold text-lg py-4 cursor-pointer flex items-center justify-between list-none">
+                                <span>2. Second-Order Thinking</span>
+                                <span class="text-xs px-3 py-1 rounded-full bg-zinc-900 text-zinc-400 group-open:rotate-180 transition-transform"><i class="fa-solid fa-chevron-down"></i></span>
+                            </summary>
+                            <div class="pb-6 text-sm text-zinc-300 space-y-3">
+                                <p>Consider not just the immediate consequence of an action, but the consequence of that consequence — and the one after that.</p>
+                                <div class="bg-zinc-900 border-l-2 border-violet-500 pl-4 py-1 text-xs">
+                                    <strong>Why it shifts cognition:</strong> Most people stop at first-order effects. Second-order thinkers see the delayed, indirect, and often opposite results.
+                                </div>
+                                <p class="text-xs"><strong>Example:</strong> Rent control helps current tenants (1st order) but reduces housing supply and raises prices long-term (2nd order).</p>
+                            </div>
+                        </details>
+                        
+                        <details class="model-card group bg-zinc-950 border border-zinc-800 rounded-2xl px-6 py-1">
+                            <summary class="font-semibold text-lg py-4 cursor-pointer flex items-center justify-between list-none">
+                                <span>3. Incentives</span>
+                                <span class="text-xs px-3 py-1 rounded-full bg-zinc-900 text-zinc-400 group-open:rotate-180 transition-transform"><i class="fa-solid fa-chevron-down"></i></span>
+                            </summary>
+                            <div class="pb-6 text-sm text-zinc-300 space-y-3">
+                                <p>Never underestimate the power of incentives. People respond to what is measured, rewarded, and punished — often in ways that surprise you.</p>
+                                <div class="bg-zinc-900 border-l-2 border-violet-500 pl-4 py-1 text-xs">
+                                    <strong>Why it shifts cognition:</strong> You stop being surprised by bad behavior and start diagnosing the incentive structure that produces it.
+                                </div>
+                                <p class="text-xs"><strong>Example:</strong> When a company says "we value innovation" but promotes people who hit short-term targets, you now understand why innovation dies.</p>
+                            </div>
+                        </details>
+                        
+                        <details class="model-card group bg-zinc-950 border border-zinc-800 rounded-2xl px-6 py-1">
+                            <summary class="font-semibold text-lg py-4 cursor-pointer flex items-center justify-between list-none">
+                                <span>4. Compounding</span>
+                                <span class="text-xs px-3 py-1 rounded-full bg-zinc-900 text-zinc-400 group-open:rotate-180 transition-transform"><i class="fa-solid fa-chevron-down"></i></span>
+                            </summary>
+                            <div class="pb-6 text-sm text-zinc-300 space-y-3">
+                                <p>Small advantages or disadvantages, consistently applied over long periods, produce results that appear miraculous to those thinking linearly.</p>
+                                <div class="bg-zinc-900 border-l-2 border-violet-500 pl-4 py-1 text-xs">
+                                    <strong>Why it shifts cognition:</strong> You develop patience for processes whose results are invisible for years. You stop chasing quick wins that destroy compounding.
+                                </div>
+                            </div>
+                        </details>
+                        
+                        <details class="model-card group bg-zinc-950 border border-zinc-800 rounded-2xl px-6 py-1">
+                            <summary class="font-semibold text-lg py-4 cursor-pointer flex items-center justify-between list-none">
+                                <span>5. Opportunity Cost</span>
+                                <span class="text-xs px-3 py-1 rounded-full bg-zinc-900 text-zinc-400 group-open:rotate-180 transition-transform"><i class="fa-solid fa-chevron-down"></i></span>
+                            </summary>
+                            <div class="pb-6 text-sm text-zinc-300 space-y-3">
+                                <p>The true cost of anything is what you give up to get it. Every choice is also the rejection of all other paths.</p>
+                                <div class="bg-zinc-900 border-l-2 border-violet-500 pl-4 py-1 text-xs">
+                                    <strong>Why it shifts cognition:</strong> You stop evaluating decisions in isolation and begin weighing them against their best alternative use of time, attention, and capital.
+                                </div>
+                            </div>
+                        </details>
+                        
+                        <details class="model-card group bg-zinc-950 border border-zinc-800 rounded-2xl px-6 py-1">
+                            <summary class="font-semibold text-lg py-4 cursor-pointer flex items-center justify-between list-none">
+                                <span>6. Circle of Competence</span>
+                                <span class="text-xs px-3 py-1 rounded-full bg-zinc-900 text-zinc-400 group-open:rotate-180 transition-transform"><i class="fa-solid fa-chevron-down"></i></span>
+                            </summary>
+                            <div class="pb-6 text-sm text-zinc-300 space-y-3">
+                                <p>Know the boundaries of what you truly understand. Inside the circle you can act with confidence. Outside it, you are guessing.</p>
+                                <div class="bg-zinc-900 border-l-2 border-violet-500 pl-4 py-1 text-xs">
+                                    <strong>Why it shifts cognition:</strong> You develop the rare skill of saying "I don't know" without shame and the discipline to stay within your circle or deliberately expand it.
+                                </div>
+                            </div>
+                        </details>
+                        
+                        <details class="model-card group bg-zinc-950 border border-zinc-800 rounded-2xl px-6 py-1">
+                            <summary class="font-semibold text-lg py-4 cursor-pointer flex items-center justify-between list-none">
+                                <span>7. Hanlon's Razor</span>
+                                <span class="text-xs px-3 py-1 rounded-full bg-zinc-900 text-zinc-400 group-open:rotate-180 transition-transform"><i class="fa-solid fa-chevron-down"></i></span>
+                            </summary>
+                            <div class="pb-6 text-sm text-zinc-300 space-y-3">
+                                <p>Never attribute to malice that which is adequately explained by stupidity, ignorance, or systems design.</p>
+                                <div class="bg-zinc-900 border-l-2 border-violet-500 pl-4 py-1 text-xs">
+                                    <strong>Why it shifts cognition:</strong> You conserve emotional energy previously wasted on assuming intentional harm and redirect it toward fixing broken systems and processes.
+                                </div>
+                            </div>
+                        </details>
+                        
+                        <details class="model-card group bg-zinc-950 border border-zinc-800 rounded-2xl px-6 py-1">
+                            <summary class="font-semibold text-lg py-4 cursor-pointer flex items-center justify-between list-none">
+                                <span>8. Availability Heuristic</span>
+                                <span class="text-xs px-3 py-1 rounded-full bg-zinc-900 text-zinc-400 group-open:rotate-180 transition-transform"><i class="fa-solid fa-chevron-down"></i></span>
+                            </summary>
+                            <div class="pb-6 text-sm text-zinc-300 space-y-3">
+                                <p>We judge probability and importance by how easily examples come to mind. Vivid, recent, or emotionally charged events are overweighted.</p>
+                                <div class="bg-zinc-900 border-l-2 border-violet-500 pl-4 py-1 text-xs">
+                                    <strong>Why it shifts cognition:</strong> You stop being manipulated by media salience and start seeking base rates and statistical reality.
+                                </div>
+                            </div>
+                        </details>
+                        
+                        <details class="model-card group bg-zinc-950 border border-zinc-800 rounded-2xl px-6 py-1">
+                            <summary class="font-semibold text-lg py-4 cursor-pointer flex items-center justify-between list-none">
+                                <span>9. Lindy Effect</span>
+                                <span class="text-xs px-3 py-1 rounded-full bg-zinc-900 text-zinc-400 group-open:rotate-180 transition-transform"><i class="fa-solid fa-chevron-down"></i></span>
+                            </summary>
+                            <div class="pb-6 text-sm text-zinc-300 space-y-3">
+                                <p>The longer something has survived, the longer it is likely to continue surviving. Non-perishable things (ideas, books, institutions) gain robustness with age.</p>
+                                <div class="bg-zinc-900 border-l-2 border-violet-500 pl-4 py-1 text-xs">
+                                    <strong>Why it shifts cognition:</strong> You develop a bias toward the time-tested over the novel and fashionable.
+                                </div>
+                            </div>
+                        </details>
+                        
+                        <details class="model-card group bg-zinc-950 border border-zinc-800 rounded-2xl px-6 py-1">
+                            <summary class="font-semibold text-lg py-4 cursor-pointer flex items-center justify-between list-none">
+                                <span>10. Via Negativa</span>
+                                <span class="text-xs px-3 py-1 rounded-full bg-zinc-900 text-zinc-400 group-open:rotate-180 transition-transform"><i class="fa-solid fa-chevron-down"></i></span>
+                            </summary>
+                            <div class="pb-6 text-sm text-zinc-300 space-y-3">
+                                <p>Improvement by removal. It is often easier and more powerful to subtract the harmful than to add the beneficial. "Do no harm" is a profound strategy.</p>
+                                <div class="bg-zinc-900 border-l-2 border-violet-500 pl-4 py-1 text-xs">
+                                    <strong>Why it shifts cognition:</strong> You stop endlessly adding complexity, tools, and habits and start asking what you can eliminate.
+                                </div>
+                            </div>
+                        </details>
+                        
+                        <details class="model-card group bg-zinc-950 border border-zinc-800 rounded-2xl px-6 py-1">
+                            <summary class="font-semibold text-lg py-4 cursor-pointer flex items-center justify-between list-none">
+                                <span>11. Map vs. Territory</span>
+                                <span class="text-xs px-3 py-1 rounded-full bg-zinc-900 text-zinc-400 group-open:rotate-180 transition-transform"><i class="fa-solid fa-chevron-down"></i></span>
+                            </summary>
+                            <div class="pb-6 text-sm text-zinc-300 space-y-3">
+                                <p>The model is never the thing itself. Every mental model is a simplification that leaves out critical aspects of reality. The map is useful only when you remember it is not the territory.</p>
+                                <div class="bg-zinc-900 border-l-2 border-violet-500 pl-4 py-1 text-xs">
+                                    <strong>Why it shifts cognition:</strong> You hold models lightly. You use them as tools, not as truth. You stay open to the territory surprising you.
+                                </div>
+                            </div>
+                        </details>
+                    </div>
+                </div>
+            `,
+            
+            3: `
+                <div class="max-w-3xl mx-auto">
+                    <div class="flex items-center gap-x-4 mb-6">
+                        <div class="dimension-icon text-pink-400">
+                            <i class="fa-solid fa-project-diagram text-3xl"></i>
+                        </div>
+                        <div>
+                            <div class="text-xs tracking-[3px] text-pink-400 font-mono">DIMENSION 03 / 06</div>
+                            <h1 class="font-display text-5xl tracking-tighter">Powerful Frameworks</h1>
+                        </div>
+                    </div>
+                    
+                    <p class="text-xl text-zinc-300 leading-relaxed">
+                        Mental models show you what to see. Frameworks give you repeatable processes for what to do. These six are battle-tested structures for high-stakes thinking.
+                    </p>
+                    
+                    <div class="mt-8 space-y-3">
+                        <h2 class="section-heading mb-2">Six Battle-Tested Frameworks</h2>
+                    </div>
+                    
+                    <div class="space-y-3 mt-6">
+                        <details class="model-card group bg-zinc-950 border border-zinc-800 rounded-2xl px-6 py-1">
+                            <summary class="font-semibold text-lg py-4 cursor-pointer flex items-center justify-between list-none">
+                                <span>OODA Loop</span>
+                                <span class="text-xs px-3 py-1 rounded-full bg-zinc-900 text-zinc-400 group-open:rotate-180 transition-transform"><i class="fa-solid fa-chevron-down"></i></span>
+                            </summary>
+                            <div class="pb-6 text-sm text-zinc-300 space-y-3">
+                                <p><strong>Observe → Orient → Decide → Act</strong> — then repeat, faster than your environment changes.</p>
+                                <div class="bg-zinc-900 border-l-2 border-pink-500 pl-4 py-1 text-xs">
+                                    <strong>Why it shifts cognition:</strong> In uncertain, fast-moving situations, you stop trying to create perfect plans and instead build a tempo of continuous adaptation.
+                                </div>
+                                <p class="text-xs">Best used in: startups, crisis, competitive environments, personal pivots.</p>
+                            </div>
+                        </details>
+                        
+                        <details class="model-card group bg-zinc-950 border border-zinc-800 rounded-2xl px-6 py-1">
+                            <summary class="font-semibold text-lg py-4 cursor-pointer flex items-center justify-between list-none">
+                                <span>First Principles Thinking</span>
+                                <span class="text-xs px-3 py-1 rounded-full bg-zinc-900 text-zinc-400 group-open:rotate-180 transition-transform"><i class="fa-solid fa-chevron-down"></i></span>
+                            </summary>
+                            <div class="pb-6 text-sm text-zinc-300 space-y-3">
+                                <p>Break a problem down to its most fundamental truths, then reason up from there. Ignore analogies and "best practices" until you have rebuilt from atoms.</p>
+                                <div class="bg-zinc-900 border-l-2 border-pink-500 pl-4 py-1 text-xs">
+                                    <strong>Why it shifts cognition:</strong> You escape the gravity of conventional wisdom and status-quo solutions.
+                                </div>
+                                <p class="text-xs"><strong>Example:</strong> Elon Musk on rockets: "What is the absolute physical limit of cost per kg to orbit?" rather than "How do rockets normally work?"</p>
+                            </div>
+                        </details>
+                        
+                        <details class="model-card group bg-zinc-950 border border-zinc-800 rounded-2xl px-6 py-1">
+                            <summary class="font-semibold text-lg py-4 cursor-pointer flex items-center justify-between list-none">
+                                <span>Eisenhower Matrix</span>
+                                <span class="text-xs px-3 py-1 rounded-full bg-zinc-900 text-zinc-400 group-open:rotate-180 transition-transform"><i class="fa-solid fa-chevron-down"></i></span>
+                            </summary>
+                            <div class="pb-6 text-sm text-zinc-300 space-y-3">
+                                <p>Urgent vs. Important. Most people spend their lives in the Urgent-Important quadrant reacting. The matrix forces you to spend more time in Important-Not-Urgent (the quadrant of strategy, relationships, and prevention).</p>
+                                <div class="bg-zinc-900 border-l-2 border-pink-500 pl-4 py-1 text-xs">
+                                    <strong>Why it shifts cognition:</strong> You stop being a slave to other people's urgency and start protecting time for what actually moves the needle.
+                                </div>
+                            </div>
+                        </details>
+                        
+                        <details class="model-card group bg-zinc-950 border border-zinc-800 rounded-2xl px-6 py-1">
+                            <summary class="font-semibold text-lg py-4 cursor-pointer flex items-center justify-between list-none">
+                                <span>Feynman Technique</span>
+                                <span class="text-xs px-3 py-1 rounded-full bg-zinc-900 text-zinc-400 group-open:rotate-180 transition-transform"><i class="fa-solid fa-chevron-down"></i></span>
+                            </summary>
+                            <div class="pb-6 text-sm text-zinc-300 space-y-3">
+                                <p>To truly understand something: (1) Write it out simply as if teaching a child. (2) Identify gaps and go back to the source. (3) Simplify further and use analogies.</p>
+                                <div class="bg-zinc-900 border-l-2 border-pink-500 pl-4 py-1 text-xs">
+                                    <strong>Why it shifts cognition:</strong> You stop confusing familiarity with understanding. The technique exposes shallow knowledge immediately.
+                                </div>
+                            </div>
+                        </details>
+                        
+                        <details class="model-card group bg-zinc-950 border border-zinc-800 rounded-2xl px-6 py-1">
+                            <summary class="font-semibold text-lg py-4 cursor-pointer flex items-center justify-between list-none">
+                                <span>Pre-Mortem Analysis</span>
+                                <span class="text-xs px-3 py-1 rounded-full bg-zinc-900 text-zinc-400 group-open:rotate-180 transition-transform"><i class="fa-solid fa-chevron-down"></i></span>
+                            </summary>
+                            <div class="pb-6 text-sm text-zinc-300 space-y-3">
+                                <p>Before a project or decision begins, imagine it has already failed. Then work backward to identify every possible cause of failure. This is inversion applied to planning.</p>
+                                <div class="bg-zinc-900 border-l-2 border-pink-500 pl-4 py-1 text-xs">
+                                    <strong>Why it shifts cognition:</strong> You surface risks that optimism and groupthink normally suppress.
+                                </div>
+                            </div>
+                        </details>
+                        
+                        <details class="model-card group bg-zinc-950 border border-zinc-800 rounded-2xl px-6 py-1">
+                            <summary class="font-semibold text-lg py-4 cursor-pointer flex items-center justify-between list-none">
+                                <span>Regret Minimization Framework</span>
+                                <span class="text-xs px-3 py-1 rounded-full bg-zinc-900 text-zinc-400 group-open:rotate-180 transition-transform"><i class="fa-solid fa-chevron-down"></i></span>
+                            </summary>
+                            <div class="pb-6 text-sm text-zinc-300 space-y-3">
+                                <p>When facing a difficult choice, project yourself to age 80 and ask: "Which decision will I regret more — doing this or not doing this?"</p>
+                                <div class="bg-zinc-900 border-l-2 border-pink-500 pl-4 py-1 text-xs">
+                                    <strong>Why it shifts cognition:</strong> It cuts through short-term fear and social pressure to reveal what your future self actually values.
+                                </div>
+                            </div>
+                        </details>
+                    </div>
+                </div>
+            `,
+            
+            4: `
+                <div class="max-w-3xl mx-auto">
+                    <div class="flex items-center gap-x-4 mb-6">
+                        <div class="dimension-icon text-rose-400">
+                            <i class="fa-solid fa-project-diagram text-3xl"></i>
+                        </div>
+                        <div>
+                            <div class="text-xs tracking-[3px] text-rose-400 font-mono">DIMENSION 04 / 06</div>
+                            <h1 class="font-display text-5xl tracking-tighter">Interconnections & Trade-offs</h1>
+                        </div>
+                    </div>
+                    
+                    <p class="text-xl text-zinc-300 leading-relaxed">
+                        Isolated models are powerful but incomplete. Reality is a web of relationships, delays, feedback, and conflicting goals. This dimension trains you to see the system.
+                    </p>
+                    
+                    <div class="mt-10">
+                        <h2 class="section-heading mb-6">Key Systemic Concepts</h2>
+                        
+                        <div class="space-y-8">
+                            <div class="border-l-2 border-rose-500 pl-6">
+                                <div class="font-semibold text-lg">Feedback Loops</div>
+                                <p class="mt-2 text-sm">Reinforcing loops amplify change (virtuous or vicious cycles). Balancing loops stabilize. Most complex problems contain both. The skill is identifying which loop is dominant right now.</p>
+                                <div class="mt-2 text-xs text-emerald-400">Shift: You stop treating symptoms and start intervening at the level of loop structure.</div>
+                            </div>
+                            
+                            <div class="border-l-2 border-rose-500 pl-6">
+                                <div class="font-semibold text-lg">Stocks, Flows & Delays</div>
+                                <p class="mt-2 text-sm">Stocks are accumulations (inventory, trust, debt, skill). Flows are rates of change into or out of the stock. Delays between action and visible result are where most policy and personal failures originate.</p>
+                                <div class="mt-2 text-xs text-emerald-400">Shift: You develop patience and stop demanding immediate visible proof that a good decision was made.</div>
+                            </div>
+                            
+                            <div class="border-l-2 border-rose-500 pl-6">
+                                <div class="font-semibold text-lg">Leverage Points (Donella Meadows)</div>
+                                <p class="mt-2 text-sm">Not all interventions are equal. Changing parameters is weak. Changing goals, information flows, or the paradigm itself is transformative. Most people intervene at low-leverage points.</p>
+                                <div class="mt-2 text-xs text-emerald-400">Shift: You stop wasting political and personal capital on symbolic changes and aim higher in the hierarchy of leverage.</div>
+                            </div>
+                            
+                            <div class="border-l-2 border-rose-500 pl-6">
+                                <div class="font-semibold text-lg">Trade-off Surfaces</div>
+                                <p class="mt-2 text-sm">Every decision exists on a multi-dimensional surface of competing values (speed vs quality, autonomy vs coordination, exploration vs exploitation). There is rarely a single "right" answer — only intelligent navigation of the surface.</p>
+                                <div class="mt-2 text-xs text-emerald-400">Shift: You stop seeking the perfect choice and start asking "Which trade-off am I willing to own?"</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `,
+            
+            5: `
+                <div class="max-w-3xl mx-auto">
+                    <div class="flex items-center gap-x-4 mb-6">
+                        <div class="dimension-icon text-amber-400">
+                            <i class="fa-solid fa-exclamation-triangle text-3xl"></i>
+                        </div>
+                        <div>
+                            <div class="text-xs tracking-[3px] text-amber-400 font-mono">DIMENSION 05 / 06</div>
+                            <h1 class="font-display text-5xl tracking-tighter">Application & Shadow</h1>
+                        </div>
+                    </div>
+                    
+                    <p class="text-xl text-zinc-300 leading-relaxed">
+                        Every powerful tool casts a shadow. Mental models and frameworks can be misapplied, overused, or turned into ideology. Wisdom is not just knowing the models — it is knowing when they betray you.
+                    </p>
+                    
+                    <div class="mt-10">
+                        <h2 class="section-heading mb-6">The Shadow Side</h2>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="bg-zinc-950 border border-zinc-800 rounded-2xl p-6">
+                                <div class="font-semibold mb-2 text-amber-400">Model Myopia</div>
+                                <p class="text-sm">Using one favorite model for every situation (the "hammer" problem). Inversion is powerful but not always the right first move. Second-order thinking can lead to paralysis.</p>
+                            </div>
+                            <div class="bg-zinc-950 border border-zinc-800 rounded-2xl p-6">
+                                <div class="font-semibold mb-2 text-amber-400">Overfitting to Models</div>
+                                <p class="text-sm">Treating models as complete descriptions of reality rather than useful simplifications. The map replaces the territory in your mind.</p>
+                            </div>
+                            <div class="bg-zinc-950 border border-zinc-800 rounded-2xl p-6">
+                                <div class="font-semibold mb-2 text-amber-400">Status Quo Bias via Models</div>
+                                <p class="text-sm">Using "compounding" or "Lindy Effect" as sophisticated excuses to avoid necessary change or risk.</p>
+                            </div>
+                            <div class="bg-zinc-950 border border-zinc-800 rounded-2xl p-6">
+                                <div class="font-semibold mb-2 text-amber-400">Weaponization</div>
+                                <p class="text-sm">Using mental models to win arguments rather than to see more clearly. This is the fastest way to corrupt your own thinking.</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-10">
+                        <h2 class="section-heading mb-4">Developing Discernment</h2>
+                        <div class="prose-custom text-sm">
+                            <p>The mature practitioner develops a meta-skill: <strong>when to use which model</strong>, and when to put all models aside and simply pay attention to what is actually happening in front of them.</p>
+                            <p class="mt-3">They also maintain a small set of "antidote" practices: regular periods of model-free observation, talking to people who think nothing like them, and deliberately making decisions from different parts of their mind (intuition, values, long-term self).</p>
+                        </div>
+                    </div>
+                </div>
+            `,
+            
+            6: `
+                <div class="max-w-3xl mx-auto">
+                    <div class="flex items-center gap-x-4 mb-6">
+                        <div class="dimension-icon text-emerald-400">
+                            <i class="fa-solid fa-infinity text-3xl"></i>
+                        </div>
+                        <div>
+                            <div class="text-xs tracking-[3px] text-emerald-400 font-mono">DIMENSION 06 / 06 — CAPSTONE</div>
+                            <h1 class="font-display text-5xl tracking-tighter">Meta & Meta-Meta Thinking</h1>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-emerald-950/30 border border-emerald-900 rounded-3xl p-8 mb-10">
+                        <p class="text-lg text-emerald-200">This is the destination. Everything before was preparation.</p>
+                        <p class="mt-3 text-emerald-300">You now have the capacity to not only use better thinking tools, but to consciously design, test, and evolve the very system by which you think.</p>
+                    </div>
+                    
+                    <div class="space-y-10">
+                        <div>
+                            <h2 class="section-heading mb-4">Double-Loop Learning</h2>
+                            <p class="text-zinc-300">Single-loop learning: "My decision failed. I will adjust my tactics."</p>
+                            <p class="mt-1 text-zinc-300">Double-loop learning: "My decision failed. I will examine the assumptions and values that led me to frame the problem that way in the first place."</p>
+                            <p class="mt-3 text-sm text-emerald-400">This is the difference between getting better at playing the game and occasionally questioning whether you are playing the right game.</p>
+                        </div>
+                        
+                        <div>
+                            <h2 class="section-heading mb-4">Designing Your Personal Thinking OS</h2>
+                            <p class="text-zinc-300 mb-4">You are now ready to become the architect of your own cognitive system. This is not a static document. It is a living practice.</p>
+                            
+                            <div class="bg-zinc-950 border border-zinc-800 rounded-2xl p-7 space-y-6">
+                                <div>
+                                    <div class="text-sm font-medium text-emerald-400 mb-2">My Core Model Portfolio</div>
+                                    <p class="text-xs text-zinc-400 mb-3">Which models from Dimensions 2–5 do you want to internalize most deeply? Which ones will you use as your daily operating system?</p>
+                                    <textarea id="meta-portfolio" class="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-4 text-sm h-20" placeholder="Example: Inversion + Second-Order + Circle of Competence + Pre-Mortem before major decisions..."></textarea>
+                                </div>
+                                
+                                <div>
+                                    <div class="text-sm font-medium text-emerald-400 mb-2">My Decision Review Ritual</div>
+                                    <textarea id="meta-ritual" class="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-4 text-sm h-20" placeholder="What questions will I ask myself after every significant decision? When will I review?"></textarea>
+                                </div>
+                                
+                                <div>
+                                    <div class="text-sm font-medium text-emerald-400 mb-2">My Belief Updating Protocol</div>
+                                    <textarea id="meta-updating" class="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-4 text-sm h-20" placeholder="How do I actively seek disconfirming evidence? What sources do I deliberately expose myself to?"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <h2 class="section-heading mb-4">The Final Shift</h2>
+                            <div class="prose-custom">
+                                <p>You are no longer a passive user of thinking tools. You have become someone who can notice when your current system is insufficient, design an upgrade, test it against reality, and iterate — all while remaining humble about the limits of any system you create.</p>
+                                <p class="mt-3">This is the deepest freedom available to a thinking being: the freedom to consciously participate in the evolution of your own mind.</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Capstone Interactive -->
+                    <div class="mt-12 pt-10 border-t border-zinc-800">
+                        <div class="flex items-center gap-x-3 mb-5">
+                            <i class="fa-solid fa-infinity text-emerald-400"></i>
+                            <h3 class="font-semibold text-xl tracking-tight">Design Your Thinking Operating System</h3>
+                        </div>
+                        
+                        <button onclick="saveMetaSystem()" 
+                                class="w-full py-3.5 mb-4 rounded-2xl bg-emerald-600 hover:bg-emerald-500 transition-colors font-medium flex items-center justify-center gap-x-2">
+                            <i class="fa-solid fa-save"></i>
+                            <span>Save My Personal Thinking OS</span>
+                        </button>
+                        
+                        <div id="meta-saved" class="hidden text-center py-3 text-emerald-400 text-sm">
+                            Your Thinking OS has been saved. Revisit this dimension anytime to evolve it.
+                        </div>
+                        
+                        <div class="mt-8">
+                            <button onclick="exportThinkingManifesto()" 
+                                    class="w-full py-3 rounded-2xl border border-emerald-700 hover:bg-emerald-950 text-emerald-400 font-medium flex items-center justify-center gap-x-2 text-sm">
+                                <i class="fa-solid fa-file-export"></i>
+                                <span>Export My Thinking Manifesto (Text)</span>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-12 pt-10 border-t border-zinc-800 text-center">
+                        <div class="max-w-md mx-auto">
+                            <p class="text-emerald-300 text-sm">You have completed the journey through all six dimensions.</p>
+                            <p class="mt-2 text-xs text-zinc-400">The real work begins now — in how you choose to think tomorrow.</p>
+                        </div>
+                    </div>
+                </div>
+            `
+        };
+
+        // Initialize navigation — renders into the left overlay panel (Constraint 01)
+        function initializeNavigation() {
+            const navContainer = document.getElementById('left-panel-list');
+            if (!navContainer) return;
+            navContainer.innerHTML = '';
+
+            dimensions.forEach(dim => {
+                const isCompleted = progress.completed.includes(dim.id);
+                const isActive = currentDimension === dim.id;
+
+                const cardHTML = `
+                    <div onclick="selectDimension(${dim.id})"
+                         class="dimension-nav ${isActive ? 'active' : ''} cursor-pointer bg-zinc-900 border ${isCompleted ? 'border-emerald-600' : 'border-zinc-700'} hover:border-zinc-600 rounded-2xl p-4 flex flex-col">
+
+                        <div class="flex items-start justify-between">
+                            <div class="flex items-center gap-x-3">
+                                <div class="nav-number rounded-xl text-sm font-mono ${isCompleted ? 'bg-emerald-600 text-white' : 'bg-zinc-800 text-zinc-400'}">
+                                    ${dim.number}
+                                </div>
+                                <div>
+                                    <div class="font-semibold text-base tracking-tight">${dim.name}</div>
+                                    <div class="text-xs text-zinc-400 mt-0.5">${dim.tagline}</div>
+                                </div>
+                            </div>
+
+                            ${isCompleted ?
+                                `<div class="text-emerald-500"><i class="fa-solid fa-check-circle text-lg"></i></div>` :
+                                `<div class="text-zinc-600"><i class="fa-regular fa-circle text-lg"></i></div>`
+                            }
+                        </div>
+
+                        <div class="mt-3">
+                            <div class="text-[10px] text-zinc-500 font-mono tracking-wider">${dim.outcome}</div>
+                        </div>
+                    </div>
+                `;
+
+                navContainer.innerHTML += cardHTML;
+            });
+        }
+
+        // Select and render a dimension
+        function selectDimension(dimId) {
+            currentDimension = dimId;
+
+            // Hide welcome, response viewer; show content
+            document.getElementById('welcome-screen').classList.add('hidden');
+            document.getElementById('response-viewer').classList.add('hidden');
+            document.getElementById('content-area').classList.remove('hidden');
+
+            // Render content
+            const pane = document.getElementById('content-pane');
+            pane.innerHTML = dimensionContent[dimId];
+
+            // Update active state in nav (visual only)
+            document.querySelectorAll('.dimension-nav').forEach((el, index) => {
+                el.classList.remove('active', 'ring-1', 'ring-offset-2', 'ring-offset-zinc-950', 'ring-indigo-500');
+                if (dimensions[index].id === dimId) {
+                    el.classList.add('active', 'ring-1', 'ring-offset-2', 'ring-offset-zinc-950', 'ring-indigo-500');
+                }
+            });
+
+            closeLeftPanel();
+            
+            // Scroll to content
+            document.getElementById('content-area').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        // Mark current dimension complete
+        function markDimensionComplete() {
+            if (!currentDimension) return;
+            
+            if (!progress.completed.includes(currentDimension)) {
+                progress.completed.push(currentDimension);
+                localStorage.setItem('dimensions_progress', JSON.stringify(progress));
+            }
+            
+            // Refresh nav
+            initializeNavigation();
+            
+            // Update progress bar
+            updateProgressBar();
+            
+            // Change button state
+            const btn = document.getElementById('complete-btn');
+            if (btn) {
+                btn.innerHTML = `<i class="fa-solid fa-check-double"></i> <span>Completed — Thank you</span>`;
+                btn.disabled = true;
+                btn.classList.add('!bg-emerald-700', 'cursor-default');
+                btn.classList.remove('bg-emerald-600', 'hover:bg-emerald-500');
+            }
+            
+            // If this was the last dimension, celebrate
+            if (progress.completed.length === 6) {
+                setTimeout(() => {
+                    alert("You have completed all six dimensions. The real transformation happens in how you now choose to think.");
+                }, 600);
+            }
+        }
+
+        // Update progress bar and text
+        // Journey Progress bar removed from header per request — dimension
+        // completion state (progress.completed) is still tracked and still
+        // drives the checkmarks in the left panel list; this just no longer
+        // renders a % meter anywhere.
+        function updateProgressBar() {
+            // intentionally no-op — see comment above
+        }
+
+        // Start journey (from welcome)
+        function startJourney() {
+            document.getElementById('welcome-screen').classList.add('hidden');
+            document.getElementById('content-area').classList.remove('hidden');
+            selectDimension(1);
+            
+            // Mark first as viewed implicitly
+            if (!progress.completed.includes(1)) {
+                // Do not auto-complete; user must engage
+            }
+        }
+
+        // Save Meta Thinking OS (Dimension 6)
+        function saveMetaSystem() {
+            const portfolio = document.getElementById('meta-portfolio')?.value.trim() || '';
+            const ritual = document.getElementById('meta-ritual')?.value.trim() || '';
+            const updating = document.getElementById('meta-updating')?.value.trim() || '';
+            
+            if (!portfolio && !ritual && !updating) {
+                alert("Please fill in at least one section of your Thinking OS before saving.");
+                return;
+            }
+            
+            const metaSystem = {
+                portfolio,
+                ritual,
+                updating,
+                savedAt: new Date().toISOString()
+            };
+            
+            localStorage.setItem('dimensions_meta_system', JSON.stringify(metaSystem));
+            
+            const msg = document.getElementById('meta-saved');
+            msg.classList.remove('hidden');
+            
+            setTimeout(() => {
+                msg.classList.add('hidden');
+            }, 2800);
+        }
+
+        function exportThinkingManifesto() {
+            const meta = JSON.parse(localStorage.getItem('dimensions_meta_system') || '{}');
+            
+            let text = "MY THINKING OPERATING SYSTEM\n";
+            text += "Generated from Dimensions — Six-Dimensional Cognitive Portal\n";
+            text += "Date: " + new Date().toLocaleDateString() + "\n\n";
+            text += "═".repeat(50) + "\n\n";
+            
+            text += "CORE MODEL PORTFOLIO\n";
+            text += meta.portfolio || "(Not yet defined)";
+            text += "\n\n";
+            
+            text += "DECISION REVIEW RITUAL\n";
+            text += meta.ritual || "(Not yet defined)";
+            text += "\n\n";
+            
+            text += "BELIEF UPDATING PROTOCOL\n";
+            text += meta.updating || "(Not yet defined)";
+            text += "\n\n";
+            
+            text += "═".repeat(50) + "\n";
+            text += "This document is a living artifact. Revisit Dimension 06 regularly to evolve it.\n";
+            
+            const blob = new Blob([text], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'my-thinking-manifesto.txt';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // ============================================================
+        // MAP MY THINKING — classify a raw fragment against the taxonomy
+        // ============================================================
+        function buildExpansionPrompt(fragment, taxonomyItem, shortReason) {
+            const dim = dimensions.find(d => d.id === taxonomyItem.dim);
+            const system = `You are the interpretive mapping engine for a mental-models learning tool called Dimensions. A person's fragment has already been matched to a specific model/framework. Write a short generative paragraph (3-5 sentences) that walks through HOW and WHY this model illuminates their fragment — the mechanism, not just the label. Be specific to their exact fragment, not generic textbook explanation of the model. Do not evaluate whether their fragment's claim is true — only the reasoning structure. Plain prose only, no JSON, no headers, no markdown.`;
+            const user = `Fragment: "${fragment}"\n\nMatched model: ${taxonomyItem.name} (${dim ? dim.name : 'Dimension ' + taxonomyItem.dim})\nShort reason already given: "${shortReason}"\n\nExpand this into the generative paragraph.`;
+            return { system, user };
+        }
+
+        function buildApplicationPrompt(fragment, taxonomyItem, shortReason) {
+            const dim = dimensions.find(d => d.id === taxonomyItem.dim);
+            const system = `You are the applied-practice engine for a mental-models learning tool called Dimensions. A person's fragment has already been matched to a specific model/framework, and the mechanism has been explained. Your job now is different: give them a concrete, usable protocol for applying THIS model to THEIR exact situation — not a definition, not a restatement of the mechanism.
+
+Structure the response as:
+1. One sentence naming the specific move this model prescribes for their situation.
+2. 3-5 concrete, sequential steps they can actually run — each step an action, not a concept. Steps should reference specifics from their fragment where possible, not generic textbook steps.
+3. One sentence on what to watch for — the failure mode of applying this model badly, or the signal that it's working.
+
+Keep it tight and operational — this is a protocol to run, not an essay to read. Do not evaluate whether their fragment's claim is true. Plain prose with a numbered list for the steps, no JSON, no markdown headers.`;
+            const user = `Fragment: "${fragment}"\n\nMatched model: ${taxonomyItem.name} (${dim ? dim.name : 'Dimension ' + taxonomyItem.dim})\nWhy it matches: "${shortReason}"\n\nGive me the applied protocol.`;
+            return { system, user };
+        }
+
+        // Lane context for live Expand/Apply patching (laneKey -> entryId)
+        var currentLaneEntries = {};
+        async function applyMatchModel(btn, taxonomyIndex, matchPos, shortReason, laneKey, entryId) {
+            const fragment = document.getElementById('map-input').value.trim();
+            const t = taxonomy[taxonomyIndex];
+            const lane = laneKey ? laneList().find(l => l.key === laneKey) : laneList().filter(l => activeKeys().includes(l.key))[0];
+            if (!lane) { toast('Select lanes in settings'); return; }
+            const providerCfg = P(lane.pid);
+            const targetId = 'apply_' + taxonomyIndex + '_' + String(laneKey || 'solo').replace(/[^a-zA-Z0-9]/g, '_');
+            const targetEl = document.getElementById(targetId) || document.getElementById('apply_' + taxonomyIndex);
+            if (!targetEl) return;
+
+            if (providerCfg && providerCfg.requiresKey && !getKey(providerCfg.keyStorageName)) {
+                targetEl.textContent = `${providerCfg.label} needs an API key — add one in the gear menu.`;
+                targetEl.classList.remove('hidden');
+                return;
+            }
+
+            const origHTML = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Applying...';
+            targetEl.classList.add('hidden');
+
+            try {
+                const { system, user } = buildApplicationPrompt(fragment, t, shortReason);
+                const r = await callLaneStrict(lane, system, user);
+                const trimmed = r.text.trim();
+                targetEl.innerHTML = renderMarkdown(trimmed);
+                targetEl.classList.remove('hidden');
+                btn.classList.add('hidden');
+                patchResponseEntryMatch(entryId || currentResponseEntryId, matchPos, 'applied', trimmed);
+            } catch (e) {
+                targetEl.textContent = 'Could not generate application: ' + e.message;
+                targetEl.classList.remove('hidden');
+                btn.disabled = false;
+                btn.innerHTML = origHTML;
+            }
+        }
+
+        async function expandMatchReasoning(btn, taxonomyIndex, matchPos, shortReason, laneKey, entryId) {
+            const fragment = document.getElementById('map-input').value.trim();
+            const t = taxonomy[taxonomyIndex];
+            const targetId = 'expand_' + taxonomyIndex + '_' + String(laneKey || 'solo').replace(/[^a-zA-Z0-9]/g, '_');
+            const targetEl = document.getElementById(targetId) || document.getElementById('expand_' + taxonomyIndex);
+            if (!targetEl) return;
+
+            const lane = laneKey ? laneList().find(l => l.key === laneKey) : laneList().filter(l => activeKeys().includes(l.key))[0];
+            if (!lane) { toast('Select lanes in settings'); return; }
+            const providerCfg = P(lane.pid);
+
+            if (providerCfg && providerCfg.requiresKey && !getKey(providerCfg.keyStorageName)) {
+                targetEl.textContent = `${providerCfg.label} needs an API key — add one in the gear menu.`;
+                targetEl.classList.remove('hidden');
+                return;
+            }
+
+            const origHTML = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Expanding...';
+            targetEl.classList.add('hidden');
+
+            try {
+                const { system, user } = buildExpansionPrompt(fragment, t, shortReason);
+                const r = await callLaneStrict(lane, system, user);
+                const trimmed = r.text.trim();
+                targetEl.innerHTML = renderMarkdown(trimmed);
+                targetEl.classList.remove('hidden');
+                btn.classList.add('hidden');
+                patchResponseEntryMatch(entryId || currentResponseEntryId, matchPos, 'expanded', trimmed);
+            } catch (e) {
+                targetEl.textContent = 'Could not expand: ' + e.message;
+                targetEl.classList.remove('hidden');
+                btn.disabled = false;
+                btn.innerHTML = origHTML;
+            }
+        }
+
+        function buildMappingPrompt(fragment) {
+            const list = taxonomy.map((t, i) => `${i}. [Dim ${t.dim}] ${t.name}`).join('\n');
+            const dimList = dimensions.map(d => `${d.id}. ${d.name} — ${d.tagline}`).join('\n');
+            const system = `You are the interpretive mapping engine for a mental-models learning tool called Dimensions.
+
+A person will hand you a raw fragment — a half-formed tension, a passing intuition, a complaint, an observation, anything. It will rarely name a model explicitly. Your job is generative, not lexical matching: reason about what is actually going on underneath the fragment, then connect that underlying dynamic to the models and frameworks below that illuminate it.
+
+Every fragment connects to something in this list — the list spans foundational clarity, mental models, decision frameworks, systems/trade-offs, failure modes, and meta-thinking, which together cover almost any kind of thinking a person could be doing. Your task is never to decide whether a connection exists — it does. Your task is to find the sharpest ones and explain the mechanism, not just the label.
+
+Concretely: read the fragment for its underlying mechanism (what force, incentive, bias, structural pattern, or blind spot is actually driving what they described), then match that mechanism to the models/frameworks that name or explain it — even when the fragment never uses the model's own vocabulary. "I get distracted by my phone" never says "incentive" or "second-order" but is centrally about both.
+
+Always return between 3 and 6 matches, ordered most dominant first. Do not return an empty list — if the fragment is very short or abstract, that just means you reach one level further to find the generative connection (their example is one instance of a broader mechanism; name the mechanism, then map it). Never pad with a weak filler match just to hit 3, but do the interpretive work required to find real ones — thin surface phrasing is not a reason to stop early.
+
+Important: you are never evaluating whether the fragment's claim is true, wise, or advisable. You are analyzing the SHAPE of the thinking in it — what kind of inference, leap, generalization, incentive, or blind spot the fragment exhibits — regardless of whether you personally agree with the content. A sweeping claim, a controversial opinion, or a confident prediction all map cleanly (e.g. onto Availability Heuristic, Lindy Effect, Map vs. Territory, Second-Order Thinking) without you needing to endorse, caveat, or correct the claim itself. Do not add disclaimers, safety caveats, or hedging about the fragment's subject matter anywhere in your response — output is JSON only, always, no matter what the fragment says.
+
+TAXONOMY (index. [Dim n] Name):
+${list}
+
+DIMENSIONS:
+${dimList}
+
+Respond with ONLY valid JSON — your entire response must start with { and end with }. No prose before or after, no code fences, no preamble, no caveats. Exact shape:
+{"matches":[{"index":<taxonomy index>,"strength":"high"|"medium"|"low","reason":"<one sentence naming the specific mechanism in THEIR fragment and how this model illuminates it>"}]}`;
+
+            return { system, user: fragment };
+        }
+
+        /* ───────── Lanes dispatch: one fragment through every ticked lane (Mode A single-path) ───────── */
+        async function runMapping() {
+            const input = document.getElementById('map-input');
+            const btn = document.getElementById('map-btn');
+            const errEl = document.getElementById('map-error');
+            const resultsEl = document.getElementById('map-results');
+            const fragment = input.value.trim();
+
+            errEl.classList.add('hidden');
+            resultsEl.classList.add('hidden');
+            resultsEl.innerHTML = '';
+
+            if (!fragment) {
+                errEl.textContent = 'Write a fragment first — a sentence or two is enough.';
+                errEl.classList.remove('hidden');
+                return;
+            }
+            if (!liveModelConfig) {
+                errEl.textContent = 'Model config still loading — try again in a moment.';
+                errEl.classList.remove('hidden');
+                return;
+            }
+
+            var lanes = laneList().filter(function (l) { return activeKeys().indexOf(l.key) > -1; });
+            if (!lanes.length) {
+                errEl.textContent = 'Select lanes in settings (gear menu) — tick at least one model lane to map with.';
+                errEl.classList.remove('hidden');
+                toast('Select lanes in settings');
+                return;
+            }
+            // Key guard per lane (lane honesty: each lane fails in its own column)
+            var missing = [];
+            lanes.forEach(function (l) { var c = PROVIDERS[l.pid].cfg; if (c.requiresKey && !keyOf(c) && missing.indexOf(c.label) < 0) missing.push(c.label); });
+            if (missing.length && !isArtifact) {
+                errEl.textContent = missing.join(' and ') + ' needs an API key — add one in the gear menu. Lanes without keys will error in their own column.';
+                errEl.classList.remove('hidden');
+            }
+            resolveCustom(lanes);                                         // A4, before any request
+
+            const origBtnHTML = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> <span>Mapping ' + lanes.length + ' lane' + (lanes.length === 1 ? '' : 's') + '...</span>';
+
+            // Build one card per lane: header (dot + Provider · model + served + status + copy) + body
+            const COPY_SVG = '<svg viewBox="0 0 24 24" style="width:11px;height:11px;stroke:currentColor;fill:none;stroke-width:1.8"><rect x="9" y="9" width="11" height="11" rx="2"></rect><path d="M5 15V6a2 2 0 0 1 2-2h9"></path></svg> Copy';
+            resultsEl.classList.remove('hidden');
+            var grid = document.createElement('div'); grid.className = 'lanes-grid'; resultsEl.appendChild(grid);
+            var copyBar = document.createElement('div'); copyBar.className = 'flex justify-end mb-3';
+            copyBar.innerHTML = '';
+            var copyAllBtn = document.createElement('button'); copyAllBtn.className = 'copy-btn'; copyAllBtn.innerHTML = COPY_SVG.replace('Copy', 'Copy all lanes');
+            copyAllBtn.addEventListener('click', function(){ copyAllLanes(copyAllBtn); });
+            resultsEl.insertBefore(copyBar, grid); copyBar.appendChild(copyAllBtn);
+
+            var cards = lanes.map(function (l) {
+                var card = document.createElement('div'); card.className = 'lane-card';
+                var head = document.createElement('div'); head.className = 'flex items-center gap-x-2 px-4 py-2.5 border-b border-zinc-800';
+                var dot = document.createElement('span'); dot.className = 'provider-dot'; dot.style.background = (PROVIDERS[l.pid] && PROVIDERS[l.pid].cfg.dotColor) || '#9090a8';
+                var title = document.createElement('span'); title.className = 'lane-title flex-1 text-xs text-zinc-300 truncate'; title.textContent = laneLabel(l); title.title = l.key;
+                var st = document.createElement('span'); st.className = 'text-[10px] font-mono text-zinc-500'; st.textContent = 'Queued';
+                var cp = document.createElement('button'); cp.className = 'copy-btn'; cp.innerHTML = COPY_SVG;
+                head.appendChild(dot); head.appendChild(title); head.appendChild(st); head.appendChild(cp);
+                var body = document.createElement('div'); body.className = 'lane-body p-4 text-sm text-zinc-300'; body.textContent = 'Queued…';
+                cp.addEventListener('click', function(){ copyToClipboard(body.innerText, cp); });
+                card.appendChild(head); card.appendChild(body); grid.appendChild(card);
+                return { lane: l, card: card, title: title, st: st, body: body, copyBtn: cp };
+            });
+
+            currentLaneEntries = {};
+            const { system, user } = buildMappingPrompt(fragment);
+            await Promise.all(lanes.map(function (l, i) {
+                return sleep(i * 220).then(function () { return runLaneMapping(l, cards[i], fragment, system, user); });
+            }));
+
+            btn.disabled = false;
+            btn.innerHTML = origBtnHTML;
+        }
+
+        async function runLaneMapping(l, ui, fragment, system, user) {
+            ui.st.textContent = 'Streaming'; ui.body.textContent = 'Mapping…';
+            try {
+                var r = await callModel({ provider: l.pid, model: l.m, system: system, user: user,
+                    onText: function () {} });
+                if (r.served && r.served !== l.m) ui.title.textContent = laneLabel(l) + ' → served: ' + r.served;
+                var parsed;
+                try { parsed = jsonValidator(r.text); }
+                catch (ve) { throw new Error('Unparseable JSON from ' + laneLabel(l) + '. ' + ve.message); }
+                var entryId = paintLaneResults(ui, l, parsed, fragment, r.served);
+                ui.st.textContent = r.cut ? 'Cut at cap' : 'Complete';
+                return entryId;
+            } catch (e) {
+                ui.card.classList.add('error'); ui.body.textContent = String(e.message || e); ui.st.textContent = 'Error';
+                return null;
+            }
+        }
+
+        function paintLaneResults(ui, lane, parsed, fragment, served) {
+            const matches = parsed && Array.isArray(parsed.matches) ? parsed.matches : null;
+            if (!matches || !matches.length) {
+                ui.body.textContent = "This lane returned no matches — try rephrasing with a bit more context.";
+                return null;
+            }
+            const strengthOrder = { high: 0, medium: 1, low: 2 };
+            const sorted = matches.filter(m => taxonomy[m.index]).sort((a, b) => (strengthOrder[a.strength] ?? 3) - (strengthOrder[b.strength] ?? 3));
+
+            // Auto-save per lane (Constraint 20): tagged with provider + requested model + served
+            var savedEntryId = 'resp_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
+            const entry = {
+                id: savedEntryId,
+                fragment: fragment,
+                createdAt: Date.now(),
+                provider: lane.pid,
+                model: lane.m,
+                served: (served && served !== lane.m) ? served : undefined,
+                matches: sorted.map(m => {
+                    const t = taxonomy[m.index];
+                    const dim = dimensions.find(d => d.id === t.dim);
+                    return {
+                        name: t.name,
+                        dimLabel: dim ? dim.number + ' — ' + dim.name : 'Dimension ' + t.dim,
+                        strength: m.strength,
+                        reason: m.reason || '',
+                        expanded: null,
+                        applied: null
+                    };
+                })
+            };
+            saveResponseEntry(entry);
+            currentLaneEntries[lane.key] = savedEntryId;
+            currentResponseEntryId = savedEntryId;
+
+            const strengthColor = { high: 'emerald', medium: 'amber', low: 'zinc' };
+            const laneSuffix = String(lane.key).replace(/[^a-zA-Z0-9]/g, '_');
+            ui.body.innerHTML = sorted.map((m, pos) => {
+                const t = taxonomy[m.index];
+                const dim = dimensions.find(d => d.id === t.dim);
+                const color = strengthColor[m.strength] || 'zinc';
+                const reasonEscaped = (m.reason || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '&quot;').replace(/\n/g, ' ');
+                const expandButton = m.strength === 'high'
+                    ? `<button onclick="event.stopPropagation(); expandMatchReasoning(this, ${m.index}, ${pos}, '${reasonEscaped}', '${lane.key}', '${savedEntryId}')" class="mt-2 mr-3 text-[11px] text-indigo-400 hover:text-indigo-300 flex items-center gap-x-1"><i class="fa-solid fa-arrow-down-wide-short text-[10px]"></i> Expand</button>`
+                    : '';
+                const applyButton = `<button onclick="event.stopPropagation(); applyMatchModel(this, ${m.index}, ${pos}, '${reasonEscaped}', '${lane.key}', '${savedEntryId}')" class="mt-2 text-[11px] text-emerald-400 hover:text-emerald-300 flex items-center gap-x-1"><i class="fa-solid fa-wand-magic-sparkles text-[10px]"></i> Apply</button>`;
+                return `
+                    <div onclick="selectDimension(${t.dim})" class="cursor-pointer bg-zinc-950 border border-zinc-800 hover:border-zinc-600 rounded-2xl p-4 mb-3 transition-colors">
+                        <div class="flex items-center justify-between mb-1.5">
+                            <div class="font-semibold text-sm text-white">${t.name}</div>
+                            <span class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-${color}-900/40 text-${color}-400 border border-${color}-800">${(m.strength || '').toUpperCase()}</span>
+                        </div>
+                        <div class="text-xs text-zinc-500 mb-2">Dimension ${dim ? dim.number + ' — ' + dim.name : t.dim}</div>
+                        <div class="text-sm text-zinc-300">${m.reason || ''}</div>
+                        <div class="flex items-center flex-wrap">${expandButton}${applyButton}</div>
+                        <div id="expand_${m.index}_${laneSuffix}" onclick="event.stopPropagation()" class="hidden mt-3 pt-3 border-t border-zinc-800 text-sm text-zinc-300 leading-relaxed"></div>
+                        <div id="apply_${m.index}_${laneSuffix}" onclick="event.stopPropagation()" class="hidden mt-3 pt-3 border-t border-zinc-800 text-sm text-zinc-300 leading-relaxed whitespace-pre-line"></div>
+                    </div>
+                `;
+            }).join('');
+
+            // Highlight dominant dimensions in the nav
+            const dominantDims = new Set(sorted.filter(m => m.strength === 'high').map(m => taxonomy[m.index].dim));
+            document.querySelectorAll('.dimension-nav').forEach((el, index) => {
+                el.classList.remove('ring-1', 'ring-indigo-500');
+                if (dominantDims.has(dimensions[index].id)) {
+                    el.classList.add('ring-1', 'ring-indigo-500');
+                }
+            });
+            return savedEntryId;
+        }
+
+        function renderMappingResults(parsed, fragment) {
+            // Legacy single-result entry point (kept for compatibility): paints into the first active lane card shape
+            var lanes = laneList().filter(function (l) { return activeKeys().indexOf(l.key) > -1; });
+            var lane = lanes[0] || { key: 'solo', pid: (usableProviders()[0] || {}).id || 'groq', m: '' };
+            var resultsEl = document.getElementById('map-results');
+            resultsEl.classList.remove('hidden');
+            resultsEl.innerHTML = '';
+            var wrap = document.createElement('div'); wrap.className = 'lane-body'; resultsEl.appendChild(wrap);
+            paintLaneResults({ body: wrap, title: { textContent: '' }, st: { textContent: '' }, card: resultsEl }, lane, parsed, fragment, null);
+        }
+
+        // Reset everything
+        function resetProgress() {
+            if (!confirm("This will clear all progress and your saved Thinking OS. Are you sure?")) {
+                return;
+            }
+            
+            localStorage.removeItem('dimensions_progress');
+            localStorage.removeItem('dimensions_reflections'); // legacy key cleanup
+            localStorage.removeItem('dimensions_meta_system');
+            
+            progress = { completed: [] };
+            
+            initializeNavigation();
+            
+            // If content is open, reload current dimension without saved state
+            if (currentDimension) {
+                const pane = document.getElementById('content-pane');
+                pane.innerHTML = dimensionContent[currentDimension];
+            }
+            
+            // Show welcome again
+            document.getElementById('welcome-screen').classList.remove('hidden');
+            document.getElementById('content-area').classList.add('hidden');
+        }
+
+        // Load state from localStorage
+        function loadState() {
+            const savedProgress = localStorage.getItem('dimensions_progress');
+            if (savedProgress) {
+                progress = JSON.parse(savedProgress);
+            }
+            
+            updateProgressBar();
+            initializeNavigation();
+
+            // First-time visitor (no saved progress at all): surface the six
+            // portals immediately via the overlay, rather than leaving them
+            // undiscoverable behind the ☰ toggle on an empty welcome screen.
+            if (!savedProgress) {
+                openLeftPanel();
+            }
+        }
+
+        // Keyboard support
+        function setupKeyboard() {
+            document.addEventListener('keydown', function(e) {
+                if (e.key === '/' && document.activeElement.tagName === 'BODY') {
+                    e.preventDefault();
+                    toggleRightPanel();
+                }
+                
+                if (e.key.toLowerCase() === 'escape') {
+                    const leftOpen = document.getElementById('left-panel').style.transform === 'translateX(0px)' || document.getElementById('left-panel').style.transform === 'translateX(0)';
+                    const rightOpen = document.getElementById('right-panel').style.transform === 'translateX(0px)' || document.getElementById('right-panel').style.transform === 'translateX(0)';
+                    if (leftOpen) {
+                        closeLeftPanel();
+                    } else if (rightOpen) {
+                        closeRightPanel();
+                    } else if (!document.getElementById('content-area').classList.contains('hidden')) {
+                        // Go back to welcome / nav
+                        document.getElementById('content-area').classList.add('hidden');
+                        document.getElementById('welcome-screen').classList.remove('hidden');
+                    }
+                }
+            });
+            
+            // Easter egg: press "6" to jump to capstone if curious
+            document.addEventListener('keypress', function(e) {
+                if (e.key === '6' && document.activeElement.tagName === 'BODY') {
+                    selectDimension(6);
+                }
+            });
+        }
+
+        // Boot the application
+        function boot() {
+            initializeTailwind();
+            loadState();
+            setupKeyboard();
+            migrateLaneKeys();
+            wireKeys();
+            applyConfigToPicker('fallback');
+            uiReady = true;
+            renderConfigUI();
+            fetchModelConfig(src => applyConfigToPicker(src));
+            
+            // If user has made progress before, skip welcome and show nav prominently
+            if (progress.completed.length > 0) {
+                document.getElementById('welcome-screen').classList.add('hidden');
+                // Keep content hidden until they choose a dimension
+            }
+            
+            // Optional: Auto-select first dimension on very first visit (commented for agency)
+            // if (progress.completed.length === 0) { selectDimension(1); }
+            
+            console.log('%c[Dimensions] Cognitive Portal initialized. All state is local.', 'color:#3f3f46');
+        }
+
+        // Start everything
+        window.onload = boot;
+    </script>
+</body>
+</html>

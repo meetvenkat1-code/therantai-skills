@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<!-- COMPILED by tools/compile_skill.py from claude_brain/compiled_skills/choreograph/. Source: skills/choreograph/SKILL.md. DO NOT hand-edit; edit skills/ source and re-ingest. -->
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>choreograph (skill build)</title>
+<style>
+:root{--bg:#0a0a0f;--panel:#12121a;--line:#26263a;--txt:#e8e8f0;--dim:#8a8aa3;--acc:#22c55e}
+body{background:var(--bg);color:var(--txt);font-family:system-ui,sans-serif;margin:0}
+.header{display:flex;justify-content:space-between;align-items:center;padding:.8rem 1.2rem;border-bottom:1px solid var(--line)}
+.badge{font-size:.65rem;border:1px solid var(--line);border-radius:99px;padding:.15rem .6rem;color:var(--dim)}
+.canvas{max-width:800px;margin:0 auto;padding:1.2rem}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:1rem;margin-bottom:1rem}
+.desc{font-size:.8rem;color:var(--dim);margin:.4rem 0 0}
+.bubble{border:1px solid var(--line);border-radius:10px;padding:.7rem 1rem;margin-top:.6rem;white-space:pre-wrap;font-size:.88rem}
+.bubble.user{border-color:var(--acc)}.who{font-size:.65rem;color:var(--dim);letter-spacing:.1em;text-transform:uppercase}
+textarea{width:100%;min-height:70px;background:#0d0d14;color:var(--txt);border:1px solid var(--line);border-radius:8px;padding:.6rem}
+input[type=password]{background:#0d0d14;color:var(--txt);border:1px solid var(--line);border-radius:6px;padding:.4rem .6rem;width:210px}
+select{background:#0d0d14;color:var(--txt);border:1px solid var(--line);border-radius:6px;padding:.35rem}
+button{background:var(--acc);color:#04120a;border:0;border-radius:8px;padding:.55rem 1.1rem;font-weight:700;cursor:pointer;margin-top:.6rem}
+button.plain{background:#1a1a26;color:var(--txt);border:1px solid var(--line);font-weight:400}
+.keyrow{display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;font-size:.72rem;color:var(--dim);margin-top:.6rem}
+</style></head>
+<body>
+<div class="header"><div><b>CHOREOGRAPH</b> <span class="badge">skill build</span> <span class="badge" id="cfgBadge">Config: …</span></div>
+<div><select id="providerSelect"><option value="groq">Groq</option><option value="or-auto">OR · Free Router</option><option value="claude">Claude · Native</option></select></div></div>
+<div class="canvas"><div class="panel"><p class="desc">&quot;Meta-skill that reads a practice domain — its terrain, friction points, skill ecosystem, cognitive style, and output destinations — and emits a set of named situational protocols in arrow-chain format. Each protocol is a sequenced chain of moves for a named situation the practice reliably encounters. The generator is second-order: it produces protocols the way ossify produces spines. Does NOT produce generic workflows — it reads the specific practice and emits sequences native to it. Invoke with /choreograph [domain] or phrases like 'generate protocols for [domain]', 'what are the protocols for this kind of work', 'build the operating sequences for [practice]', 'choreograph [domain]', 'I need protocols for [domain]'. Output always routes to /placement-protocol for ecosystem registration.&quot;</p>
+<div class="keyrow">Keys (this browser only): <input type="password" id="key-groq" placeholder="gsk_…"> <input type="password" id="key-openrouter" placeholder="sk-or-…"> <button class="plain" id="saveKeys">Save</button></div></div>
+<div id="stream"></div>
+<div class="panel"><textarea id="chatInput" placeholder="Invoke the skill… (Enter to send, Shift+Enter for newline)"></textarea><br>
+<button id="sendBtn">Send</button> <button class="plain" id="clearBtn">Clear transcript</button></div></div>
+<script>
+/* ---- Model Core v2 (registry runtime, compact) ---- */
+var ENGINE_NAME = "choreograph";
+var CANONICAL_CONFIG_URL = "https://raw.githubusercontent.com/meetvenkat1-code/therantai-config/refs/heads/main/model.json";
+var LOCAL_FALLBACK_CONFIG = {
+ "native_model": "claude-sonnet-4-6",
+ "defaultLanes": [
+  "groq::openai/gpt-oss-120b",
+  "or-auto::openrouter/free"
+ ],
+ "providers": [
+  {
+   "id": "groq",
+   "endpoint": "https://api.groq.com/openai/v1/chat/completions",
+   "keyStorageName": "groq",
+   "modelChain": [
+    "openai/gpt-oss-120b",
+    "openai/gpt-oss-20b"
+   ]
+  },
+  {
+   "id": "or-auto",
+   "endpoint": "https://openrouter.ai/api/v1/chat/completions",
+   "keyStorageName": "openrouter",
+   "modelChain": [
+    "openrouter/free"
+   ]
+  }
+ ]
+};
+var liveModelConfig = LOCAL_FALLBACK_CONFIG;
+function getKey(name){ try { return localStorage.getItem("hek_" + name) || ""; } catch(e){ return ""; } }
+async function fetchModelConfig(){
+  try {
+    var r = await fetch(CANONICAL_CONFIG_URL + "?v=" + Date.now(), {cache:"no-store"});
+    if (r.ok) { var j = await r.json(); if (j && j.providers) { liveModelConfig = j; setBadge("live"); return; } }
+  } catch(e){}
+  setBadge("fallback");
+}
+function setBadge(s){ var b = document.getElementById("cfgBadge"); if (b) { b.textContent = "Config: " + s; b.dataset.state = s; } }
+function providers(){ return liveModelConfig.providers || []; }
+async function readOpenAIStream(resp, onText){
+  var reader = resp.body.getReader(), dec = new TextDecoder(), acc = "";
+  var buf = "";
+  while (true) {
+    var chunk = await reader.read(); if (chunk.done) break;
+    buf += dec.decode(chunk.value, {stream:true});
+    var parts = buf.split("\n\n"); buf = parts.pop();
+    for (var p of parts) {
+      var line = p.trim(); if (!line.startsWith("data:")) continue;
+      var data = line.slice(5).trim(); if (data === "[DONE]") continue;
+      try {
+        var d = JSON.parse(data);
+        var t = (d.choices && d.choices[0] && (d.choices[0].delta?.content || d.choices[0].message?.content)) || "";
+        if (t) { acc += t; if (onText) onText(acc); }
+      } catch(e){}
+    }
+  }
+  return acc;
+}
+/* callModel: ONE entry. Proxy first, then direct chain-walk. No scattered fetch. */
+/* Universal skill injection: registry builds define withSkill(); elsewhere this no-ops. */
+async function callModel(opts){
+  try { if (typeof withSkill === 'function') { opts = Object.assign({}, opts, {system: withSkill(opts.system)}); } } catch(e){}
+  var prov = providers().find(p => p.id === opts.provider) || providers()[0];
+  var errors = [];
+  // 1) platform proxy (Netlify) when reachable
+  try {
+    var pr = await fetch("/api/chat", {method:"POST", headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({system: opts.system, user: opts.user, provider: prov.id})});
+    if (pr.ok) {
+      var pj = await pr.json();
+      if (pj && pj.text) { if (opts.onText) opts.onText(pj.text); return {text: pj.text, served: "proxy"}; }
+    }
+  } catch(e){ errors.push("proxy:" + e.message); }
+  // 2) direct BYOK chain
+  var chain = [prov].concat(providers().filter(p => p.id !== prov.id && !p.native));
+  for (var cand of chain) {
+    if (cand.native) continue; // native branch is platform-only; skip standalone
+    var key = getKey(cand.keyStorageName || cand.id);
+    if (!key) { errors.push(cand.id + ":missing_key"); continue; }
+    try {
+      var headers = {"Content-Type":"application/json", "Authorization":"Bearer " + key};
+      var resp = await fetch(cand.endpoint, {method:"POST", headers,
+        body: JSON.stringify({model: (cand.modelChain && cand.modelChain[0]) || "",
+          messages:[{role:"system",content:opts.system},{role:"user",content:opts.user}], stream:true})});
+      if (!resp.ok) { errors.push(cand.id + ":" + resp.status); continue; }
+      var text = await readOpenAIStream(resp, opts.onText);
+      if (text) return {text, served: cand.id};
+    } catch(e){ errors.push(cand.id + ":" + e.message); }
+  }
+  throw new Error("all_providers_failed (" + errors.join("; ") + "). Set keys in Settings.");
+}
+
+/* ---- Skill behavior (verbatim SKILL.md body) ---- */
+function getSkillText(){ return `# CHOREOGRAPH
+
+Fires on a named practice domain to produce named situational protocols — sequenced arrow-chains, not generic workflows. A protocol is built from what *this* practice specifically encounters (friction points, transitions, decision nodes, installed skills) — not what practices have in common.
+
+**The distinction:** a generic workflow ("Start → Do the thing → Review → Output") could describe any practice and describes none deeply. A protocol ("Intuition fires → name it in one sentence → /spinal-column → locate the structural container") could only describe one practice. The difference is the reading act — this skill *is* that reading act, emission is its final gesture.
+
+## Reading (internal, fast — not a questionnaire)
+
+1. **Terrain** — what cognitive/creative/operational moves is the practitioner actually doing, not the domain label.
+2. **Friction map** — where does the practice stall, drift, collapse, leak? Friction is the reliable map of where protocols are needed; a frictionless practice needs none.
+3. **Skill ecosystem** — protocols are sequences *of existing skills*; know what's installed, chainable, and what gaps a chain would expose.
+4. **Output destinations** — where does output land (ecosystem/artifacts/perception/teaching)? Shapes each protocol's closing move.
+5. **Cognitive style** — the practitioner's natural entry point and characteristic error. Protocols must align or they'll be skipped.
+
+## Situational detection
+
+A situation qualifies when: it recurs reliably, its moves are currently implicit/underdetermined, getting it wrong has consistent cost, and naming a sequence would produce a habit (not just understanding). Disqualified: one-offs, situations already fully governed by one skill, situations where the right move is always the same single action (reminder, not protocol).
+
+Emit **5–8** qualifying situations. Fewer = underserved; more = a second skill-list to manage instead of habits.
+
+## Emission format`; }
+var transcript=[];
+function bubble(who,text,cls){ var d=document.createElement('div'); d.className='bubble '+(cls||''); d.innerHTML='<div class="who">'+who+'</div>'; var b=document.createElement('div'); b.textContent=text; d.appendChild(b); document.getElementById('stream').appendChild(d); d.scrollIntoView(false); return b; }
+function buildUser(){ return transcript.slice(-12).map(function(t){ return t.role+': '+t.content; }).join('\n\n'); }
+async function send(){ var inp=document.getElementById('chatInput').value.trim(); if(!inp) return; document.getElementById('chatInput').value='';
+  transcript.push({role:'user',content:inp}); bubble('you',inp,'user');
+  var body=bubble('skill','…');
+  try{ var r=await callModel({provider:document.getElementById('providerSelect').value,system:getSkillText(),user:buildUser(),onText:function(a){body.textContent=a;}});
+    body.textContent=r.text; transcript.push({role:'assistant',content:r.text}); }
+  catch(e){ body.textContent='Error: '+e.message; } }
+document.getElementById('sendBtn').addEventListener('click',send);
+document.getElementById('chatInput').addEventListener('keydown',function(e){ if(e.key==='Enter'&&!e.shiftKey){ e.preventDefault(); send(); } });
+document.getElementById('clearBtn').addEventListener('click',function(){ transcript=[]; document.getElementById('stream').innerHTML=''; });
+document.getElementById('saveKeys').addEventListener('click',function(){ try{ localStorage.setItem('hek_groq',document.getElementById('key-groq').value); localStorage.setItem('hek_openrouter',document.getElementById('key-openrouter').value); }catch(e){} });
+try{ document.getElementById('key-groq').value=localStorage.getItem('hek_groq')||''; document.getElementById('key-openrouter').value=localStorage.getItem('hek_openrouter')||''; }catch(e){}
+fetchModelConfig();
+</script>
+</body></html>

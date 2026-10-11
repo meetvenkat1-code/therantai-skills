@@ -1,0 +1,18 @@
+{
+  "skill": "placement-protocol",
+  "skill_name": "placement-protocol",
+  "description": "The deliberate gate every named friction passes through after it is extracted and before it is installed as a skill. Resolves the four structural questions \u2014 organizing scheme, arc-phase, trigger condition, staffed-or-orphan verdict \u2014 and writes the result to the Skill Registry, the single structured source of truth for the ecosystem. Runs socratic by default (questioning the person through each placement to train structural instinct) with an autonomous escape hatch. The complement of cognitive-friction-extractor \u2014 the extractor NAMES the friction, this skill PLACES it. Invoke with /place to smelt a batch of named-but-unplaced frictions, and /map to regenerate the SVG zone projection from the registry on demand.",
+  "source_file": "skills/placement-protocol/SKILL.md",
+  "source_sha": "671dbb658fc4b2e945c584d4f316e4ea55a61151175c893662d14a926973e26b",
+  "resources": [],
+  "provider_config": {
+    "model_core": "v2"
+  },
+  "inputs": [
+    {
+      "id": "chatInput",
+      "kind": "textarea",
+      "label": "Invoke the skill"
+    }
+  ]
+}

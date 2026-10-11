@@ -1,0 +1,18 @@
+{
+  "skill": "crystallise",
+  "skill_name": "crystallise",
+  "description": "Captures the cognitive arc of a completed exploratory session \u2014 the initial confusion, the friction points dissolved, and the understanding reached \u2014 and renders it as a shareable SVG visual. Invoke this skill with /crystallise at the end of any session where a genuine breakthrough, resolution, or framework emerged from back-and-forth dialogue. Trigger on phrases like \"make this shareable\", \"summarise what we figured out\", \"crystallise this session\", \"I want to share this with a friend\", \"turn this into a visual\", \"what did we actually solve here\". Do NOT trigger automatically \u2014 this skill requires intentional invocation at a moment of genuine resolution.",
+  "source_file": "skills/crystallise/SKILL.md",
+  "source_sha": "e1443541dccbabb63c75ddaee8ec2ab928cca2786baae7cd7bfd41b006071056",
+  "resources": [],
+  "provider_config": {
+    "model_core": "v2"
+  },
+  "inputs": [
+    {
+      "id": "chatInput",
+      "kind": "textarea",
+      "label": "Invoke the skill"
+    }
+  ]
+}

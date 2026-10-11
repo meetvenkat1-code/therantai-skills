@@ -1,0 +1,18 @@
+{
+  "skill": "prompt-operation-loop",
+  "skill_name": "prompt-operation-loop",
+  "description": "Iterative prompt optimization engine that turns raw or vague intuitions into dense mode-classified prompts forcing a precise epistemic operation, executes them internally, and adversarially evaluates whether the operation was genuinely performed rather than described. Re-architects structurally on failure until convergence, then surfaces the winning prompt. Runs in two output modes \u2014 default (response + winning prompt) and --prompt-only (winning prompt is the deliverable, responses run internally as the test harness). Activation phrases include auto-loop this, run the prompt loop on, epistemic loop this, prompt-to-operation this, optimize this intuition, dense prompt and execute, adversarial prompt evaluator this, turn this into forced cognitive operation, generate the winning prompt, winning prompt only, prompt operation loop, /prompt-loop, /prompt-loop --prompt-only.",
+  "source_file": "skills/prompt-operation-loop/SKILL.md",
+  "source_sha": "0cb9522b7aa5d2c9a8578425b89af6b1f7699aeedb820b90591acdb63390caea",
+  "resources": [],
+  "provider_config": {
+    "model_core": "v2"
+  },
+  "inputs": [
+    {
+      "id": "chatInput",
+      "kind": "textarea",
+      "label": "Invoke the skill"
+    }
+  ]
+}

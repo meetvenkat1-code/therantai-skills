@@ -1,0 +1,412 @@
+{
+  "cards": [
+    {
+      "slug": "adjudicate",
+      "title": "adjudicate",
+      "blurb": ">",
+      "path": "claude_brain/compiled_skills/adjudicate/dist/adjudicate-compiled.html"
+    },
+    {
+      "slug": "alloy",
+      "title": "alloy",
+      "blurb": ">",
+      "path": "claude_brain/compiled_skills/alloy/dist/alloy-compiled.html"
+    },
+    {
+      "slug": "apoptosis",
+      "title": "apoptosis",
+      "blurb": "Programmed obsolescence-by-evolution. Audits living, beloved, frequently-used skills, memory entries, and standing law for whether they still earn their place as the practice ev...",
+      "path": "claude_brain/compiled_skills/apoptosis/dist/apoptosis-compiled.html"
+    },
+    {
+      "slug": "assay",
+      "title": "assay",
+      "blurb": ">",
+      "path": "claude_brain/compiled_skills/assay/dist/assay-compiled.html"
+    },
+    {
+      "slug": "attune",
+      "title": "attune",
+      "blurb": "\"Mid-session contextual skill suggester with a strict philosophy of when ambient intelligence earns the right to speak: only when silence would cost the session something irreve...",
+      "path": "claude_brain/compiled_skills/attune/dist/attune-compiled.html"
+    },
+    {
+      "slug": "autopsy",
+      "title": "autopsy",
+      "blurb": "The Refiner organ of the Oracle Suite. Carries the [autopsy] protocol \u2014 receives a wounded artifact plus its failure signature, audits any prior prediction stake, locates the fa...",
+      "path": "claude_brain/compiled_skills/autopsy/dist/autopsy-compiled.html"
+    },
+    {
+      "slug": "brain-doc-sync",
+      "title": "brain-doc-sync",
+      "blurb": "The third command in the standing capture/resolve/sync triad. Refreshes therantai-brain.md \u2014 the portable narrative wrapper \u2014 to reflect the current state of skill-registry.md. ...",
+      "path": "claude_brain/compiled_skills/brain-doc-sync/dist/brain-doc-sync-compiled.html"
+    },
+    {
+      "slug": "carousel-engine",
+      "title": "carousel-engine",
+      "blurb": "Build an Instagram carousel engine as a single HTML file with full slide generation, preview/storyboard views, copy controls, and ZIP export of individual PNG slides + storyboar...",
+      "path": "claude_brain/compiled_skills/carousel-engine/dist/carousel-engine-compiled.html"
+    },
+    {
+      "slug": "cast",
+      "title": "cast",
+      "blurb": ">",
+      "path": "claude_brain/compiled_skills/cast/dist/cast-compiled.html"
+    },
+    {
+      "slug": "choreograph",
+      "title": "choreograph",
+      "blurb": "\"Meta-skill that reads a practice domain \u2014 its terrain, friction points, skill ecosystem, cognitive style, and output destinations \u2014 and emits a set of named situational protoco...",
+      "path": "claude_brain/compiled_skills/choreograph/dist/choreograph-compiled.html"
+    },
+    {
+      "slug": "cognitive-friction-extractor",
+      "title": "cognitive-friction-extractor",
+      "blurb": "Scans any build session for resolved friction points and extracts them as named, categorized skills in CATEGORY / SKILL / CONSTRAINT / TRIGGER / ASCENT format. Runs both arms of...",
+      "path": "claude_brain/compiled_skills/cognitive-friction-extractor/dist/cognitive-friction-extractor-compiled.html"
+    },
+    {
+      "slug": "compress",
+      "title": "compress",
+      "blurb": ">",
+      "path": "claude_brain/compiled_skills/compress/dist/compress-compiled.html"
+    },
+    {
+      "slug": "convergence-gate",
+      "title": "convergence-gate",
+      "blurb": "The pre-invocation routing pipeline for the Therantai skill ecosystem. Fires the moment raw input arrives (a fragment dump, a hand-drafted framework, a voice-transcribed thought...",
+      "path": "claude_brain/compiled_skills/convergence-gate/dist/convergence-gate-compiled.html"
+    },
+    {
+      "slug": "core-extractor",
+      "title": "core-extractor",
+      "blurb": "Strips any artifact, HTML engine, or code to its generative spine \u2014 separating the engine (the system prompt carrying the cognitive identity) from the vessel (UI, API routing, r...",
+      "path": "claude_brain/compiled_skills/core-extractor/dist/core-extractor-compiled.html"
+    },
+    {
+      "slug": "counsel",
+      "title": "counsel",
+      "blurb": ">",
+      "path": "claude_brain/compiled_skills/counsel/dist/counsel-compiled.html"
+    },
+    {
+      "slug": "crystallise",
+      "title": "crystallise",
+      "blurb": "Captures the cognitive arc of a completed exploratory session \u2014 the initial confusion, the friction points dissolved, and the understanding reached \u2014 and renders it as a shareab...",
+      "path": "claude_brain/compiled_skills/crystallise/dist/crystallise-compiled.html"
+    },
+    {
+      "slug": "custom-gpt-package",
+      "title": "custom-gpt-package",
+      "blurb": "\"Converts a design idea, spine, or existing system prompt into a complete, copy-paste-ready ChatGPT Custom GPT package \u2014 Name, Description, Instructions (with a mandatory anti-d...",
+      "path": "claude_brain/compiled_skills/custom-gpt-package/dist/custom-gpt-package-compiled.html"
+    },
+    {
+      "slug": "decomposition",
+      "title": "decomposition",
+      "blurb": "The Mapper organ of the Oracle Suite. Carries the [decomposition] protocol \u2014 fractures a compound task along its natural joints into orthogonal, dependency-ordered sub-problems ...",
+      "path": "claude_brain/compiled_skills/decomposition/dist/decomposition-compiled.html"
+    },
+    {
+      "slug": "defer-log",
+      "title": "defer-log",
+      "blurb": "Lightweight session closing instrument. When there is no time or energy for a full /cognitive-friction-extractor + /place run, invoke /defer-log to scan the entire session, rend...",
+      "path": "claude_brain/compiled_skills/defer-log/dist/defer-log-compiled.html"
+    },
+    {
+      "slug": "distill",
+      "title": "distill",
+      "blurb": ">",
+      "path": "claude_brain/compiled_skills/distill/dist/distill-compiled.html"
+    },
+    {
+      "slug": "ecosystem-audit-pipeline",
+      "title": "ecosystem-audit-pipeline",
+      "blurb": "\"The self-executing subtractive health chain for the Therantai ecosystem. Sequences moult --check \u2192 apoptosis sweep \u2192 moult live run \u2192 brain doc sync, then hands off explicitly ...",
+      "path": "claude_brain/compiled_skills/ecosystem-audit-pipeline/dist/ecosystem-audit-pipeline-compiled.html"
+    },
+    {
+      "slug": "fan",
+      "title": "fan",
+      "blurb": "Fires on jam-state \u2014 friction, cognitive dissonance, entanglement mid-session \u2014 and detonates a divergent fan of successor questions from the blocked node. Each branch routes th...",
+      "path": "claude_brain/compiled_skills/fan/dist/fan-compiled.html"
+    },
+    {
+      "slug": "forge-pipeline",
+      "title": "forge-pipeline",
+      "blurb": "\"The self-executing engine-building chain for any Therantai session. Discriminates input type (bare theme vs loaded fragments), routes to the correct spine-forging organ, enforc...",
+      "path": "claude_brain/compiled_skills/forge-pipeline/dist/forge-pipeline-compiled.html"
+    },
+    {
+      "slug": "forge-transit",
+      "title": "forge-transit",
+      "blurb": "Engine-specific session capture skill for transit into the Exploration-Hybrid HTML Engine Architect project. On invocation, scans the session for engine-building signals, fills ...",
+      "path": "claude_brain/compiled_skills/forge-transit/dist/forge-transit-compiled.html"
+    },
+    {
+      "slug": "fuse-delta",
+      "title": "fuse-delta",
+      "blurb": ">",
+      "path": "claude_brain/compiled_skills/fuse-delta/dist/fuse-delta-compiled.html"
+    },
+    {
+      "slug": "governing-variable-sensor",
+      "title": "governing-variable-sensor",
+      "blurb": ">",
+      "path": "claude_brain/compiled_skills/governing-variable-sensor/dist/governing-variable-sensor-compiled.html"
+    },
+    {
+      "slug": "graft-in",
+      "title": "graft-in",
+      "blurb": "Pins the immediate prior response as a frozen root-node inside the current session and opens a sequential branching log from it. Each invocation of /fork runs one new branch fro...",
+      "path": "claude_brain/compiled_skills/graft-in/dist/graft-in-compiled.html"
+    },
+    {
+      "slug": "graft-out",
+      "title": "graft-out",
+      "blurb": "Preserves a frozen node as a portable context block so it can be re-activated in a fresh session \u2014 stripped clean of branch history, carrying only the root context needed to for...",
+      "path": "claude_brain/compiled_skills/graft-out/dist/graft-out-compiled.html"
+    },
+    {
+      "slug": "handoff",
+      "title": "handoff",
+      "blurb": "Compresses the current session into a minimal markdown context block designed to be pasted as the opening message of a new chat session, preserving resolved understandings, acti...",
+      "path": "claude_brain/compiled_skills/handoff/dist/handoff-compiled.html"
+    },
+    {
+      "slug": "hardcoded-provider-panel",
+      "title": "hardcoded-provider-panel",
+      "blurb": ">",
+      "path": "claude_brain/compiled_skills/hardcoded-provider-panel/dist/hardcoded-provider-panel-compiled.html"
+    },
+    {
+      "slug": "harvest-pipeline",
+      "title": "harvest-pipeline",
+      "blurb": "\"The self-executing closing chain for any Therantai session. Encodes the five-stage harvest sequence \u2014 extract, place, stage, sweep, sync \u2014 as a sequential pipeline with handoff...",
+      "path": "claude_brain/compiled_skills/harvest-pipeline/dist/harvest-pipeline-compiled.html"
+    },
+    {
+      "slug": "ignition-pipeline",
+      "title": "ignition-pipeline",
+      "blurb": "\"The self-executing opening chain for any Therantai session. Reads the local claude_brain/ folder, surfaces active threads, flags pending-merge entries, fires an attune pulse, a...",
+      "path": "claude_brain/compiled_skills/ignition-pipeline/dist/ignition-pipeline-compiled.html"
+    },
+    {
+      "slug": "intake",
+      "title": "intake",
+      "blurb": ">",
+      "path": "claude_brain/compiled_skills/intake/dist/intake-compiled.html"
+    },
+    {
+      "slug": "intuition-forge",
+      "title": "intuition-forge",
+      "blurb": "\"Transforms raw intuition into standalone HTML engines via eight stations: Seed, Intention, Identity, Architecture, Interaction, System Mandate, Stress Test, Artifact.\"",
+      "path": "claude_brain/compiled_skills/intuition-forge/dist/intuition-forge-compiled.html"
+    },
+    {
+      "slug": "kinship",
+      "title": "kinship",
+      "blurb": ">",
+      "path": "claude_brain/compiled_skills/kinship/dist/kinship-compiled.html"
+    },
+    {
+      "slug": "legacy-reference-appendix",
+      "title": "legacy-reference-appendix",
+      "blurb": ">",
+      "path": "claude_brain/compiled_skills/legacy-reference-appendix/dist/legacy-reference-appendix-compiled.html"
+    },
+    {
+      "slug": "log-this",
+      "title": "log-this",
+      "blurb": ">",
+      "path": "claude_brain/compiled_skills/log-this/dist/log-this-compiled.html"
+    },
+    {
+      "slug": "meta-forge-v3",
+      "title": "meta-forge-v3",
+      "blurb": "Forges paste-ready system prompts from any input. Discriminates input type, breeds mutually-exclusive variants (--variant N), heals deployed spines from field-failure signatures...",
+      "path": "claude_brain/compiled_skills/meta-forge-v3/dist/meta-forge-v3-compiled.html"
+    },
+    {
+      "slug": "moult",
+      "title": "moult",
+      "blurb": ">",
+      "path": "claude_brain/compiled_skills/moult/dist/moult-compiled.html"
+    },
+    {
+      "slug": "occams-razor",
+      "title": "occams-razor",
+      "blurb": "Compresses a messy, rambling, or multi-threaded user input down to the single structural fork that actually matters, resolves that fork using best available reasoning, and state...",
+      "path": "claude_brain/compiled_skills/occams-razor/dist/occams-razor-compiled.html"
+    },
+    {
+      "slug": "openrouter-free-path-integration",
+      "title": "openrouter-free-path-integration",
+      "blurb": "Complete, stable pattern for integrating the OpenRouter free path (`openrouter/free`) into any hybrid HTML engine. Includes automatic routing, manual model selection, conditiona...",
+      "path": "claude_brain/compiled_skills/openrouter-free-path-integration/dist/openrouter-free-path-integration-compiled.html"
+    },
+    {
+      "slug": "oracle-core",
+      "title": "oracle-core",
+      "blurb": "The Manager organ of the Oracle Suite. Sole function \u2014 interpret raw intent and decide which suite organ fires. Tagged intent dispatches directly to decomposition or autopsy; un...",
+      "path": "claude_brain/compiled_skills/oracle-core/dist/oracle-core-compiled.html"
+    },
+    {
+      "slug": "ossify",
+      "title": "ossify",
+      "blurb": "\"Germinates a dense, paste-ready portable spine from a bare theme \u2014 a domain, subject, or register handed over with no fragments and no built artifact yet. The generative invers...",
+      "path": "claude_brain/compiled_skills/ossify/dist/ossify-compiled.html"
+    },
+    {
+      "slug": "placement-protocol",
+      "title": "placement-protocol",
+      "blurb": "The deliberate gate every named friction passes through after it is extracted and before it is installed as a skill. Resolves the four structural questions \u2014 organizing scheme, ...",
+      "path": "claude_brain/compiled_skills/placement-protocol/dist/placement-protocol-compiled.html"
+    },
+    {
+      "slug": "prompt-engine-interface-contract",
+      "title": "prompt-engine-interface-contract",
+      "blurb": "A domain-specific interface and logic contract for building prompt-testing, prompt-management, and prompt-comparison tools. Encodes resolved friction from production builds acro...",
+      "path": "claude_brain/compiled_skills/prompt-engine-interface-contract/dist/prompt-engine-interface-contract-compiled.html"
+    },
+    {
+      "slug": "prompt-operation-loop",
+      "title": "prompt-operation-loop",
+      "blurb": "Iterative prompt optimization engine that turns raw or vague intuitions into dense mode-classified prompts forcing a precise epistemic operation, executes them internally, and a...",
+      "path": "claude_brain/compiled_skills/prompt-operation-loop/dist/prompt-operation-loop-compiled.html"
+    },
+    {
+      "slug": "push",
+      "title": "push",
+      "blurb": "\"One-directional cross-instance cognitive state transfer. Captures the current state of a practitioner's instance \u2014 resolved friction, upgrade delta, contracts in force, key rej...",
+      "path": "claude_brain/compiled_skills/push/dist/push-compiled.html"
+    },
+    {
+      "slug": "radiate",
+      "title": "radiate",
+      "blurb": ">",
+      "path": "claude_brain/compiled_skills/radiate/dist/radiate-compiled.html"
+    },
+    {
+      "slug": "ramify",
+      "title": "ramify",
+      "blurb": "Live divergence engine \u2014 fires inside unresolved friction (stuck, entangled, dissonant) and fans successor questions from *within* the friction's own domain. Not a fixed taxonom...",
+      "path": "claude_brain/compiled_skills/ramify/dist/ramify-compiled.html"
+    },
+    {
+      "slug": "registry-delta-exporter",
+      "title": "registry-delta-exporter",
+      "blurb": ">",
+      "path": "claude_brain/compiled_skills/registry-delta-exporter/dist/registry-delta-exporter-compiled.html"
+    },
+    {
+      "slug": "retroactive-harvest",
+      "title": "retroactive-harvest",
+      "blurb": "The recovery organ for pre-registry session transcripts \u2014 old conversations that closed before the harvest pipeline existed, before skill-vocabulary entered the practice, before...",
+      "path": "claude_brain/compiled_skills/retroactive-harvest/dist/retroactive-harvest-compiled.html"
+    },
+    {
+      "slug": "router",
+      "title": "router",
+      "blurb": "The Dispatcher organ of the Oracle Suite. Receives untagged tasks from oracle-core and classifies task depth \u2014 WOUNDED, COMPOUND, or SHALLOW \u2014 then dispatches to autopsy (Refine...",
+      "path": "claude_brain/compiled_skills/router/dist/router-compiled.html"
+    },
+    {
+      "slug": "rupture",
+      "title": "rupture",
+      "blurb": ">",
+      "path": "claude_brain/compiled_skills/rupture/dist/rupture-compiled.html"
+    },
+    {
+      "slug": "script-dna",
+      "title": "script-dna",
+      "blurb": "Strips any narrated or rhetorical script \u2014 video-essay narration, true-crime script, self-help monologue, sermon, explainer, ad copy \u2014 to its generative skeleton, separating the...",
+      "path": "claude_brain/compiled_skills/script-dna/dist/script-dna-compiled.html"
+    },
+    {
+      "slug": "skill-import",
+      "title": "skill-import",
+      "blurb": "The universal reception organ for the Therantai skill ecosystem zip. Runs a three-verdict merge protocol when a zip or skill bundle arrives from another builder \u2014 unique-to-rece...",
+      "path": "claude_brain/compiled_skills/skill-import/dist/skill-import-compiled.html"
+    },
+    {
+      "slug": "slider-discovery",
+      "title": "slider-discovery",
+      "blurb": "\"Discovers load-bearing slider dimensions native to a specific artifact or HTML engine \u2014 a judgment organ that first decides if a slider is structurally warranted, then surfaces...",
+      "path": "claude_brain/compiled_skills/slider-discovery/dist/slider-discovery-compiled.html"
+    },
+    {
+      "slug": "spinal-column",
+      "title": "spinal-column",
+      "blurb": "\"Forges a dense, paste-ready system prompt from raw intuition fragments \u2014 the mid-thought residue of a building process, not a clean idea. Fast inward collapse: no expansion, no...",
+      "path": "claude_brain/compiled_skills/spinal-column/dist/spinal-column-compiled.html"
+    },
+    {
+      "slug": "spine-pipeline",
+      "title": "spine-pipeline",
+      "blurb": "\"The self-executing spine-forging chain for standalone identity work \u2014 when the endpoint is a portable system prompt, not a built engine. Discriminates input type (bare theme / ...",
+      "path": "claude_brain/compiled_skills/spine-pipeline/dist/spine-pipeline-compiled.html"
+    },
+    {
+      "slug": "structure-this",
+      "title": "structure-this",
+      "blurb": "\"Pre-processing gate that captures genuine intent from raw conversational flow before any answering begins. Clusters questions by domain, deduplicates overlaps, types each by th...",
+      "path": "claude_brain/compiled_skills/structure-this/dist/structure-this-compiled.html"
+    },
+    {
+      "slug": "stuck-pipeline",
+      "title": "stuck-pipeline",
+      "blurb": ">",
+      "path": "claude_brain/compiled_skills/stuck-pipeline/dist/stuck-pipeline-compiled.html"
+    },
+    {
+      "slug": "substrate-capture",
+      "title": "substrate-capture",
+      "blurb": "Catches the failure where a correct realization mid-build (\"this needs to live outside X\") opens an unbounded engineering tail that quietly replaces the original intuition as th...",
+      "path": "claude_brain/compiled_skills/substrate-capture/dist/substrate-capture-compiled.html"
+    },
+    {
+      "slug": "sync",
+      "title": "sync",
+      "blurb": "\"Bidirectional cross-instance cognitive state merge for aligned collaborators. Both instances capture their current state \u2014 resolved friction, contracts in force, upgrade deltas...",
+      "path": "claude_brain/compiled_skills/sync/dist/sync-compiled.html"
+    },
+    {
+      "slug": "synth",
+      "title": "synth",
+      "blurb": "\"Standalone auto-parameterizing synthesis skill. Infers the single interpretive lens (systems / dialectical / archetypal / first-principles / developmental / etc.) that the give...",
+      "path": "claude_brain/compiled_skills/synth/dist/synth-compiled.html"
+    },
+    {
+      "slug": "taxonomy-router",
+      "title": "taxonomy-router",
+      "blurb": ">",
+      "path": "claude_brain/compiled_skills/taxonomy-router/dist/taxonomy-router-compiled.html"
+    },
+    {
+      "slug": "transit-block",
+      "title": "transit-block",
+      "blurb": "Universal session capture skill \u2014 scans the current session, fills what it can, and emits a paste-ready context block that carries resolved understanding, decisions, rejections,...",
+      "path": "claude_brain/compiled_skills/transit-block/dist/transit-block-compiled.html"
+    },
+    {
+      "slug": "translation-gate",
+      "title": "translation-gate",
+      "blurb": "Reads generative or creative requests through five translation families \u2014 Pointing, Excluding, Naming the Register, Dimensional Constraining, Metaphorical Anchoring \u2014 as the amb...",
+      "path": "claude_brain/compiled_skills/translation-gate/dist/translation-gate-compiled.html"
+    },
+    {
+      "slug": "typography",
+      "title": "typography",
+      "blurb": "Font pairing rules, descender fixes, and adaptive theme bundles for HTML engine builds. Invoke with /typography or \"invoke typography skill\" when building engines with custom fo...",
+      "path": "claude_brain/compiled_skills/typography/dist/typography-compiled.html"
+    },
+    {
+      "slug": "script-compiler",
+      "title": "script-compiler",
+      "blurb": "Pure-text meta-compiler for scripts. Takes one or more reference texts (monologue, video-essay narration, sermon, ad copy, explainer, any prose written to move a listener) and b...",
+      "path": "claude_brain/compiled_skills/script-compiler/dist/script-compiler-compiled.html"
+    }
+  ]
+}

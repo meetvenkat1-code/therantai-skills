@@ -1,0 +1,18 @@
+{
+  "skill": "prompt-engine-interface-contract",
+  "skill_name": "prompt-engine-interface-contract",
+  "description": "A domain-specific interface and logic contract for building prompt-testing, prompt-management, and prompt-comparison tools. Encodes resolved friction from production builds across panel architecture, active prompt orientation, scratchpad modal, copy mechanism, stream safety, and design constraints. Invoke when building any tool whose primary purpose is testing or managing system prompts.",
+  "source_file": "skills/prompt-engine-interface-contract/SKILL.md",
+  "source_sha": "ad3e3421bdaecd659345eb301ac8193ac3379081dee6a38e5e66b0fdbf41eb7c",
+  "resources": [],
+  "provider_config": {
+    "model_core": "v2"
+  },
+  "inputs": [
+    {
+      "id": "chatInput",
+      "kind": "textarea",
+      "label": "Invoke the skill"
+    }
+  ]
+}

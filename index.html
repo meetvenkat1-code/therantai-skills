@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AI Engines Platform Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0a0a0f;--panel:#12121a;--line:#26263a;--txt:#e8e8f0;--dim:#8a8aa3;--acc:#38bdf8}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--txt);font-family:"Space Grotesk",system-ui,sans-serif;margin:0}
+.wrap{max-width:1060px;margin:0 auto;padding:2.5rem 1.5rem 4rem}
+header h1{font-size:1.9rem;margin:0;letter-spacing:-.01em}
+header p{color:var(--dim);font-size:.9rem;margin:.4rem 0 0}
+.meta{display:flex;gap:.5rem;margin-top:1rem;flex-wrap:wrap}
+.badge{font-size:.68rem;border:1px solid var(--line);border-radius:99px;padding:.15rem .6rem;color:var(--dim)}
+.badge.ok{color:#22c55e;border-color:#22c55e}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:1rem;margin-top:2rem}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:1.2rem;display:flex;flex-direction:column;gap:.5rem}
+.card:hover{border-color:var(--acc)}
+.card .kicker{font-size:.65rem;letter-spacing:.12em;text-transform:uppercase;color:var(--acc)}
+.card h2{font-size:1.05rem;margin:0}
+.card p{font-size:.82rem;color:var(--dim);margin:0;flex:1}
+.card .path{font-size:.65rem;color:var(--dim);font-family:ui-monospace,Menlo,Consolas,monospace;word-break:break-all}
+.card a{display:inline-block;margin-top:.4rem;background:var(--acc);color:#04121a;font-weight:700;font-size:.8rem;text-decoration:none;border-radius:8px;padding:.55rem 1rem;text-align:center}
+footer{margin-top:2.5rem;color:var(--dim);font-size:.72rem}
+footer code{font-size:.72rem}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+<h1>AI Engines Platform Dashboard</h1>
+<p>Central launchpad for all compiled registry projections. Each card opens its standalone build.</p>
+<div class="meta"><span class="badge ok">9 / 9 compiled</span><span class="badge">Model Core v2</span><span class="badge">deterministic builds</span></div>
+</header>
+<div class="grid">
+<div class="card"><div class="kicker">Parameterised</div><h2>Prompt Generator</h2><p>Meta-prompt compiler: 3-axis sliders compile a tailored system prompt, then execute it across current / opposite / centroid presets.</p><div class="path">claude_brain/engines/prompt-generator/dist/prompt-generator-compiled.html</div><a href="claude_brain/engines/prompt-generator/dist/prompt-generator-compiled.html" target="_blank" rel="noopener">Launch Prompt Generator</a></div>
+<div class="card"><div class="kicker">Parameterised</div><h2>Easy English</h2><p>Telugu-to-English translation tutor with pronunciation cards, voice selection, and strict-JSON output.</p><div class="path">claude_brain/engines/easy-english/dist/easy-english-compiled.html</div><a href="claude_brain/engines/easy-english/dist/easy-english-compiled.html" target="_blank" rel="noopener">Launch Easy English</a></div>
+<div class="card"><div class="kicker">Multi-Step · 3 stages</div><h2>Aperture Carousel</h2><p>Architect plans the slide arc, Writer drafts the JSON slides, Editor audits form only. Copy + ZIP export.</p><div class="path">claude_brain/engines/aperture-carousel/dist/aperture-carousel-compiled.html</div><a href="claude_brain/engines/aperture-carousel/dist/aperture-carousel-compiled.html" target="_blank" rel="noopener">Launch Aperture Carousel</a></div>
+<div class="card"><div class="kicker">Multi-Step · 12 lenses</div><h2>Cognitive Shift v7</h2><p>One concept in, twelve JSON perspectives out — explain, decode, invert, steelman, socratic, synthesis and more, with challenge levels.</p><div class="path">claude_brain/engines/cognitive-shift-v7/dist/cognitive-shift-v7-compiled.html</div><a href="claude_brain/engines/cognitive-shift-v7/dist/cognitive-shift-v7-compiled.html" target="_blank" rel="noopener">Launch Cognitive Shift v7</a></div>
+<div class="card"><div class="kicker">Multi-Step · 3 portals</div><h2>Fan Ramify Flywheel</h2><p>One fragment transformed in parallel through breadth (Fan), depth (Ramify), and momentum (Flywheel) portals.</p><div class="path">claude_brain/engines/fan_ramify_flywheel/dist/fan_ramify_flywheel-compiled.html</div><a href="claude_brain/engines/fan_ramify_flywheel/dist/fan_ramify_flywheel-compiled.html" target="_blank" rel="noopener">Launch Fan Ramify Flywheel</a></div>
+<div class="card"><div class="kicker">Multi-Step · wizard</div><h2>Scenario Forge</h2><p>Three-step wizard: decompose a topic into scenarios, tune intensity and pacing, then play the compiled scene with chat and branch suggestions.</p><div class="path">claude_brain/engines/scenario-forge/dist/scenario-forge-compiled.html</div><a href="claude_brain/engines/scenario-forge/dist/scenario-forge-compiled.html" target="_blank" rel="noopener">Launch Scenario Forge</a></div>
+<div class="card"><div class="kicker">Multi-Step · multi-lane</div><h2>Dimensions</h2><p>Interpretive classifier mapping thinking fragments to 23 mental models across 6 dimensions, with per-match expand and apply protocols.</p><div class="path">claude_brain/engines/dimensions/dist/dimensions-compiled.html</div><a href="claude_brain/engines/dimensions/dist/dimensions-compiled.html" target="_blank" rel="noopener">Launch Dimensions</a></div>
+<div class="card"><div class="kicker">Multi-Step · fan + optimizer</div><h2>Vector Forge v3</h2><p>Prompt-forging engine: fan orthogonal vectors from a seed, crystallize the path, then forge, score, and revise the dense prompt to convergence.</p><div class="path">claude_brain/engines/vectorforge-v3/dist/vectorforge-v3-compiled.html</div><a href="claude_brain/engines/vectorforge-v3/dist/vectorforge-v3-compiled.html" target="_blank" rel="noopener">Launch Vector Forge v3</a></div>
+<div class="card"><div class="kicker">Auto-draft</div><h2>12 Auto Loop Engine V15 Full Per Role Decompressor Plus Mix Chip</h2><p>Auto-onboarded from incoming batch (0 prompt blocks). Triad under review — verify system.md, then recompile.</p><div class="path">claude_brain/engines/12-auto-loop-engine-v15-full-per-role-decompressor-plus-mix-chip/dist/12-auto-loop-engine-v15-full-per-role-decompressor-plus-mix-chip-compiled.html</div><a href="claude_brain/engines/12-auto-loop-engine-v15-full-per-role-decompressor-plus-mix-chip/dist/12-auto-loop-engine-v15-full-per-role-decompressor-plus-mix-chip-compiled.html" target="_blank" rel="noopener">Launch 12 Auto Loop Engine V15 Full Per Role Decompressor Plus Mix Chip</a></div>
+</div>
+<footer>Built from <code>claude_brain/engines/*/dist/</code> registry projections · Rebuild with <code>python tools/compile_engine.py --engine &lt;name&gt;</code></footer>
+</div>
+</body>
+</html>

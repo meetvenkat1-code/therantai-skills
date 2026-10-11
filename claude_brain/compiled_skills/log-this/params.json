@@ -1,0 +1,18 @@
+{
+  "skill": "log-this",
+  "skill_name": "log-this",
+  "description": ">",
+  "source_file": "skills/log-this/SKILL.md",
+  "source_sha": "93b19459c9ddb3f0bda2048165640159a6e9576190b19555de405f1a7541e269",
+  "resources": [],
+  "provider_config": {
+    "model_core": "v2"
+  },
+  "inputs": [
+    {
+      "id": "chatInput",
+      "kind": "textarea",
+      "label": "Invoke the skill"
+    }
+  ]
+}

@@ -1,0 +1,1559 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Cognitive Shift Engine v5</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,300;0,8..60,400;0,8..60,500;1,8..60,300;1,8..60,400&display=swap');
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#0a0a0f;
+  --surface:#12121a;
+  --elevated:#1a1a28;
+  --border:#2a2a3d;
+  --text:#e8e8f0;
+  --secondary:#9090a8;
+  --muted:#505068;
+  --accent:#7c6ef5;
+  --accent-glow:rgba(124,110,245,0.15);
+  --amber:#f5a623;
+  --green:#4caf82;
+  --coral:#f56565;
+  --teal:#38bdf8;
+  --orange:#f97316;
+  --font:'Space Grotesk',sans-serif;
+  --prose:'Source Serif 4',Georgia,serif;
+  --prose-size:15.5px;
+  --prose-lh:1.88;
+  --prose-gap:1.6em;
+  --prose-color:rgba(232,232,240,0.72);
+  --header-h:52px;
+}
+body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:100vh;overflow-x:hidden;-webkit-font-smoothing:antialiased;}
+
+.orb{position:fixed;border-radius:50%;filter:blur(120px);pointer-events:none;z-index:0;}
+.orb1{width:600px;height:600px;background:rgba(124,110,245,0.055);top:-180px;right:-120px;}
+.orb2{width:450px;height:450px;background:rgba(78,201,160,0.04);bottom:-100px;left:-120px;}
+.orb3{width:320px;height:320px;background:rgba(249,115,22,0.03);top:45%;left:28%;}
+
+/* ── HEADER ── */
+.header{
+  display:flex;align-items:center;justify-content:space-between;
+  height:var(--header-h);padding:0 1.5rem;
+  background:var(--surface);border-bottom:1px solid var(--border);
+  position:sticky;top:0;z-index:100;
+  backdrop-filter:blur(16px);
+}
+.zone-a{display:flex;align-items:baseline;gap:4px;font-family:var(--font);font-size:16px;font-weight:700;color:var(--text);letter-spacing:-.01em;white-space:nowrap;}
+.zone-a-delta{color:var(--accent);font-weight:700;}
+.zone-a-name{color:var(--accent);font-style:italic;}
+
+.zone-b{display:flex;align-items:center;gap:8px;}
+.provider-selector{display:flex;align-items:center;gap:6px;background:var(--elevated);border:1px solid var(--border);border-radius:7px;padding:5px 10px;cursor:pointer;transition:border-color .15s;}
+.provider-selector:hover{border-color:rgba(255,255,255,0.22);}
+.provider-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;transition:background .2s;}
+select#providerSelect{background:none;border:none;color:var(--secondary);font-family:var(--font);font-size:.7rem;outline:none;cursor:pointer;}
+select#providerSelect option{background:var(--elevated);}
+.gear-btn{display:flex;align-items:center;justify-content:center;width:30px;height:30px;background:none;border:1px solid var(--border);border-radius:7px;cursor:pointer;transition:all .15s;}
+.gear-btn:hover{border-color:rgba(255,255,255,0.22);background:var(--elevated);}
+.gear-btn svg{width:13px;height:13px;stroke:var(--secondary);fill:none;stroke-width:2;stroke-linecap:round;}
+.gear-btn.active{border-color:var(--accent);background:var(--accent-glow);}
+.gear-btn.active svg{stroke:var(--accent);}
+
+/* Zone C — lowercase italic crafted by */
+.zone-c{display:flex;flex-direction:column;align-items:flex-end;line-height:1.35;flex-shrink:0;}
+.zone-c-crafted{font-size:0.62rem;color:var(--muted);font-style:italic;font-weight:400;letter-spacing:.02em;}
+.zone-c-email{font-size:0.62rem;color:var(--muted);text-decoration:none;transition:color .15s;}
+.zone-c-email:hover{color:var(--secondary);}
+
+/* ── WARN BANNER ── */
+.warn-banner{background:rgba(249,115,22,0.12);border-bottom:1px solid rgba(249,115,22,0.3);color:var(--orange);font-size:.73rem;padding:.4rem 1.5rem;text-align:center;visibility:hidden;pointer-events:none;opacity:0;transition:opacity .2s;}
+.warn-banner.visible{visibility:visible;pointer-events:all;opacity:1;}
+
+/* ── GEAR DRAWER ── */
+.gear-backdrop{position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:199;visibility:hidden;pointer-events:none;opacity:0;transition:opacity .2s;}
+.gear-backdrop.open{visibility:visible;pointer-events:all;opacity:1;}
+.gear-drawer{position:fixed;top:var(--header-h);right:0;bottom:0;width:320px;background:var(--elevated);border-left:1px solid var(--border);z-index:200;transform:translateX(100%);transition:transform .25s ease;overflow-y:auto;padding:1.2rem;}
+.gear-drawer.open{transform:translateX(0);}
+.drawer-title{font-size:.68rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:1rem;}
+.key-row{margin-bottom:.9rem;}
+.key-label{font-size:.68rem;color:var(--secondary);margin-bottom:.3rem;display:flex;align-items:center;gap:.4rem;}
+.key-dot{width:6px;height:6px;border-radius:50%;}
+.key-input-row{display:flex;gap:.4rem;}
+.key-input{flex:1;background:var(--bg);border:1px solid var(--border);color:var(--text);font-family:var(--font);font-size:.7rem;padding:.32rem .5rem;border-radius:4px;outline:none;transition:border-color .2s;}
+.key-input:focus{border-color:var(--accent);}
+.key-input::placeholder{color:var(--muted);}
+.save-key-btn{background:var(--border);border:none;color:var(--secondary);font-size:.66rem;padding:0 .6rem;border-radius:4px;cursor:pointer;transition:background .2s,color .2s;}
+.save-key-btn:hover{background:var(--accent);color:white;}
+.key-note{font-size:.66rem;color:var(--muted);font-style:italic;padding:.35rem .5rem;background:var(--bg);border:1px solid var(--border);border-radius:4px;}
+
+/* ── MAIN SHELL ── */
+.shell{position:relative;z-index:1;max-width:1000px;margin:0 auto;padding:32px 1.5rem 64px;}
+
+/* ── SEARCH ── */
+.main-heading{font-family:var(--font);font-size:clamp(22px,4vw,34px);font-weight:700;line-height:1.24;color:var(--text);letter-spacing:-.022em;margin-bottom:24px;margin-top:32px;}
+.main-heading span{color:var(--accent);}
+.input-row{display:flex;gap:10px;align-items:stretch;background:var(--elevated);border:1px solid var(--border);border-radius:13px;padding:7px 7px 7px 18px;transition:border-color .2s,box-shadow .2s;margin-bottom:10px;}
+.input-row:focus-within{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-glow);}
+#concept-input{flex:1;background:none;border:none;outline:none;color:var(--text);font-family:var(--prose);font-size:16px;padding:8px 0 10px;line-height:1.7;}
+#concept-input::placeholder{color:var(--muted);font-style:italic;}
+#go-btn{background:var(--accent);color:#fff;border:none;border-radius:9px;padding:10px 22px;font-family:var(--font);font-size:13px;font-weight:700;letter-spacing:.04em;cursor:pointer;transition:background .2s,transform .1s;white-space:nowrap;}
+#go-btn:hover{background:#9189eb;}
+#go-btn:active{transform:scale(.97);}
+#go-btn:disabled{background:rgba(124,110,245,0.28);cursor:not-allowed;}
+
+.chips{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:16px;}
+.chip{display:inline-flex;align-items:center;gap:6px;background:var(--elevated);border:1px solid var(--border);border-radius:100px;padding:5px 13px 7px;font-family:var(--font);font-size:12px;font-weight:600;color:var(--secondary);cursor:pointer;transition:all .15s;line-height:1.5;}
+.chip:hover{border-color:var(--accent);color:var(--text);}
+.chip-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
+
+.challenge-row{display:flex;align-items:center;gap:12px;margin-bottom:24px;flex-wrap:wrap;}
+.challenge-label{font-size:10px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);flex-shrink:0;}
+.challenge-pills{display:flex;gap:6px;}
+.challenge-pill{background:var(--elevated);border:1px solid var(--border);border-radius:100px;padding:5px 13px 7px;font-family:var(--font);font-size:11px;font-weight:700;color:var(--muted);cursor:pointer;transition:all .15s;letter-spacing:.03em;line-height:1.5;}
+.challenge-pill:hover{border-color:rgba(255,255,255,0.22);color:var(--secondary);}
+.challenge-pill.active[data-level="familiar"]{background:rgba(76,175,130,0.08);border-color:var(--green);color:var(--green);}
+.challenge-pill.active[data-level="stretch"]{background:rgba(245,166,35,0.08);border-color:var(--amber);color:var(--amber);}
+.challenge-pill.active[data-level="uncomfortable"]{background:rgba(249,115,22,0.08);border-color:var(--orange);color:var(--orange);}
+
+/* ── TAB GRID ── */
+.tabs-section{margin-bottom:14px;}
+.surface-lenses-label{font-size:9px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;}
+
+/* Row 1: 4 tabs */
+.tab-row-4{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:6px;}
+/* Row 2: 4 tabs */
+.tab-row-4b{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:6px;}
+/* Row 3: 3 tabs */
+.tab-row-3{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:16px;}
+
+.vtab{background:none;border:1px solid var(--border);border-radius:13px;padding:10px 12px 12px;cursor:pointer;transition:all .18s;display:flex;flex-direction:column;align-items:flex-start;gap:4px;text-align:left;width:100%;}
+.vtab:hover{border-color:rgba(255,255,255,0.18);background:rgba(255,255,255,0.018);}
+.vtab.active{background:var(--elevated);border-color:rgba(255,255,255,0.22);box-shadow:0 4px 14px rgba(0,0,0,0.38);}
+
+/* vtab-header: pulse dot LEFT of label text */
+.vtab-header{display:flex;align-items:center;gap:6px;font-family:var(--font);font-size:11.5px;font-weight:700;color:var(--muted);width:100%;line-height:1.5;}
+.vtab-header svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;opacity:.7;flex-shrink:0;}
+.vtab.active .vtab-header{color:var(--text);}
+.vtab.active .vtab-header svg{opacity:1;}
+
+/* pulse dot — LEFT side, before text */
+.pulse-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0;animation:pulseDot 2s ease-in-out infinite;}
+.vtab.active .pulse-dot{display:none;}
+
+.vtab-sub{font-family:var(--font);font-size:10px;color:var(--muted);line-height:1.4;pointer-events:none;}
+.vtab.active .vtab-sub{color:var(--secondary);}
+
+/* tab accent colors — inactive */
+.vtab.explain-tab:not(.active) .vtab-header{color:var(--amber);}
+.vtab.decode-tab:not(.active) .vtab-header{color:#a78bfa;}
+.vtab.apps-tab:not(.active) .vtab-header{color:var(--secondary);}
+.vtab.flow-tab:not(.active) .vtab-header{color:var(--green);}
+.vtab.confuse-tab:not(.active) .vtab-header{color:#84cc16;}
+.vtab.invert-tab:not(.active) .vtab-header{color:var(--orange);}
+.vtab.steelman-tab:not(.active) .vtab-header{color:var(--coral);}
+.vtab.tension-tab:not(.active) .vtab-header{color:#d946ef;}
+.vtab.socratic-tab:not(.active) .vtab-header{color:#fb923c;}
+.vtab.synthesis-tab:not(.active) .vtab-header{color:var(--accent);}
+.vtab.contrast-tab:not(.active) .vtab-header{color:var(--teal);}
+
+/* pulse dot colors */
+.pd-amber{background:var(--amber);animation-delay:.0s;}
+.pd-purple{background:#a78bfa;animation-delay:.5s;}
+.pd-green{background:var(--green);animation-delay:1s;}
+.pd-lime{background:#84cc16;animation-delay:.3s;}
+.pd-orange{background:var(--orange);animation-delay:.8s;}
+.pd-coral{background:var(--coral);animation-delay:1.2s;}
+.pd-fuchsia{background:#d946ef;animation-delay:.6s;}
+.pd-peach{background:#fb923c;animation-delay:1.5s;}
+.pd-accent{background:var(--accent);animation-delay:.9s;}
+.pd-teal{background:var(--teal);animation-delay:.2s;}
+
+@keyframes pulseDot{0%,100%{opacity:1;transform:scale(1);}50%{opacity:0.3;transform:scale(0.5);}}
+
+/* ── DEEP DIVE DIVIDER ── */
+.deep-divider{display:flex;align-items:center;gap:12px;margin-bottom:10px;}
+.deep-divider-line{flex:1;height:1px;background:var(--border);}
+.deep-divider-label{font-size:9px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);white-space:nowrap;}
+
+/* ── DEEP STRUCTURE TIER ── */
+.deep-tier-btn{width:100%;display:flex;align-items:center;justify-content:space-between;background:none;border:1px solid var(--border);border-radius:13px;padding:11px 16px 13px;cursor:pointer;transition:all .18s;text-align:left;margin-bottom:16px;}
+.deep-tier-btn:hover{border-color:rgba(255,255,255,0.18);background:rgba(255,255,255,0.018);}
+.deep-tier-btn.active{background:var(--elevated);border-color:rgba(56,189,248,0.35);box-shadow:0 4px 14px rgba(0,0,0,0.38);}
+.deep-tier-left{display:flex;align-items:center;gap:8px;}
+.deep-tier-icon{font-size:13px;color:var(--teal);flex-shrink:0;}
+.deep-tier-title{font-family:var(--font);font-size:12px;font-weight:700;color:var(--teal);line-height:1.5;}
+.deep-tier-btn:not(.active) .deep-tier-title{color:var(--muted);}
+.deep-tier-btn:not(.active) .deep-tier-icon{color:var(--muted);}
+.deep-tier-sub{font-family:var(--font);font-size:10px;color:var(--muted);line-height:1.4;margin-top:1px;}
+.deep-sub-tabs{display:flex;gap:5px;}
+.deep-sub-pill{font-size:9.5px;font-family:var(--font);padding:4px 10px 5px;border-radius:100px;border:1px solid var(--border);color:var(--muted);cursor:pointer;transition:all .15s;line-height:1.5;background:none;}
+.deep-sub-pill:hover{border-color:rgba(56,189,248,0.4);color:var(--teal);}
+.deep-sub-pill.active{border-color:rgba(56,189,248,0.5);color:var(--teal);background:rgba(56,189,248,0.08);}
+
+/* ── THEME STRIP ── */
+.theme-strip{margin-bottom:18px;}
+.theme-pill{display:inline-flex;align-items:center;gap:8px;background:rgba(124,110,245,0.06);border:1px solid rgba(124,110,245,0.3);border-radius:100px;padding:5px 14px 7px 11px;cursor:pointer;transition:all .2s;user-select:none;}
+.theme-pill:hover{background:rgba(124,110,245,0.1);border-color:rgba(124,110,245,0.5);}
+.theme-pill-dot{width:7px;height:7px;border-radius:50%;background:var(--accent);box-shadow:0 0 6px 1px var(--accent);flex-shrink:0;}
+.theme-pill-label{font-size:10.5px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:rgba(124,110,245,0.85);line-height:1.5;}
+.theme-pill-chevron{width:10px;height:10px;stroke:rgba(124,110,245,0.5);fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;transition:transform .28s;margin-left:2px;}
+.theme-strip.collapsed .theme-pill-chevron{transform:rotate(180deg);}
+.theme-def-wrap{overflow:hidden;max-height:120px;transition:max-height .32s cubic-bezier(.4,0,.2,1),opacity .22s ease,margin .28s ease;margin-top:9px;opacity:1;}
+.theme-def-wrap.hidden{max-height:0;opacity:0;margin-top:0;}
+.theme-def{font-family:var(--prose);font-size:13px;color:rgba(232,232,240,0.42);line-height:1.75;padding-bottom:.25em;}
+
+/* ── OUTPUT SECTION ── */
+#output-zone{margin-top:4px;}
+
+/* ── PROSE BASE ── */
+.prose-body{font-family:var(--prose);font-size:var(--prose-size);color:var(--prose-color);line-height:var(--prose-lh);width:100%;letter-spacing:.006em;padding-bottom:.3em;}
+.prose-body p{margin-bottom:var(--prose-gap);}
+.prose-body p:last-child{margin-bottom:0;}
+
+/* ── APPS VIEW ── */
+.apps-grid{display:grid;grid-template-columns:1fr;gap:13px;margin-bottom:24px;}
+.app-card{background:var(--elevated);border:1px solid var(--border);border-radius:16px;padding:22px 26px 26px 24px;position:relative;transition:border-color .2s,transform .2s;}
+.app-card:hover{border-color:rgba(255,255,255,0.18);transform:translateY(-2px);}
+.app-accent-bar{position:absolute;top:0;left:0;right:0;height:2px;border-radius:16px 16px 0 0;}
+.b1{background:var(--accent);}.b2{background:var(--green);}.b3{background:var(--amber);}.b4{background:var(--coral);}.b5{background:var(--teal);}
+.app-domain{font-size:10px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;margin-bottom:5px;line-height:1.5;}
+.c1{color:var(--accent);}.c2{color:var(--green);}.c3{color:var(--amber);}.c4{color:var(--coral);}.c5{color:var(--teal);}
+.app-name{font-size:17px;font-weight:700;color:var(--text);margin-bottom:12px;line-height:1.38;}
+.app-bridge{font-family:var(--prose);font-size:var(--prose-size);color:var(--prose-color);line-height:var(--prose-lh);width:100%;margin-bottom:16px;padding-bottom:.25em;}
+.chain-wrap{margin-bottom:15px;}
+.chain-label{font-size:9.5px;font-weight:500;letter-spacing:.13em;text-transform:uppercase;color:var(--green);margin-bottom:7px;}
+.chain-strip{display:flex;align-items:center;flex-wrap:wrap;gap:4px;}
+.chain-step{background:rgba(76,175,130,0.07);border:1px solid rgba(76,175,130,0.2);border-radius:6px;padding:4px 10px 6px;font-size:10.5px;font-weight:700;color:var(--text);line-height:1.5;}
+.chain-step.last{background:rgba(76,175,130,0.18);border-color:rgba(76,175,130,0.45);}
+.chain-arrow{color:rgba(76,175,130,0.4);font-size:13px;font-weight:700;}
+.wow-box{background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:10px;padding:12px 16px;}
+.wow-label{font-size:9px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--accent);margin-bottom:5px;}
+.wow-text{font-family:var(--prose);font-size:14px;color:rgba(232,232,240,0.78);line-height:1.72;font-style:italic;padding-bottom:.2em;}
+
+/* ── FLOW VIEW ── */
+.flow-tension-strip{background:rgba(249,115,22,0.05);border:1px solid rgba(249,115,22,0.2);border-radius:10px;padding:10px 16px;margin-bottom:18px;display:flex;align-items:flex-start;gap:10px;}
+.flow-tension-label{font-size:9.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--orange);white-space:nowrap;padding-top:2px;}
+.flow-tension-text{font-family:var(--prose);font-size:13.5px;color:var(--prose-color);line-height:1.68;padding-bottom:.2em;}
+.flow-canvas-wrapper{position:relative;background:rgba(17,17,25,0.4);border:1px solid var(--border);border-radius:22px;padding:36px 22px;margin-bottom:20px;}
+.flow-svg-layer{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:1;}
+.flow-tree-viewport{position:relative;z-index:2;display:grid;grid-template-columns:1fr;gap:28px;align-items:center;}
+@media(min-width:780px){.flow-tree-viewport{grid-template-columns:240px 1fr 240px;gap:14px;min-height:360px;}}
+.flow-side-col{display:flex;flex-direction:column;gap:20px;justify-content:center;}
+.flow-center{display:flex;justify-content:center;align-items:center;}
+.hub-nucleus{background:var(--bg);border:2px solid var(--accent);border-radius:20px;padding:18px 22px;text-align:center;box-shadow:0 0 32px rgba(124,110,245,0.2);transition:transform .3s;cursor:default;max-width:220px;z-index:3;}
+.hub-nucleus:hover{transform:scale(1.02);}
+.hub-meta{font-size:9px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--accent);margin-bottom:5px;}
+.hub-title{font-size:17px;font-weight:700;color:var(--text);line-height:1.38;}
+.spoke-node{background:var(--elevated);border:1px solid var(--border);border-radius:13px;padding:13px 16px 15px;cursor:pointer;transition:all .25s;position:relative;z-index:3;}
+.spoke-node:hover{transform:translateY(-2px);border-color:rgba(255,255,255,0.22);}
+.spoke-node.active{background:rgba(255,255,255,0.04);box-shadow:0 8px 22px rgba(0,0,0,0.42);}
+.spoke-meta{font-size:8.5px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;margin-bottom:4px;line-height:1.5;}
+.spoke-title{font-size:13px;font-weight:700;color:var(--text);line-height:1.38;}
+.spoke-signal{margin-top:7px;height:2px;border-radius:2px;background:var(--border);overflow:hidden;}
+.spoke-signal-fill{height:100%;border-radius:2px;transition:width .5s ease;}
+.spoke-drawer{background:var(--elevated);border:1px solid var(--border);border-radius:18px;padding:24px 28px;margin-bottom:24px;display:none;}
+.spoke-drawer.open{display:block;}
+.drawer-domain-header{display:flex;align-items:center;gap:12px;margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid var(--border);}
+.drawer-domain-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+.drawer-domain-name{font-size:16px;font-weight:700;color:var(--text);line-height:1.38;}
+.drawer-signal-wrap{margin-left:auto;display:flex;flex-direction:column;align-items:flex-end;gap:3px;}
+.drawer-signal-label{font-size:9px;font-weight:500;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);}
+.drawer-signal-bar{width:80px;height:3px;background:var(--border);border-radius:3px;overflow:hidden;}
+.drawer-signal-fill{height:100%;border-radius:3px;transition:width .6s ease;}
+.drawer-grid{display:grid;grid-template-columns:1fr;gap:20px;}
+@media(min-width:600px){.drawer-grid{grid-template-columns:1fr 1fr;}}
+.drawer-section-label{font-size:9.5px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;margin-bottom:8px;}
+.drawer-prose{font-family:var(--prose);font-size:14.5px;color:var(--prose-color);line-height:1.78;padding-bottom:.25em;}
+.circuit-track{display:flex;align-items:center;flex-wrap:wrap;gap:8px;}
+.circuit-bubble{background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:9px;padding:7px 13px 9px;font-size:11.5px;color:var(--text);display:inline-flex;align-items:center;gap:7px;line-height:1.5;}
+.circuit-bubble-num{width:17px;height:17px;border-radius:50%;background:var(--green);color:#08080f;font-size:9.5px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;}
+.circuit-arrow{color:rgba(76,175,130,0.3);font-size:11px;font-weight:700;}
+.drawer-crosslinks{margin-top:18px;padding-top:18px;border-top:1px solid var(--border);}
+.crosslinks-label{font-size:9.5px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--amber);margin-bottom:10px;}
+.crosslink-item{display:flex;align-items:flex-start;gap:10px;padding:10px 13px;background:rgba(245,166,35,0.05);border:1px solid rgba(245,166,35,0.14);border-radius:9px;margin-bottom:8px;}
+.crosslink-item:last-child{margin-bottom:0;}
+.crosslink-domains{font-size:11px;font-weight:700;color:var(--amber);white-space:nowrap;padding-top:1px;line-height:1.5;}
+.crosslink-logic{font-family:var(--prose);font-size:13.5px;color:var(--secondary);line-height:1.65;padding-bottom:.2em;}
+.flow-narrative-wrap{margin-bottom:22px;}
+.flow-narrative-label{font-size:9.5px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;}
+.flow-narrative-text{font-family:var(--prose);font-size:var(--prose-size);color:var(--prose-color);line-height:var(--prose-lh);width:100%;padding-bottom:.25em;}
+.flow-narrative-text p{margin-bottom:var(--prose-gap);}
+.flow-narrative-text p:last-child{margin-bottom:0;}
+
+/* ── EXPLAIN VIEW ── */
+.explain-style-label{font-size:9.5px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:9px;}
+.explain-pills{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:28px;}
+.explain-pill{background:var(--elevated);border:1px solid var(--border);border-radius:100px;padding:6px 15px 8px;font-size:11.5px;font-weight:700;color:rgba(232,232,240,0.5);cursor:pointer;transition:all .15s;letter-spacing:.03em;line-height:1.5;}
+.explain-pill:hover{border-color:rgba(245,166,35,0.4);color:var(--amber);}
+.explain-pill.active{background:rgba(245,166,35,0.08);border-color:var(--amber);color:var(--amber);}
+.explain-prose-wrap{padding-left:22px;border-left:2px solid rgba(245,166,35,0.25);width:100%;}
+.explain-style-badge{font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--amber);background:rgba(245,166,35,0.08);border:1px solid rgba(245,166,35,0.22);border-radius:6px;padding:4px 10px 6px;display:inline-block;margin-bottom:18px;line-height:1.5;}
+.explain-body{font-family:var(--prose);font-size:var(--prose-size);color:var(--prose-color);line-height:var(--prose-lh);width:100%;letter-spacing:.012em;padding-bottom:.3em;}
+.explain-body p{margin-bottom:var(--prose-gap);}
+.explain-body p:last-child{margin-bottom:0;}
+.explain-body strong{color:#fcd47e;font-weight:600;background:rgba(245,166,35,0.09);padding:1px 5px;border-radius:4px;}
+.explain-body em{color:var(--amber);font-style:italic;font-weight:500;}
+.explain-step{display:flex;gap:14px;margin-bottom:15px;align-items:flex-start;}
+.explain-step-num{min-width:22px;height:22px;border-radius:50%;background:var(--amber);color:#08080f;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:3px;}
+.explain-step-text{font-family:var(--prose);font-size:var(--prose-size);color:var(--prose-color);line-height:var(--prose-lh);padding-bottom:.2em;}
+.myth-card{margin-bottom:12px;padding:14px 18px;border-radius:11px;}
+.myth-card.myth-false{background:rgba(239,68,68,0.05);border:1px solid rgba(239,68,68,0.16);}
+.myth-card.myth-true{background:rgba(34,197,94,0.05);border:1px solid rgba(34,197,94,0.15);}
+.myth-tag{font-size:10px;font-weight:700;letter-spacing:.1em;display:block;margin-bottom:6px;line-height:1.5;}
+.myth-tag.tag-false{color:#ef4444;}.myth-tag.tag-true{color:#22c55e;}
+.myth-prose{font-family:var(--prose);font-size:var(--prose-size);color:var(--prose-color);line-height:var(--prose-lh);width:100%;padding-bottom:.2em;}
+
+/* ── DECODE VIEW ── */
+.decode-auto-badge{display:inline-flex;align-items:center;gap:7px;background:rgba(167,139,250,0.07);border:1px solid rgba(167,139,250,0.2);border-radius:100px;padding:5px 13px 7px;margin-bottom:20px;}
+.decode-auto-dot{width:6px;height:6px;border-radius:50%;background:#a78bfa;box-shadow:0 0 6px #a78bfa;animation:pulseDot 2s ease-in-out infinite;}
+.decode-auto-text{font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:#a78bfa;line-height:1.5;}
+.decode-prose-wrap{padding-left:22px;border-left:2px solid rgba(167,139,250,0.22);width:100%;}
+.decode-form-badge{font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#a78bfa;background:rgba(167,139,250,0.08);border:1px solid rgba(167,139,250,0.22);border-radius:6px;padding:4px 10px 6px;display:inline-block;margin-bottom:14px;line-height:1.5;}
+.decode-why{font-family:var(--prose);font-size:13.5px;color:rgba(232,232,240,0.4);line-height:1.65;font-style:italic;margin-bottom:16px;padding-bottom:.2em;}
+.decode-body{font-family:var(--prose);font-size:var(--prose-size);color:var(--prose-color);line-height:var(--prose-lh);width:100%;letter-spacing:.012em;padding-bottom:.3em;}
+.decode-body p{margin-bottom:var(--prose-gap);}
+.decode-body p:last-child{margin-bottom:0;}
+.decode-body strong{color:#d8b4fe;font-weight:600;background:rgba(167,139,250,0.1);padding:1px 5px;border-radius:4px;}
+.decode-switcher{margin-top:38px;padding-top:18px;border-top:1px solid var(--border);}
+.decode-switcher-label{font-size:9.5px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:9px;}
+.decode-pills{display:flex;flex-wrap:wrap;gap:6px;}
+.decode-pill{background:var(--elevated);border:1px solid var(--border);border-radius:100px;padding:6px 15px 8px;font-size:11.5px;font-weight:700;color:rgba(232,232,240,0.5);cursor:pointer;transition:all .15s;letter-spacing:.03em;line-height:1.5;}
+.decode-pill:hover{border-color:rgba(167,139,250,0.35);color:#a78bfa;}
+.decode-pill.active{background:rgba(167,139,250,0.08);border-color:#a78bfa;color:#a78bfa;}
+
+/* ── SHARED DEEP VIEW ── */
+.deep-view{margin-bottom:24px;}
+.deep-loading{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:13px;padding:44px 0;text-align:center;}
+.deep-spinner{width:34px;height:34px;border-radius:50%;animation:spin .85s linear infinite;}
+.ds-orange{border:2px solid rgba(249,115,22,0.18);border-top-color:var(--orange);}
+.ds-red{border:2px solid rgba(239,68,68,0.18);border-top-color:var(--coral);}
+.ds-cyan{border:2px solid rgba(56,189,248,0.18);border-top-color:var(--teal);}
+.ds-fuchsia{border:2px solid rgba(217,70,239,0.18);border-top-color:#d946ef;}
+.ds-lime{border:2px solid rgba(132,204,22,0.18);border-top-color:#84cc16;}
+.ds-peach{border:2px solid rgba(251,146,60,0.18);border-top-color:#fb923c;}
+.ds-accent{border:2px solid rgba(124,110,245,0.18);border-top-color:var(--accent);}
+.ds-teal{border:2px solid rgba(56,189,248,0.18);border-top-color:var(--teal);}
+.ds-amber{border:2px solid rgba(245,166,35,0.18);border-top-color:var(--amber);}
+.ds-green{border:2px solid rgba(76,175,130,0.18);border-top-color:var(--green);}
+.deep-loading-text{font-size:12px;font-weight:600;letter-spacing:.08em;color:var(--secondary);}
+
+/* ── INVERT VIEW ── */
+.invert-intro{font-family:var(--prose);font-size:var(--prose-size);color:var(--prose-color);line-height:var(--prose-lh);width:100%;margin-bottom:24px;border-left:3px solid rgba(249,115,22,0.3);padding-left:18px;padding-bottom:.25em;}
+.invert-grid{display:grid;grid-template-columns:1fr;gap:12px;margin-bottom:24px;}
+@media(min-width:600px){.invert-grid{grid-template-columns:1fr 1fr;}}
+.invert-card{background:var(--elevated);border:1px solid rgba(249,115,22,0.15);border-radius:14px;padding:20px 22px 24px;position:relative;}
+.invert-card-accent{position:absolute;top:0;left:0;right:0;height:2px;background:var(--orange);border-radius:14px 14px 0 0;opacity:.5;}
+.invert-num{font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--orange);margin-bottom:7px;line-height:1.5;}
+.invert-headline{font-size:15px;font-weight:700;color:var(--text);margin-bottom:10px;line-height:1.35;}
+.invert-body{font-family:var(--prose);font-size:14.5px;color:var(--prose-color);line-height:1.78;padding-bottom:.2em;}
+.invert-tag{display:inline-block;margin-top:10px;font-size:9.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:rgba(249,115,22,0.6);background:rgba(249,115,22,0.06);border:1px solid rgba(249,115,22,0.18);border-radius:5px;padding:3px 8px 5px;line-height:1.4;}
+.invert-synthesis{background:rgba(249,115,22,0.05);border:1px solid rgba(249,115,22,0.2);border-radius:12px;padding:18px 22px;}
+.invert-synthesis-label{font-size:9.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--orange);margin-bottom:8px;}
+.invert-synthesis-text{font-family:var(--prose);font-size:var(--prose-size);color:var(--prose-color);line-height:var(--prose-lh);font-style:italic;padding-bottom:.2em;}
+
+/* ── STEELMAN VIEW ── */
+.steelman-opposition-box{background:rgba(239,68,68,0.05);border:1px solid rgba(239,68,68,0.22);border-radius:16px;padding:24px 26px;margin-bottom:18px;}
+.steelman-opp-label{font-size:9.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--coral);margin-bottom:6px;line-height:1.5;}
+.steelman-thesis{font-size:18px;font-weight:700;color:var(--text);margin-bottom:16px;line-height:1.3;}
+.steelman-body{font-family:var(--prose);font-size:var(--prose-size);color:var(--prose-color);line-height:var(--prose-lh);margin-bottom:18px;padding-bottom:.2em;}
+.steelman-evidence-label{font-size:9.5px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;}
+.steelman-evidence-list{display:flex;flex-direction:column;gap:8px;margin-bottom:18px;}
+.steelman-evidence-item{display:flex;gap:12px;align-items:flex-start;background:rgba(239,68,68,0.04);border:1px solid rgba(239,68,68,0.1);border-radius:9px;padding:10px 14px;}
+.steelman-evidence-num{width:20px;height:20px;border-radius:50%;background:rgba(239,68,68,0.15);color:var(--coral);font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px;}
+.steelman-evidence-text{font-family:var(--prose);font-size:14px;color:var(--prose-color);line-height:1.72;padding-bottom:.2em;}
+.steelman-rebuttal-box{background:rgba(34,197,94,0.04);border:1px solid rgba(34,197,94,0.18);border-radius:12px;padding:18px 22px;}
+.steelman-rebuttal-label{font-size:9.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#22c55e;margin-bottom:8px;}
+.steelman-rebuttal-text{font-family:var(--prose);font-size:var(--prose-size);color:var(--prose-color);line-height:var(--prose-lh);padding-bottom:.2em;}
+
+/* ── CONFUSE VIEW ── */
+.confuse-intro{font-family:var(--prose);font-size:var(--prose-size);color:var(--prose-color);line-height:var(--prose-lh);width:100%;margin-bottom:22px;padding-bottom:.2em;}
+.confuse-items{display:flex;flex-direction:column;gap:14px;margin-bottom:24px;}
+.confuse-item{border-radius:14px;border:1px solid var(--border);}
+.confuse-myth-row{background:rgba(239,68,68,0.05);padding:14px 18px;border-bottom:1px solid rgba(239,68,68,0.12);}
+.confuse-truth-row{background:rgba(34,197,94,0.04);padding:14px 18px;}
+.confuse-row-label{font-size:9px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;margin-bottom:5px;line-height:1.5;}
+.confuse-myth-row .confuse-row-label{color:#ef4444;}
+.confuse-truth-row .confuse-row-label{color:#22c55e;}
+.confuse-row-text{font-family:var(--prose);font-size:14.5px;color:var(--prose-color);line-height:1.75;padding-bottom:.2em;}
+.confuse-severity{display:inline-flex;align-items:center;gap:5px;margin-bottom:8px;}
+.confuse-severity-dot{width:5px;height:5px;border-radius:50%;background:var(--coral);}
+.confuse-severity-label{font-size:9.5px;color:var(--muted);}
+
+/* ── SOCRATIC VIEW ── */
+.socratic-intro{font-family:var(--prose);font-size:var(--prose-size);color:var(--prose-color);line-height:var(--prose-lh);width:100%;margin-bottom:24px;font-style:italic;padding-bottom:.2em;}
+.socratic-questions{display:flex;flex-direction:column;gap:18px;margin-bottom:24px;}
+.socratic-q{background:var(--elevated);border:1px solid var(--border);border-radius:16px;padding:22px 26px;}
+.socratic-q-num{font-size:9.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;line-height:1.5;}
+.socratic-q-text{font-size:17px;font-weight:700;color:var(--text);line-height:1.3;margin-bottom:16px;}
+.socratic-q-assumption-label{font-size:9px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:rgba(251,146,60,0.6);margin-bottom:6px;}
+.socratic-q-assumption{font-family:var(--prose);font-size:14px;color:rgba(251,146,60,0.8);line-height:1.68;font-style:italic;padding-bottom:.2em;}
+.socratic-q-hint{font-family:var(--prose);font-size:14px;color:var(--prose-color);line-height:1.68;margin-top:12px;padding-top:12px;border-top:1px solid var(--border);padding-bottom:.2em;}
+.socratic-q-hint-label{font-size:9px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:5px;}
+.socratic-closer{background:rgba(251,146,60,0.05);border:1px solid rgba(251,146,60,0.2);border-radius:12px;padding:16px 20px;}
+.socratic-closer-label{font-size:9.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#fb923c;margin-bottom:8px;line-height:1.5;}
+.socratic-closer-text{font-family:var(--prose);font-size:14.5px;color:var(--prose-color);line-height:1.75;padding-bottom:.2em;}
+
+/* ── TENSION VIEW ── */
+.tension-intro{font-family:var(--prose);font-size:var(--prose-size);color:var(--prose-color);line-height:var(--prose-lh);width:100%;margin-bottom:24px;padding-bottom:.2em;}
+.tension-grid{display:flex;flex-direction:column;gap:16px;margin-bottom:24px;}
+.tension-item{background:var(--elevated);border:1px solid var(--border);border-radius:16px;padding:22px 26px;}
+.tension-vs-bar{display:flex;align-items:center;gap:14px;margin-bottom:16px;flex-wrap:wrap;}
+.tension-concept-a{background:rgba(167,139,250,0.1);border:1px solid rgba(167,139,250,0.25);border-radius:8px;padding:6px 14px 8px;font-size:13px;font-weight:700;color:#d8b4fe;line-height:1.4;}
+.tension-vs{font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.08em;}
+.tension-concept-b{background:rgba(217,70,239,0.08);border:1px solid rgba(217,70,239,0.22);border-radius:8px;padding:6px 14px 8px;font-size:13px;font-weight:700;color:#e879f9;line-height:1.4;}
+.tension-type{font-size:9.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;line-height:1.5;}
+.tension-body{font-family:var(--prose);font-size:14.5px;color:var(--prose-color);line-height:1.78;margin-bottom:12px;padding-bottom:.2em;}
+.tension-implication{font-family:var(--prose);font-size:13.5px;color:rgba(217,70,239,0.7);line-height:1.68;font-style:italic;border-left:2px solid rgba(217,70,239,0.2);padding-left:12px;padding-bottom:.2em;}
+.tension-summary-box{background:rgba(217,70,239,0.05);border:1px solid rgba(217,70,239,0.18);border-radius:12px;padding:16px 20px;}
+.tension-summary-label{font-size:9.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#d946ef;margin-bottom:8px;line-height:1.5;}
+.tension-summary-text{font-family:var(--prose);font-size:var(--prose-size);color:var(--prose-color);line-height:var(--prose-lh);padding-bottom:.2em;}
+
+/* ── SYNTHESIS VIEW ── */
+.synthesis-intro{font-family:var(--prose);font-size:var(--prose-size);color:var(--prose-color);line-height:var(--prose-lh);width:100%;margin-bottom:24px;border-left:3px solid rgba(124,110,245,0.3);padding-left:18px;padding-bottom:.25em;}
+.synthesis-stages{display:flex;flex-direction:column;gap:14px;margin-bottom:24px;}
+.synthesis-stage{background:var(--elevated);border:1px solid rgba(124,110,245,0.18);border-radius:14px;padding:20px 22px 24px;position:relative;}
+.synthesis-stage-num{font-size:9.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:rgba(124,110,245,0.7);margin-bottom:6px;line-height:1.5;}
+.synthesis-stage-headline{font-size:15px;font-weight:700;color:var(--text);margin-bottom:10px;line-height:1.35;}
+.synthesis-stage-body{font-family:var(--prose);font-size:14.5px;color:var(--prose-color);line-height:1.78;padding-bottom:.2em;}
+.synthesis-apex{background:rgba(124,110,245,0.08);border:1px solid rgba(124,110,245,0.3);border-radius:12px;padding:20px 24px;}
+.synthesis-apex-label{font-size:9.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);margin-bottom:8px;}
+.synthesis-apex-text{font-family:var(--prose);font-size:var(--prose-size);color:var(--prose-color);line-height:var(--prose-lh);font-style:italic;padding-bottom:.2em;}
+
+/* ── CONTRAST VIEW ── */
+.contrast-intro{font-family:var(--prose);font-size:var(--prose-size);color:var(--prose-color);line-height:var(--prose-lh);width:100%;margin-bottom:24px;border-left:3px solid rgba(56,189,248,0.3);padding-left:18px;padding-bottom:.25em;}
+.contrast-items{display:flex;flex-direction:column;gap:14px;margin-bottom:24px;}
+.contrast-item{border-radius:14px;border:1px solid var(--border);}
+.contrast-not-row{background:rgba(56,189,248,0.04);padding:14px 18px;border-bottom:1px solid rgba(56,189,248,0.12);}
+.contrast-is-row{background:rgba(76,175,130,0.04);padding:14px 18px;}
+.contrast-row-label{font-size:9px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;margin-bottom:5px;line-height:1.5;}
+.contrast-not-row .contrast-row-label{color:var(--teal);}
+.contrast-is-row .contrast-row-label{color:var(--green);}
+.contrast-row-text{font-family:var(--prose);font-size:14.5px;color:var(--prose-color);line-height:1.75;padding-bottom:.2em;}
+.contrast-boundary{background:rgba(56,189,248,0.05);border:1px solid rgba(56,189,248,0.2);border-radius:12px;padding:16px 20px;}
+.contrast-boundary-label{font-size:9.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--teal);margin-bottom:8px;line-height:1.5;}
+.contrast-boundary-text{font-family:var(--prose);font-size:var(--prose-size);color:var(--prose-color);line-height:var(--prose-lh);padding-bottom:.2em;}
+
+/* ── DEEPER VIEW ── */
+.deeper-sub-tabs-bar{display:flex;gap:6px;margin-bottom:24px;flex-wrap:wrap;}
+.deeper-tab{background:var(--elevated);border:1px solid var(--border);border-radius:100px;padding:6px 14px 8px;font-size:11px;font-weight:700;color:var(--muted);cursor:pointer;transition:all .15s;line-height:1.5;}
+.deeper-tab:hover{border-color:rgba(255,255,255,0.22);color:var(--secondary);}
+.deeper-tab.active{background:rgba(56,189,248,0.08);border-color:var(--teal);color:var(--teal);}
+.deeper-subview{display:none;}
+.deeper-subview.open{display:block;}
+.prereq-chain{display:flex;flex-direction:column;gap:12px;margin-bottom:24px;}
+.prereq-node{background:var(--elevated);border:1px solid var(--border);border-radius:12px;padding:16px 20px;display:flex;gap:16px;align-items:flex-start;}
+.prereq-level{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0;margin-top:1px;}
+.pl-f{background:rgba(56,189,248,0.12);color:var(--teal);}
+.pl-i{background:rgba(124,110,245,0.12);color:var(--accent);}
+.pl-a{background:rgba(76,175,130,0.12);color:var(--green);}
+.prereq-concept{font-size:14px;font-weight:700;color:var(--text);margin-bottom:5px;line-height:1.38;}
+.prereq-why{font-family:var(--prose);font-size:13.5px;color:var(--prose-color);line-height:1.7;padding-bottom:.2em;}
+.prereq-gap-box{background:rgba(56,189,248,0.05);border:1px solid rgba(56,189,248,0.18);border-radius:12px;padding:16px 20px;margin-top:8px;}
+.prereq-gap-label{font-size:9.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--teal);margin-bottom:8px;line-height:1.5;}
+.prereq-gap-text{font-family:var(--prose);font-size:14.5px;color:var(--prose-color);line-height:1.75;padding-bottom:.2em;}
+.edge-grid{display:grid;grid-template-columns:1fr;gap:12px;margin-bottom:24px;}
+@media(min-width:600px){.edge-grid{grid-template-columns:1fr 1fr;}}
+.edge-card{background:var(--elevated);border:1px solid var(--border);border-radius:14px;padding:18px 20px;}
+.edge-card-works{border-top:2px solid rgba(34,197,94,0.35);}
+.edge-card-breaks{border-top:2px solid rgba(239,68,68,0.35);}
+.edge-card-label{font-size:9px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;margin-bottom:10px;line-height:1.5;}
+.edge-card-works .edge-card-label{color:#22c55e;}
+.edge-card-breaks .edge-card-label{color:#ef4444;}
+.edge-item{display:flex;gap:10px;margin-bottom:9px;align-items:flex-start;}
+.edge-item:last-child{margin-bottom:0;}
+.edge-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0;margin-top:7px;}
+.edge-item-text{font-family:var(--prose);font-size:14px;color:var(--prose-color);line-height:1.72;padding-bottom:.2em;}
+.edge-boundary{font-family:var(--prose);font-size:14px;color:var(--muted);line-height:1.68;font-style:italic;margin-top:16px;padding-top:16px;border-top:1px solid var(--border);padding-bottom:.2em;}
+.temporal-strip{display:grid;grid-template-columns:1fr;gap:16px;margin-bottom:24px;}
+@media(min-width:600px){.temporal-strip{grid-template-columns:1fr 1fr 1fr;}}
+.temporal-card{background:var(--elevated);border:1px solid var(--border);border-radius:14px;padding:18px 20px;}
+.temporal-era{font-size:9.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;margin-bottom:8px;line-height:1.5;}
+.temporal-card.past-card .temporal-era{color:rgba(232,232,240,0.38);}
+.temporal-card.present-card .temporal-era{color:var(--teal);}
+.temporal-card.future-card .temporal-era{color:#d946ef;}
+.temporal-card.present-card{border-color:rgba(56,189,248,0.25);background:rgba(56,189,248,0.03);}
+.temporal-headline{font-size:14px;font-weight:700;color:var(--text);margin-bottom:8px;line-height:1.35;}
+.temporal-body{font-family:var(--prose);font-size:13.5px;color:var(--prose-color);line-height:1.72;padding-bottom:.2em;}
+.temporal-insight{font-family:var(--prose);font-size:13px;color:var(--muted);font-style:italic;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);padding-bottom:.2em;}
+
+/* ── GO DEEPER ── */
+.go-deeper{margin-top:26px;padding-top:22px;border-top:1px solid var(--border);}
+.go-deeper-title{font-size:9.5px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:11px;}
+.related-chips{display:flex;flex-wrap:wrap;gap:7px;}
+.related-chip{background:var(--elevated);border:1px solid var(--border);border-radius:100px;padding:6px 14px 8px;font-size:12px;font-weight:600;color:var(--secondary);cursor:pointer;transition:all .15s;line-height:1.5;}
+.related-chip:hover{border-color:var(--green);color:var(--green);}
+
+/* ── LOADERS ── */
+@keyframes spin{to{transform:rotate(360deg);}}
+@keyframes shimmer{0%{background-position:-400px 0;}100%{background-position:400px 0;}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:translateY(0);}}
+.skel{background:linear-gradient(90deg,var(--elevated) 25%,rgba(255,255,255,0.04) 50%,var(--elevated) 75%);background-size:800px 100%;border-radius:6px;animation:shimmer 1.6s ease-in-out infinite;}
+.skeleton-card{background:var(--elevated);border:1px solid var(--border);border-radius:16px;padding:22px 26px;margin-bottom:13px;}
+.error-box{background:rgba(226,75,74,0.07);border:1px solid rgba(226,75,74,0.2);border-radius:12px;padding:17px 20px;font-family:var(--prose);font-size:14.5px;color:#f09595;line-height:1.68;padding-bottom:.3em;}
+.no-key-box{background:rgba(245,166,35,0.07);border:1px solid rgba(245,166,35,0.2);border-radius:12px;padding:17px 20px;font-family:var(--prose);font-size:14.5px;color:#fac775;line-height:1.68;padding-bottom:.3em;}
+.view-loading{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:13px;padding:44px 0;text-align:center;}
+
+@media(max-width:560px){
+  .shell{padding:20px 1rem 60px;}
+  .main-heading{font-size:clamp(20px,7vw,28px);}
+  .tab-row-4,.tab-row-4b{grid-template-columns:1fr 1fr;}
+  .tab-row-3{grid-template-columns:1fr 1fr;}
+  .deep-sub-tabs{flex-wrap:wrap;}
+}
+</style>
+</head>
+<body>
+
+<div class="orb orb1"></div>
+<div class="orb orb2"></div>
+<div class="orb orb3"></div>
+
+<!-- ── HEADER ── -->
+<nav class="header">
+  <div class="zone-a">
+    <span class="zone-a-delta">∆</span>
+    <span class="zone-a-name">Shift</span>
+  </div>
+  <div class="zone-b">
+    <div class="provider-selector">
+      <span class="provider-dot" id="providerDot"></span>
+      <select id="providerSelect">
+        <option value="claude">Claude (Native)</option>
+        <option value="groq">Groq — gpt-oss-120b</option>
+        <option value="or-text">OpenRouter — Free Router</option>
+        <option value="openai">OpenAI — GPT-4o</option>
+        <option value="gemini">Gemini — 1.5 Pro</option>
+        <option value="lmstudio">LM Studio (local)</option>
+      </select>
+    </div>
+    <div class="provider-selector" id="orModeRow" style="visibility:hidden;pointer-events:none;position:absolute;opacity:0;">
+      <select id="orModeSelect">
+        <option value="auto">Auto Router (Free)</option>
+        <option value="specific">Specific Model</option>
+      </select>
+    </div>
+    <div class="provider-selector" id="orModelRow" style="visibility:hidden;pointer-events:none;position:absolute;opacity:0;">
+      <select id="orModelSelect">
+        <option value="meta-llama/llama-4-maverick:free">Llama 4 Maverick</option>
+        <option value="meta-llama/llama-4-scout:free">Llama 4 Scout</option>
+        <option value="google/gemma-4-31b-it:free">Gemma 4 31B</option>
+        <option value="z-ai/glm-4.5-air:free">GLM 4.5 Air</option>
+        <option value="nvidia/nemotron-3-super-120b-a12b:free">Nemotron 3 Super</option>
+      </select>
+    </div>
+    <button class="gear-btn" id="gearBtn" aria-label="Settings">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    </button>
+  </div>
+  <div class="zone-c">
+    <span class="zone-c-crafted">crafted by</span>
+    <a class="zone-c-email" href="mailto:meet.venkat1@gmail.com">meet.venkat1@gmail.com</a>
+  </div>
+</nav>
+
+<div class="warn-banner" id="keyWarn">⚠ No API key configured. Open ⚙ Settings to add one.</div>
+
+<!-- ── GEAR DRAWER ── -->
+<div class="gear-backdrop" id="gearBackdrop"></div>
+<div class="gear-drawer" id="gearDrawer">
+  <div class="drawer-title">API Configuration</div>
+  <div class="key-row">
+    <div class="key-label"><span class="key-dot" style="background:#ef4444"></span>Claude (Native)</div>
+    <div class="key-note">No key needed — platform routes natively</div>
+  </div>
+  <div class="key-row">
+    <div class="key-label"><span class="key-dot" style="background:#22c55e"></span>Groq</div>
+    <div class="key-input-row">
+      <input type="password" class="key-input" id="keyGroq" placeholder="gsk_…"/>
+      <button class="save-key-btn" id="saveGroq">Save</button>
+    </div>
+  </div>
+  <div class="key-row">
+    <div class="key-label"><span class="key-dot" style="background:#f97316"></span>OpenRouter</div>
+    <div class="key-input-row">
+      <input type="password" class="key-input" id="keyOr" placeholder="sk-or-…"/>
+      <button class="save-key-btn" id="saveOr">Save</button>
+    </div>
+  </div>
+  <div class="key-row">
+    <div class="key-label"><span class="key-dot" style="background:#3b82f6"></span>OpenAI</div>
+    <div class="key-input-row">
+      <input type="password" class="key-input" id="keyOpenai" placeholder="sk-…"/>
+      <button class="save-key-btn" id="saveOpenai">Save</button>
+    </div>
+  </div>
+  <div class="key-row">
+    <div class="key-label"><span class="key-dot" style="background:#a855f7"></span>Gemini</div>
+    <div class="key-input-row">
+      <input type="password" class="key-input" id="keyGemini" placeholder="AIza…"/>
+      <button class="save-key-btn" id="saveGemini">Save</button>
+    </div>
+  </div>
+  <div class="key-row">
+    <div class="key-label"><span class="key-dot" style="background:#eab308"></span>LM Studio (URL)</div>
+    <div class="key-input-row">
+      <input type="text" class="key-input" id="keyLmstudio" placeholder="http://localhost:1234"/>
+      <button class="save-key-btn" id="saveLmstudio">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── MAIN SHELL ── -->
+<main class="shell">
+  <h1 class="main-heading">Cognitive <span>Shift</span> Engine</h1>
+
+  <div class="input-row">
+    <input type="text" id="concept-input" placeholder="Enter any concept — recursion, democracy, entropy…"/>
+    <button id="go-btn" onclick="explore()">Explore →</button>
+  </div>
+  <div class="chips">
+    <span class="chip" onclick="tryChip('First Principles')"><span class="chip-dot" style="background:var(--accent)"></span>First Principles</span>
+    <span class="chip" onclick="tryChip('Cognitive Bias')"><span class="chip-dot" style="background:var(--green)"></span>Cognitive Bias</span>
+    <span class="chip" onclick="tryChip('Emergence')"><span class="chip-dot" style="background:var(--amber)"></span>Emergence</span>
+    <span class="chip" onclick="tryChip('Paradigm Shift')"><span class="chip-dot" style="background:var(--coral)"></span>Paradigm Shift</span>
+  </div>
+
+  <div class="challenge-row">
+    <span class="challenge-label">Challenge level</span>
+    <div class="challenge-pills">
+      <button class="challenge-pill active" data-level="familiar" onclick="setChallenge('familiar')">Familiar</button>
+      <button class="challenge-pill" data-level="stretch" onclick="setChallenge('stretch')">Stretch</button>
+      <button class="challenge-pill" data-level="uncomfortable" onclick="setChallenge('uncomfortable')">Uncomfortable</button>
+    </div>
+  </div>
+
+  <!-- ── TAB GRID ── -->
+  <div class="tabs-section" id="tabsSection" style="visibility:hidden;pointer-events:none;">
+    <div class="surface-lenses-label">Surface lenses</div>
+
+    <!-- Row 1: 4 tabs -->
+    <div class="tab-row-4">
+      <button class="vtab explain-tab" data-v="explain" onclick="switchView('explain')">
+        <div class="vtab-header">
+          <span class="pulse-dot pd-amber"></span>
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          Explain It
+        </div>
+        <span class="vtab-sub">7 lenses to understand it.</span>
+      </button>
+      <button class="vtab decode-tab" data-v="decode" onclick="switchView('decode')">
+        <div class="vtab-header">
+          <span class="pulse-dot pd-purple"></span>
+          <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+          Decode It
+        </div>
+        <span class="vtab-sub">Feel the deeper pattern.</span>
+      </button>
+      <button class="vtab apps-tab" data-v="apps" onclick="switchView('apps')">
+        <div class="vtab-header">
+          <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+          Applications
+        </div>
+        <span class="vtab-sub">Where this force appears.</span>
+      </button>
+      <button class="vtab flow-tab" data-v="flow" onclick="switchView('flow')">
+        <div class="vtab-header">
+          <span class="pulse-dot pd-green"></span>
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="2"/><path d="M12 7v4"/><path d="M8 13H5a1 1 0 0 0-1 1v3a1 1 0 0 0 1 1h3a1 1 0 0 0 1-1v-3a1 1 0 0 0-1-1z"/><path d="M16 13h3a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-3a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1z"/><line x1="12" y1="11" x2="7" y2="13"/><line x1="12" y1="11" x2="17" y2="13"/></svg>
+          Flow Map
+        </div>
+        <span class="vtab-sub">How it spreads across fields.</span>
+      </button>
+    </div>
+
+    <!-- Row 2: 4 tabs -->
+    <div class="tab-row-4b">
+      <button class="vtab confuse-tab" data-v="confuse" onclick="switchView('confuse')">
+        <div class="vtab-header">
+          <span class="pulse-dot pd-lime"></span>
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          Confusion
+        </div>
+        <span class="vtab-sub">Misconceptions exposed.</span>
+      </button>
+      <button class="vtab invert-tab" data-v="invert" onclick="switchView('invert')">
+        <div class="vtab-header">
+          <span class="pulse-dot pd-orange"></span>
+          <svg viewBox="0 0 24 24"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+          Invert
+        </div>
+        <span class="vtab-sub">World without this.</span>
+      </button>
+      <button class="vtab steelman-tab" data-v="steelman" onclick="switchView('steelman')">
+        <div class="vtab-header">
+          <span class="pulse-dot pd-coral"></span>
+          <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          Steelman
+        </div>
+        <span class="vtab-sub">Best argument against it.</span>
+      </button>
+      <button class="vtab tension-tab" data-v="tension" onclick="switchView('tension')">
+        <div class="vtab-header">
+          <span class="pulse-dot pd-fuchsia"></span>
+          <svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+          Tensions
+        </div>
+        <span class="vtab-sub">What conflicts with this.</span>
+      </button>
+    </div>
+
+    <!-- Row 3: 3 tabs — Socratic + Synthesis + Contrast -->
+    <div class="tab-row-3">
+      <button class="vtab socratic-tab" data-v="socratic" onclick="switchView('socratic')">
+        <div class="vtab-header">
+          <span class="pulse-dot pd-peach"></span>
+          <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          Socratic
+        </div>
+        <span class="vtab-sub">Questions that expose.</span>
+      </button>
+      <button class="vtab synthesis-tab" data-v="synthesis" onclick="switchView('synthesis')">
+        <div class="vtab-header">
+          <span class="pulse-dot pd-accent"></span>
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+          Synthesis
+        </div>
+        <span class="vtab-sub">What this becomes at its limit.</span>
+      </button>
+      <button class="vtab contrast-tab" data-v="contrast" onclick="switchView('contrast')">
+        <div class="vtab-header">
+          <span class="pulse-dot pd-teal"></span>
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 2a10 10 0 0 1 0 20V2z"/></svg>
+          Contrast
+        </div>
+        <span class="vtab-sub">What this is not.</span>
+      </button>
+    </div>
+
+    <!-- Deep Dive Divider -->
+    <div class="deep-divider">
+      <div class="deep-divider-line"></div>
+      <span class="deep-divider-label">deep dive</span>
+      <div class="deep-divider-line"></div>
+    </div>
+
+    <!-- Deep Structure full-width tier -->
+    <button class="deep-tier-btn" id="deepTierBtn" data-v="deeper" onclick="switchView('deeper')">
+      <div class="deep-tier-left">
+        <span class="deep-tier-icon">⊙</span>
+        <div>
+          <div class="deep-tier-title">Deep Structure</div>
+          <div class="deep-tier-sub">Prerequisites · Edge Cases · Time</div>
+        </div>
+      </div>
+      <div class="deep-sub-tabs" id="deepSubTabs" onclick="event.stopPropagation()">
+        <button class="deep-sub-pill active" data-dt="prereq" onclick="switchDeeperTab('prereq')">Prerequisites</button>
+        <button class="deep-sub-pill" data-dt="edge" onclick="switchDeeperTab('edge')">Edge Cases</button>
+        <button class="deep-sub-pill" data-dt="temporal" onclick="switchDeeperTab('temporal')">Temporal Zoom</button>
+      </div>
+    </button>
+  </div>
+
+  <!-- ── OUTPUT ── -->
+  <div id="output-zone"></div>
+</main>
+
+<script>
+(function() {
+'use strict';
+
+// ── ENVIRONMENT + STORAGE (Constraint 19) ──
+var IS_ARTIFACT = (function() {
+  try { return window.self !== window.top; } catch(e) { return true; }
+})();
+
+var HEKSTORE = (function() {
+  var mem = new Map();
+  var canLS = (function() {
+    try { localStorage.setItem('__hek_test','1'); localStorage.removeItem('__hek_test'); return true; }
+    catch(e) { return false; }
+  })();
+  var useLS = !IS_ARTIFACT && canLS;
+  return {
+    get: function(k) { return useLS ? (localStorage.getItem('hek_' + k) || '') : (mem.get(k) || ''); },
+    set: function(k, v) { if (useLS) { localStorage.setItem('hek_' + k, v); } else { mem.set(k, v); } }
+  };
+})();
+
+function getKey(p) { return HEKSTORE.get(p); }
+function storeKey(p, v) { HEKSTORE.set(p, v); }
+function getProvider() { return document.getElementById('providerSelect').value || 'claude'; }
+
+// ── OpenRouter: one route, one stable slug — no named models, no churn ──
+var OR_MODEL_MAP = { 'or-text': 'openrouter/free' };
+
+// ── PROVIDER DOT (Constraint 18B) ──
+var DOT_COLORS = { claude:'#ef4444', groq:'#22c55e', 'or-text':'#f97316', openai:'#3b82f6', gemini:'#a855f7', lmstudio:'#eab308' };
+function isOpenRouterProvider(p) { return p && p.startsWith('or-'); }
+function updateProviderDot() {
+  var p = getProvider();
+  document.getElementById('providerDot').style.background = DOT_COLORS[p] || '#9090a8';
+  var orActive = isOpenRouterProvider(p);
+  var modeRow = document.getElementById('orModeRow');
+  var modelRow = document.getElementById('orModelRow');
+  if (modeRow) {
+    modeRow.style.visibility = orActive ? 'visible' : 'hidden';
+    modeRow.style.pointerEvents = orActive ? 'all' : 'none';
+    modeRow.style.opacity = orActive ? '1' : '0';
+    modeRow.style.position = orActive ? 'static' : 'absolute';
+  }
+  var showSpecific = orActive && document.getElementById('orModeSelect') && document.getElementById('orModeSelect').value === 'specific';
+  if (modelRow) {
+    modelRow.style.visibility = showSpecific ? 'visible' : 'hidden';
+    modelRow.style.pointerEvents = showSpecific ? 'all' : 'none';
+    modelRow.style.opacity = showSpecific ? '1' : '0';
+    modelRow.style.position = showSpecific ? 'static' : 'absolute';
+  }
+  updateWarning();
+}
+function updateWarning() {
+  var p = getProvider();
+  var needsKey = p !== 'claude';
+  var keyName = isOpenRouterProvider(p) ? 'or' : p;
+  var hasKey = !!getKey(keyName);
+  var warn = document.getElementById('keyWarn');
+  if (needsKey && !hasKey) { warn.classList.add('visible'); }
+  else { warn.classList.remove('visible'); }
+}
+
+// ── CONTEXT-AWARE COPY (Constraint 05) ──
+function contextCopy(text, btn, label) {
+  label = label || 'Copy';
+  if (!text.trim()) return;
+  if (IS_ARTIFACT) {
+    var el = document.createElement('div');
+    el.style.cssText = 'position:fixed;left:-9999px;top:0;white-space:pre-wrap;';
+    el.textContent = text;
+    document.body.appendChild(el);
+    var range = document.createRange();
+    range.selectNodeContents(el);
+    var sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(range);
+    document.body.removeChild(el);
+    btn.textContent = '⌨ Press Ctrl+C to copy';
+    setTimeout(function() { btn.textContent = label; }, 3000);
+  } else {
+    navigator.clipboard.writeText(text).then(function() {
+      btn.textContent = '✓ Copied';
+      setTimeout(function() { btn.textContent = label; }, 1800);
+    });
+  }
+}
+
+// ── UTILS ──
+function esc(s) { return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function escA(s) { return String(s || '').replace(/'/g,"\\'"); }
+function getSpokeColor(i) { return ['#7c6ef5','#4caf82','#f5a623','#f56565','#38bdf8'][i%5]; }
+function parseJSON(r) { return String(r || '').replace(/```json|```/g,'').trim(); }
+function safeJSON(raw) {
+  var s = parseJSON(raw);
+  s = s.replace(/"((?:[^"\\]|\\.)*)"/g, function(m, b) {
+    return '"' + b.replace(/\n/g,'\\n').replace(/\r/g,'\\r').replace(/\t/g,'\\t') + '"';
+  });
+  try { return JSON.parse(s); } catch(_) {
+    var f = s.trimEnd();
+    f = f.replace(/,\s*"[^"]*$/, '').replace(/,\s*\{[^}]*$/, '');
+    var no = [...f].reduce(function(a,c){return c==='['?a+1:c===']'?a-1:a;},0);
+    var nb = [...f].reduce(function(a,c){return c==='{'?a+1:c==='}'?a-1:a;},0);
+    f += ']'.repeat(Math.max(0,no)) + '}'.repeat(Math.max(0,nb));
+    try { return JSON.parse(f); } catch(_2) { throw new Error('Failed to parse API response'); }
+  }
+}
+
+// ── API ROUTING (full 5-provider, streaming SSE) ──
+async function callAI(sys, msg, onChunk) {
+  var p = getProvider();
+  if (p === 'claude') {
+    var res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 2500,
+        stream: true,
+        system: sys,
+        messages: [{ role: 'user', content: msg }]
+      })
+    });
+    await readStream(res, 'anthropic', onChunk);
+  } else if (p === 'groq') {
+    var k = getKey('groq'); if (!k) throw new Error('NO_KEY');
+    var GROQ_MODEL_CHAIN = ['openai/gpt-oss-120b', 'openai/gpt-oss-20b'];
+    var res = null, lastErr = null;
+    for (var gi = 0; gi < GROQ_MODEL_CHAIN.length; gi++) {
+      try {
+        res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + k },
+          body: JSON.stringify({ model: GROQ_MODEL_CHAIN[gi], stream: true, messages: [{ role: 'system', content: sys },{ role: 'user', content: msg }] })
+        });
+        if (res.status === 429 || res.status >= 500) { lastErr = 'groq:' + res.status; res = null; continue; }
+        if (!res.ok) { lastErr = 'groq:' + res.status; res = null; continue; }
+        break;
+      } catch(ge) { lastErr = ge.message; res = null; }
+    }
+    if (!res) {
+      // hard fallback — Groq dead/404/deprecated — cross to OpenRouter Free Router
+      var ork = getKey('or'); if (!ork) throw new Error('NO_KEY (Groq exhausted: ' + lastErr + ')');
+      var orRes = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ork },
+        body: JSON.stringify({ model: OR_MODEL_MAP['or-text'], stream: true, messages: [{ role: 'system', content: sys },{ role: 'user', content: msg }] })
+      });
+      await readStream(orRes, 'openai', onChunk);
+      return;
+    }
+    await readStream(res, 'openai', onChunk);
+  } else if (isOpenRouterProvider(p)) {
+    if (IS_ARTIFACT) throw new Error('OR_ARTIFACT_BLOCKED');
+    var ork2 = getKey('or'); if (!ork2) throw new Error('NO_KEY');
+    var modeSel = document.getElementById('orModeSelect');
+    var modelSel = document.getElementById('orModelSelect');
+    var modelId = (modeSel && modeSel.value === 'specific' && modelSel) ? modelSel.value : OR_MODEL_MAP['or-text'];
+    var res2 = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + ork2 },
+      body: JSON.stringify({ model: modelId, stream: true, messages: [{ role: 'system', content: sys },{ role: 'user', content: msg }] })
+    });
+    await readStream(res2, 'openai', onChunk);
+  } else if (p === 'openai') {
+    var k = getKey('openai'); if (!k) throw new Error('NO_KEY');
+    var res = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + k },
+      body: JSON.stringify({ model: 'gpt-4o', stream: true, messages: [{ role: 'system', content: sys },{ role: 'user', content: msg }] })
+    });
+    await readStream(res, 'openai', onChunk);
+  } else if (p === 'gemini') {
+    var k = getKey('gemini'); if (!k) throw new Error('NO_KEY');
+    var res = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:streamGenerateContent?key=' + k, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ contents: [{ role: 'user', parts: [{ text: msg }] }], systemInstruction: { parts: [{ text: sys }] } })
+    });
+    await readStream(res, 'gemini', onChunk);
+  } else if (p === 'lmstudio') {
+    var base = (getKey('lmstudio') || 'http://localhost:1234').replace(/\/$/, '');
+    var res = await fetch(base + '/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ stream: true, messages: [{ role: 'system', content: sys },{ role: 'user', content: msg }] })
+    });
+    await readStream(res, 'openai', onChunk);
+  }
+}
+
+// ── STREAMING SSE (Constraint 13 — three-layer finalization) ──
+async function readStream(response, format, onChunk) {
+  if (!response.ok) {
+    var errText = await response.text();
+    throw new Error('API error ' + response.status + ': ' + errText.slice(0, 200));
+  }
+  var reader = response.body.getReader();
+  var decoder = new TextDecoder();
+  var buf = '';
+  var done = false;
+  var idleTimer = null;
+  function finalize() { if (!done) { done = true; clearTimeout(idleTimer); } }
+  var hardTimer = setTimeout(finalize, 30000);
+  while (true) {
+    var result = await reader.read();
+    if (result.done) { finalize(); break; }
+    buf += decoder.decode(result.value, { stream: true });
+    var lines = buf.split('\n');
+    buf = lines.pop();
+    for (var i = 0; i < lines.length; i++) {
+      var line = lines[i];
+      if (!line.startsWith('data: ')) continue;
+      var data = line.slice(6).trim();
+      if (data === '[DONE]') { finalize(); clearTimeout(hardTimer); return; }
+      try {
+        var parsed = JSON.parse(data);
+        var chunk =
+          format === 'anthropic' ? (parsed.delta && parsed.delta.text) :
+          format === 'openai'    ? (parsed.choices && parsed.choices[0] && parsed.choices[0].delta && parsed.choices[0].delta.content) :
+          format === 'gemini'    ? (parsed.candidates && parsed.candidates[0] && parsed.candidates[0].content && parsed.candidates[0].content.parts && parsed.candidates[0].content.parts[0] && parsed.candidates[0].content.parts[0].text) : null;
+        if (chunk) {
+          onChunk(chunk);
+          clearTimeout(idleTimer);
+          idleTimer = setTimeout(finalize, 5000);
+        }
+      } catch(e) {}
+    }
+    if (done) break;
+  }
+  clearTimeout(hardTimer);
+}
+
+// ── NON-STREAMING (for JSON views) ──
+async function callAIOnce(sys, msg) {
+  var accumulated = '';
+  await callAI(sys, msg, function(chunk) { accumulated += chunk; });
+  return accumulated;
+}
+
+// ── STATE ──
+var activeView = 'explain';
+var activeChallenge = 'familiar';
+var lastData = null;
+var activeSpokeIdx = 0;
+var flowLoading = false;
+var activeDeeperTab = 'prereq';
+var decodeActiveForm = 'Auto';
+var explainActiveStyle = "Explain Like I'm 10";
+var cache = {};
+
+// ── SYSTEM PROMPTS ──
+var SYS_MAIN = 'You are the Knowledge Engine. Return ONLY raw JSON, no markdown fences.\n{"concept":"","summary":"2-3 sentence core explanation.","applications":[{"name":"","domain":"","bridge":"2-3 sentences.","chain":["step1","step2","step3","step4","result"],"wow":"One powerful sentence."}],"related_concepts":["","","",""]}\nRules: 4-5 applications, diverse domains. chain: 4-6 short phrases. ONLY return JSON.';
+var SYS_FLOW = 'You are the Flow Intelligence Engine. Return ONLY raw JSON.\n{"flow_narrative":"4-6 sentences.","nodes":[{"domain":"","signal_strength":8,"role":"","friction":"","transmission":""}],"cross_links":[{"from":"","to":"","logic":""}],"tension_summary":""}\nOne node per domain. signal_strength 1-10. 2-3 cross_links. ONLY return JSON.';
+var SYS_DECODE = 'You are the Decode Engine. Choose: METAPHOR, ANALOGY, ALLEGORY, PARABLE, SIMILE, or MENTAL MODEL.\nReturn ONLY raw JSON: {"form":"METAPHOR","why":"One sentence.","body":"3-5 vivid sentences. Never use the concept\'s technical name."}';
+var SYS_EXPLAIN = 'You are the Explain Engine. Return ONLY raw JSON: {"style":"","body":""}\nELI10: zero jargon, 3-4 sentences. ORIGIN STORY: historical birth, 4-5 sentences. ANALOGY: structural match, 3-4 sentences.\nSTEP BY STEP: exactly 5 steps joined by " | " tokens. REAL WORLD: world without this, 4-5 sentences. MIND MAP: anatomy, 4-5 sentences.\nMYTH BUSTER: 2-3 myth/truth pairs joined by " | " tokens.';
+var DECODE_FORMS = ['Auto','Simile','Analogy','Metaphor','Mental Model','Allegory','Parable'];
+var EXPLAIN_STYLES = ["Explain Like I'm 10","Origin Story","Analogy","Step by Step","Real World","Mind Map","Myth Buster"];
+
+function getSysInvert(l) {
+  var s = {familiar:'pedagogically clear',stretch:'provocatively framed',uncomfortable:'brutally direct'};
+  return 'You are the Invert Engine. Style: ' + (s[l]||s.familiar) + '. Return ONLY raw JSON:\n{"intro":"2-3 sentences.","consequences":[{"num":1,"headline":"","body":"2-3 sentences.","domain":"","tag":"infrastructure|cognition|society|science|economics"}],"synthesis":"2-3 sentences."}\n3-4 consequences, diverse domains. ONLY return JSON.';
+}
+function getSysSteelman(l) {
+  var s = {familiar:'thoughtful critique',stretch:'rigorous counterargument',uncomfortable:'most devastating critique'};
+  return 'You are the Steelman Engine. Present the ' + (s[l]||s.familiar) + '. Return ONLY raw JSON:\n{"thesis":"One sharp sentence.","body":"3-4 sentences.","evidence":["","",""],"rebuttal":"2-3 sentences."} ONLY return JSON.';
+}
+function getSysConfuse(l) {
+  return 'You are the Confusion Radar. Return ONLY raw JSON:\n{"intro":"1-2 sentences.","misconceptions":[{"myth":"","truth":"","severity":"high|medium|low","why_sticky":""}]}\n' + (l==='uncomfortable'?'5 misconceptions including counterintuitive ones.':'4 misconceptions, common to subtle.') + ' ONLY return JSON.';
+}
+function getSysSocratic(l) {
+  var d = {familiar:'thought-provoking',stretch:'genuinely difficult',uncomfortable:'destabilizing'};
+  return 'You are the Socratic Probe Engine. Style: ' + (d[l]||d.familiar) + '. Return ONLY raw JSON:\n{"intro":"1-2 sentences.","questions":[{"question":"","assumption":"","hint":"1-2 sentences."}],"meta":"1-2 sentences."}\nExactly 3 questions. Not answerable by recall. ONLY return JSON.';
+}
+function getSysTension(l) {
+  return 'You are the Tension Mapper. Return ONLY raw JSON:\n{"intro":"2-3 sentences.","tensions":[{"concept_a":"","concept_b":"","type":"contradiction|tradeoff|paradox|historical rivalry","body":"2-3 sentences.","implication":"One sentence."}],"summary":"2-3 sentences."}\n2-3 tensions, diverse types. ONLY return JSON.';
+}
+function getSysSynthesis(l) {
+  var s = {familiar:'clear and revelatory',stretch:'pushing boundaries of the concept',uncomfortable:'at the absolute limit of what this concept can become'};
+  return 'You are the Synthesis Engine. Show what this concept becomes when pushed to its absolute limit — its convergent form, its highest expression, the point at which it transcends itself. Style: ' + (s[l]||s.familiar) + '. Return ONLY raw JSON:\n{"intro":"2-3 sentences framing the convergence journey.","stages":[{"num":1,"headline":"","body":"2-3 sentences."}],"apex":"2-3 sentences. The ultimate synthesis — what the concept becomes when fully realized."}\n3-4 stages showing progressive deepening. ONLY return JSON.';
+}
+function getSysContrast(l) {
+  return 'You are the Contrast Engine. Define this concept through negative space — what it is NOT. Each contrast pair clarifies the concept by showing its boundary with something adjacent. Return ONLY raw JSON:\n{"intro":"1-2 sentences.","contrasts":[{"not":"What people confuse it with or what it excludes","is":"What it actually is or does instead","key_difference":"One precise sentence."}],"boundary":"2-3 sentences. The definitive edge of this concept — where it ends and something else begins."}\n4-5 contrast pairs, ranging from obvious to subtle. ONLY return JSON.';
+}
+var SYS_DEEPER = 'You are the Deep Structure Engine. Return ONLY raw JSON:\n{"prerequisites":[{"concept":"","level":"foundation|intermediate|adjacent","why":""}],"gap_statement":"2-3 sentences.","edge_works":["","",""],"edge_breaks":["","",""],"boundary":"One sentence.","temporal_past":{"era":"","headline":"","body":"","insight":""},"temporal_present":{"era":"Today","headline":"","body":"","insight":""},"temporal_future":{"era":"~2075-2100","headline":"","body":"","insight":""}}\n3-4 prerequisites. ONLY return JSON.';
+
+// ── CHALLENGE ──
+function setChallenge(l) {
+  activeChallenge = l;
+  document.querySelectorAll('.challenge-pill').forEach(function(p) { p.classList.toggle('active', p.dataset.level === l); });
+}
+
+// ── EXPLORE ──
+async function explore() {
+  var input = document.getElementById('concept-input');
+  var btn = document.getElementById('go-btn');
+  var out = document.getElementById('output-zone');
+  var concept = input.value.trim();
+  if (!concept) { input.focus(); return; }
+  var p = getProvider();
+  var keyName = isOpenRouterProvider(p) ? 'or' : p;
+  if (isOpenRouterProvider(p) && IS_ARTIFACT) {
+    out.innerHTML = '<div class="no-key-box"><strong>OpenRouter unavailable inside claude.ai artifacts.</strong><br>No CORS proxy for OR — open this engine standalone to use the Free Router.</div>';
+    return;
+  }
+  if (p !== 'claude' && !getKey(keyName)) {
+    out.innerHTML = '<div class="no-key-box"><strong>No API key set.</strong><br>Click ⚙ to add your key.</div>';
+    openGear(); return;
+  }
+  btn.disabled = true; btn.textContent = 'Thinking…';
+  out.innerHTML = skeletonHTML();
+  cache = {};
+  decodeActiveForm = 'Auto'; explainActiveStyle = "Explain Like I'm 10"; activeDeeperTab = 'prereq'; activeView = 'explain'; activeSpokeIdx = 0;
+  try {
+    var raw = await callAIOnce(SYS_MAIN, 'Concept: ' + concept);
+    var parsed = JSON.parse(parseJSON(raw));
+    renderResult(parsed);
+  } catch(e) {
+    out.innerHTML = '<div class="error-box"><strong>Something went wrong.</strong><br>' + esc(e.message) + '</div>';
+  } finally {
+    btn.disabled = false; btn.textContent = 'Explore →';
+  }
+}
+
+// ── RENDER RESULT ──
+function renderResult(data) {
+  lastData = data;
+  activeView = 'explain';
+
+  // Show tabs
+  var tabs = document.getElementById('tabsSection');
+  tabs.style.visibility = 'visible';
+  tabs.style.pointerEvents = 'all';
+
+  var colors = ['c1','c2','c3','c4','c5'], bars = ['b1','b2','b3','b4','b5'];
+  var appsHTML = (data.applications || []).map(function(app, i) {
+    var ch = app.chain && app.chain.length ? '<div class="chain-wrap"><div class="chain-label">↓ Causal chain</div><div class="chain-strip">' + buildChain(app.chain) + '</div></div>' : '';
+    return '<div class="app-card"><div class="app-accent-bar ' + bars[i%5] + '"></div><div class="app-domain ' + colors[i%5] + '">' + esc(app.domain) + '</div><div class="app-name">' + esc(app.name) + '</div><div class="app-bridge">' + esc(app.bridge) + '</div>' + ch + '<div class="wow-box"><div class="wow-label">✦ Wow moment</div><div class="wow-text">' + esc(app.wow) + '</div></div></div>';
+  }).join('');
+
+  var relHTML = (data.related_concepts || []).map(function(c) {
+    return '<span class="related-chip" onclick="tryChip(\'' + escA(c) + '\')">' + esc(c) + '</span>';
+  }).join('');
+
+  var explainPillsHTML = EXPLAIN_STYLES.map(function(s) {
+    return '<button class="explain-pill' + (s === explainActiveStyle ? ' active' : '') + '" data-style="' + esc(s) + '" onclick="loadExplain(\'' + escA(s) + '\')">' + esc(s) + '</button>';
+  }).join('');
+
+  var decodePillsHTML = DECODE_FORMS.map(function(f) {
+    return '<button class="decode-pill' + (f === decodeActiveForm ? ' active' : '') + '" data-form="' + f + '" onclick="loadDecode(\'' + f + '\')">' + f + '</button>';
+  }).join('');
+
+  document.getElementById('output-zone').innerHTML =
+    '<div class="theme-strip" id="theme-strip">' +
+      '<div class="theme-pill" onclick="toggleThemeStrip()">' +
+        '<span class="theme-pill-dot"></span>' +
+        '<span class="theme-pill-label">Theme</span>' +
+        '<svg class="theme-pill-chevron" viewBox="0 0 24 24"><polyline points="18 15 12 9 6 15"/></svg>' +
+      '</div>' +
+      '<div class="theme-def-wrap" id="theme-def-wrap"><div class="theme-def">' + esc(data.summary) + '</div></div>' +
+    '</div>' +
+
+    '<div id="view-apps" style="display:none;"><div class="apps-grid">' + appsHTML + '</div></div>' +
+    '<div id="view-flow" style="display:none;"><div id="flow-wrap"><div class="view-loading"><div class="deep-spinner ds-green"></div><div class="deep-loading-text">Mapping signal paths…</div></div></div></div>' +
+    '<div id="view-explain" style="display:block;">' +
+      '<div class="explain-style-label">Choose a lens</div>' +
+      '<div class="explain-pills">' + explainPillsHTML + '</div>' +
+      '<div id="explain-inner"><div class="view-loading"><div class="deep-spinner ds-amber"></div><div class="deep-loading-text">Crafting your explanation…</div></div></div>' +
+    '</div>' +
+    '<div id="view-decode" style="display:none;">' +
+      '<div id="decode-inner"><div class="view-loading"><div class="deep-spinner ds-accent"></div><div class="deep-loading-text">Finding the best way to see this…</div></div></div>' +
+      '<div class="decode-switcher"><div class="decode-switcher-label">Try a different form</div><div class="decode-pills">' + decodePillsHTML + '</div></div>' +
+    '</div>' +
+    '<div id="view-invert" style="display:none;"><div class="deep-view" id="invert-inner"><div class="view-loading"><div class="deep-spinner ds-orange"></div><div class="deep-loading-text">Inverting the world…</div></div></div></div>' +
+    '<div id="view-steelman" style="display:none;"><div class="deep-view" id="steelman-inner"><div class="view-loading"><div class="deep-spinner ds-red"></div><div class="deep-loading-text">Building the opposition…</div></div></div></div>' +
+    '<div id="view-confuse" style="display:none;"><div class="deep-view" id="confuse-inner"><div class="view-loading"><div class="deep-spinner ds-lime"></div><div class="deep-loading-text">Scanning for misconceptions…</div></div></div></div>' +
+    '<div id="view-socratic" style="display:none;"><div class="deep-view" id="socratic-inner"><div class="view-loading"><div class="deep-spinner ds-peach"></div><div class="deep-loading-text">Sharpening the questions…</div></div></div></div>' +
+    '<div id="view-tension" style="display:none;"><div class="deep-view" id="tension-inner"><div class="view-loading"><div class="deep-spinner ds-fuchsia"></div><div class="deep-loading-text">Mapping the tensions…</div></div></div></div>' +
+    '<div id="view-synthesis" style="display:none;"><div class="deep-view" id="synthesis-inner"><div class="view-loading"><div class="deep-spinner ds-accent"></div><div class="deep-loading-text">Pushing to the limit…</div></div></div></div>' +
+    '<div id="view-contrast" style="display:none;"><div class="deep-view" id="contrast-inner"><div class="view-loading"><div class="deep-spinner ds-teal"></div><div class="deep-loading-text">Mapping the negative space…</div></div></div></div>' +
+    '<div id="view-deeper" style="display:none;"><div class="deep-view" id="deeper-inner"><div class="view-loading"><div class="deep-spinner ds-cyan"></div><div class="deep-loading-text">Charting deep structure…</div></div></div></div>' +
+    (relHTML ? '<div class="go-deeper"><div class="go-deeper-title">Go deeper — explore related concepts</div><div class="related-chips">' + relHTML + '</div></div>' : '');
+
+  updateTabActiveStates('explain');
+  loadExplain(explainActiveStyle);
+}
+
+// ── SWITCH VIEW ──
+function switchView(v) {
+  activeView = v;
+  collapseThemeStrip();
+  var allViews = ['apps','flow','explain','decode','invert','steelman','confuse','socratic','tension','synthesis','contrast','deeper'];
+  allViews.forEach(function(id) {
+    var el = document.getElementById('view-' + id);
+    if (el) el.style.display = id === v ? '' : 'none';
+  });
+  updateTabActiveStates(v);
+  if (v === 'flow' && lastData) loadFlow();
+  if (v === 'explain' && lastData) loadExplain(explainActiveStyle);
+  if (v === 'decode' && lastData) loadDecode(decodeActiveForm);
+  if (v === 'invert' && lastData) loadInvert();
+  if (v === 'steelman' && lastData) loadSteelman();
+  if (v === 'confuse' && lastData) loadConfuse();
+  if (v === 'socratic' && lastData) loadSocratic();
+  if (v === 'tension' && lastData) loadTension();
+  if (v === 'synthesis' && lastData) loadSynthesis();
+  if (v === 'contrast' && lastData) loadContrast();
+  if (v === 'deeper' && lastData) loadDeeper();
+}
+
+function updateTabActiveStates(v) {
+  document.querySelectorAll('.vtab').forEach(function(t) { t.classList.toggle('active', t.dataset.v === v); });
+  var deepBtn = document.getElementById('deepTierBtn');
+  if (deepBtn) deepBtn.classList.toggle('active', v === 'deeper');
+}
+
+// ── EXPLAIN ──
+async function loadExplain(style) {
+  if (!lastData) return;
+  explainActiveStyle = style;
+  document.querySelectorAll('.explain-pill').forEach(function(p) { p.classList.toggle('active', p.dataset.style === style); });
+  var ck = lastData.concept + '::explain::' + style;
+  if (cache[ck]) { renderExplain(cache[ck]); return; }
+  var zone = document.getElementById('explain-inner');
+  if (zone) zone.innerHTML = '<div class="view-loading"><div class="deep-spinner ds-amber"></div><div class="deep-loading-text">Crafting…</div></div>';
+  try {
+    var lk = style === "Explain Like I'm 10" ? "EXPLAIN LIKE I'M 10" : style.toUpperCase();
+    var raw = await callAIOnce(SYS_EXPLAIN, 'Concept: ' + lastData.concept + '\nSummary: ' + lastData.summary + '\nLens: ' + lk);
+    var parsed; try { parsed = JSON.parse(parseJSON(raw)); } catch(_) { parsed = {style:style,body:raw}; }
+    cache[ck] = parsed; renderExplain(parsed);
+  } catch(e) {
+    var z = document.getElementById('explain-inner');
+    if (z) z.innerHTML = '<div class="error-box"><strong>Explain failed.</strong><br>' + esc(e.message) + '</div>';
+  }
+}
+function renderExplain(data) {
+  var zone = document.getElementById('explain-inner'); if (!zone) return;
+  var body = data.body || '';
+  var sk = (data.style || explainActiveStyle).toUpperCase();
+  if (sk.includes('STEP')) {
+    var steps = body.split(' | ').map(function(s){return s.trim();}).filter(Boolean);
+    zone.innerHTML = '<div class="explain-prose-wrap"><div class="explain-style-badge">' + esc(data.style||explainActiveStyle) + '</div><div class="explain-body">' + steps.map(function(s,i){return '<div class="explain-step"><span class="explain-step-num">'+(i+1)+'</span><span class="explain-step-text">'+esc(s.replace(/^\d+\.\s*/,''))+'</span></div>';}).join('') + '</div></div>';
+    return;
+  }
+  if (sk.includes('MYTH')) {
+    var pairs = body.split(' | ').map(function(s){return s.trim();}).filter(Boolean);
+    zone.innerHTML = '<div class="explain-prose-wrap"><div class="explain-style-badge">' + esc(data.style||explainActiveStyle) + '</div><div class="explain-body">' + pairs.map(function(p,i){return '<div class="myth-card '+(i%2===0?'myth-false':'myth-true')+'"><span class="myth-tag '+(i%2===0?'tag-false':'tag-true')+'">'+(i%2===0?'❌ MYTH':'✅ TRUTH')+'</span><div class="myth-prose">'+esc(p)+'</div></div>';}).join('') + '</div></div>';
+    return;
+  }
+  var sents = body.split(/(?<=\.)\s+(?=[A-Z])/).filter(Boolean);
+  var paras = [];
+  for (var i = 0; i < sents.length; i+=2) { var chunk = [sents[i],sents[i+1]].filter(Boolean).join(' '); paras.push('<p>' + esc(chunk) + '</p>'); }
+  zone.innerHTML = '<div class="explain-prose-wrap"><div class="explain-style-badge">' + esc(data.style||explainActiveStyle) + '</div><div class="explain-body">' + paras.join('') + '</div></div>';
+}
+
+// ── DECODE ──
+async function loadDecode(form) {
+  if (!lastData) return;
+  decodeActiveForm = form;
+  document.querySelectorAll('.decode-pill').forEach(function(p) { p.classList.toggle('active', p.dataset.form === form); });
+  var ck = lastData.concept + '::decode::' + form;
+  if (cache[ck]) { renderDecode(cache[ck]); return; }
+  var zone = document.getElementById('decode-inner');
+  if (zone) zone.innerHTML = '<div class="view-loading"><div class="deep-spinner ds-accent"></div><div class="deep-loading-text">Finding the best way to see this…</div></div>';
+  try {
+    var raw = await callAIOnce(SYS_DECODE, 'Concept: ' + lastData.concept + '\nSummary: ' + lastData.summary + (form && form !== 'Auto' ? '\nForce form: ' + form : ''));
+    var parsed = safeJSON(raw);
+    cache[ck] = parsed; renderDecode(parsed);
+  } catch(e) {
+    var z = document.getElementById('decode-inner');
+    if (z) z.innerHTML = '<div class="error-box"><strong>Decode failed.</strong><br>' + esc(e.message) + '</div>';
+  }
+}
+function renderDecode(data) {
+  var zone = document.getElementById('decode-inner'); if (!zone) return;
+  var body = data.body || '';
+  var sents = body.split(/(?<=\.)\s+(?=[A-Z])/).filter(Boolean);
+  var paras = [];
+  for (var i = 0; i < sents.length; i+=2) { var chunk = [sents[i],sents[i+1]].filter(Boolean).join(' '); paras.push('<p>' + esc(chunk) + '</p>'); }
+  zone.innerHTML = '<div class="decode-auto-badge"><div class="decode-auto-dot"></div><div class="decode-auto-text">' + esc(data.form||'Auto') + '</div></div><div class="decode-prose-wrap"><div class="decode-form-badge">' + esc(data.form||'Form') + '</div><div class="decode-why">' + esc(data.why||'') + '</div><div class="decode-body">' + paras.join('') + '</div></div>';
+}
+
+// ── FLOW ──
+async function loadFlow() {
+  if (!lastData || flowLoading) return;
+  var ck = lastData.concept + '::flow';
+  if (cache[ck]) { renderFlow(cache[ck]); return; }
+  flowLoading = true;
+  var wrap = document.getElementById('flow-wrap');
+  if (wrap) wrap.innerHTML = '<div class="view-loading"><div class="deep-spinner ds-green"></div><div class="deep-loading-text">Mapping signal paths…</div></div>';
+  try {
+    var domains = (lastData.applications || []).map(function(a) { return a.domain; });
+    var raw = await callAIOnce(SYS_FLOW, 'Concept: ' + lastData.concept + '\nSummary: ' + lastData.summary + '\nDomains: ' + domains.join(', '));
+    var parsed = safeJSON(raw);
+    cache[ck] = parsed; renderFlow(parsed);
+  } catch(e) {
+    var w = document.getElementById('flow-wrap');
+    if (w) w.innerHTML = '<div class="error-box"><strong>Flow map failed.</strong><br>' + esc(e.message) + '</div>';
+  } finally { flowLoading = false; }
+}
+function renderFlow(fd) {
+  var apps = lastData.applications || [];
+  var leftHTML = '', rightHTML = '';
+  apps.forEach(function(app, i) {
+    var color = getSpokeColor(i);
+    var node = fd.nodes ? fd.nodes.find(function(n){return n.domain===app.domain;}) : null;
+    var pct = Math.round(((node ? node.signal_strength : 5)/10)*100);
+    var html = '<div class="spoke-node' + (i===activeSpokeIdx?' active':'') + '" id="spoke-' + i + '" onclick="selectSpoke(' + i + ')" style="border-left:3px solid ' + color + '"><div class="spoke-meta" style="color:' + color + '">' + esc(app.domain) + '</div><div class="spoke-title">' + esc(app.name) + '</div><div class="spoke-signal"><div class="spoke-signal-fill" style="width:' + pct + '%;background:' + color + '"></div></div></div>';
+    if (i%2===0) leftHTML+=html; else rightHTML+=html;
+  });
+  var wrap = document.getElementById('flow-wrap'); if (!wrap) return;
+  var ts = fd.tension_summary ? '<div class="flow-tension-strip"><span class="flow-tension-label">⚡ Max tension</span><span class="flow-tension-text">' + esc(fd.tension_summary) + '</span></div>' : '';
+  var nHTML = fd.flow_narrative ? '<div class="flow-narrative-wrap"><div class="flow-narrative-label">Signal narrative</div><div class="flow-narrative-text"><p>' + esc(fd.flow_narrative) + '</p></div></div>' : '';
+  wrap.innerHTML = ts + '<div class="flow-canvas-wrapper" id="flow-canvas"><svg class="flow-svg-layer" id="flow-svg"></svg><div class="flow-tree-viewport"><div class="flow-side-col" id="left-col">' + leftHTML + '</div><div class="flow-center"><div class="hub-nucleus" id="hub-node"><div class="hub-meta">Nucleus</div><div class="hub-title">' + esc(lastData.concept) + '</div></div></div><div class="flow-side-col" id="right-col">' + (rightHTML||'<div style="opacity:.22;font-size:12px;text-align:center;">Spokes anchor here</div>') + '</div></div></div><div class="spoke-drawer open" id="spoke-drawer">' + buildDrawer(activeSpokeIdx,fd,apps) + '</div>' + nHTML;
+  setTimeout(drawSVG, 70);
+}
+function buildDrawer(idx, fd, apps) {
+  var app = apps[idx]; if (!app) return '';
+  var color = getSpokeColor(idx);
+  var node = fd && fd.nodes ? fd.nodes.find(function(n){return n.domain===app.domain;}) : null;
+  var pct = Math.round(((node?node.signal_strength:5)/10)*100);
+  var chain = lastData && lastData.applications ? (lastData.applications[idx]||{}).chain || [] : [];
+  var cHTML = chain.length ? '<div style="margin-bottom:16px"><div class="drawer-section-label" style="color:'+color+'">Causal circuit</div><div class="circuit-track">' + chain.map(function(s,i){return '<div class="circuit-bubble"><span class="circuit-bubble-num">'+(i+1)+'</span>'+esc(s)+'</div>'+(i<chain.length-1?'<span class="circuit-arrow">→</span>':'');}).join('') + '</div></div>' : '';
+  var cls = fd && fd.cross_links ? fd.cross_links.filter(function(l){return l.from===app.domain||l.to===app.domain;}) : [];
+  var clHTML = cls.length ? '<div class="drawer-crosslinks"><div class="crosslinks-label">Cross-links</div>' + cls.map(function(l){return '<div class="crosslink-item"><div class="crosslink-domains">'+esc(l.from)+' ↔ '+esc(l.to)+'</div><div class="crosslink-logic">'+esc(l.logic)+'</div></div>';}).join('') + '</div>' : '';
+  var wow = lastData && lastData.applications ? (lastData.applications[idx]||{}).wow || '' : '';
+  return '<div class="drawer-domain-header"><div class="drawer-domain-dot" style="background:'+color+'"></div><div class="drawer-domain-name">'+esc(app.domain)+'</div><div class="drawer-signal-wrap"><div class="drawer-signal-label">Signal strength</div><div class="drawer-signal-bar"><div class="drawer-signal-fill" style="width:'+pct+'%;background:'+color+'"></div></div></div></div>' + cHTML + '<div class="drawer-grid">' + (node?'<div><div class="drawer-section-label" style="color:'+color+'">Role</div><div class="drawer-prose">'+esc(node.role)+'</div></div>':'') + '<div><div class="drawer-section-label" style="color:'+color+'">Friction</div><div class="drawer-prose">'+esc(node?node.friction:app.bridge)+'</div></div>' + (node?'<div><div class="drawer-section-label" style="color:'+color+'">Transmission</div><div class="drawer-prose">'+esc(node.transmission)+'</div></div>':'') + '</div>' + (wow?'<div class="wow-box" style="margin-top:16px"><div class="wow-label">✦ Wow moment</div><div class="wow-text">'+esc(wow)+'</div></div>':'') + clHTML;
+}
+function selectSpoke(i) {
+  var fd = cache[lastData.concept+'::flow'] || {};
+  activeSpokeIdx = i;
+  document.querySelectorAll('.spoke-node').forEach(function(n,idx){n.classList.toggle('active',idx===i);});
+  var drawer = document.getElementById('spoke-drawer');
+  if (drawer) { drawer.classList.remove('open'); setTimeout(function(){ drawer.innerHTML = buildDrawer(i,fd,lastData.applications||[]); drawer.classList.add('open'); },80); }
+  drawSVG();
+}
+function drawSVG() {
+  var svg = document.getElementById('flow-svg'); var hub = document.getElementById('hub-node'); if (!svg||!hub) return;
+  var cR = document.getElementById('flow-canvas') ? document.getElementById('flow-canvas').getBoundingClientRect() : null; if (!cR) return;
+  var hR = hub.getBoundingClientRect(); var hx = hR.left-cR.left+hR.width/2; var hy = hR.top-cR.top+hR.height/2;
+  var lines = '';
+  document.querySelectorAll('.spoke-node').forEach(function(sp,i){
+    var r = sp.getBoundingClientRect(); var sx = r.left-cR.left+r.width/2; var sy = r.top-cR.top+r.height/2;
+    var color = getSpokeColor(i); var isA = i===activeSpokeIdx;
+    lines += '<line x1="'+hx+'" y1="'+hy+'" x2="'+sx+'" y2="'+sy+'" stroke="'+color+'" stroke-width="'+(isA?2:1)+'" stroke-opacity="'+(isA?.55:.22)+'" stroke-dasharray="'+(isA?'':'5 4')+'"/>';
+  });
+  svg.innerHTML = lines;
+}
+
+// ── INVERT ──
+async function loadInvert() {
+  if (!lastData) return;
+  var ck = lastData.concept + '::invert::' + activeChallenge;
+  if (cache[ck]) { renderInvert(cache[ck]); return; }
+  var zone = document.getElementById('invert-inner');
+  if (zone) zone.innerHTML = '<div class="view-loading"><div class="deep-spinner ds-orange"></div><div class="deep-loading-text">Inverting the world…</div></div>';
+  try {
+    var raw = await callAIOnce(getSysInvert(activeChallenge), 'Concept: ' + lastData.concept + '\nSummary: ' + lastData.summary);
+    var parsed = safeJSON(raw); cache[ck] = parsed; renderInvert(parsed);
+  } catch(e) { var z = document.getElementById('invert-inner'); if (z) z.innerHTML = '<div class="error-box"><strong>Invert failed.</strong><br>' + esc(e.message) + '</div>'; }
+}
+function renderInvert(data) {
+  var zone = document.getElementById('invert-inner'); if (!zone) return;
+  var tc = {'infrastructure':'#6aabdf','cognition':'#a78bfa','society':'#4caf82','science':'#f5a623','economics':'#f56565'};
+  var cH = (data.consequences||[]).map(function(c,i){return '<div class="invert-card"><div class="invert-card-accent"></div><div class="invert-num">Consequence '+(i+1)+' · '+esc(c.domain||'')+'</div><div class="invert-headline">'+esc(c.headline||'')+'</div><div class="invert-body">'+esc(c.body||'')+'</div>'+(c.tag?'<span class="invert-tag" style="border-color:'+(tc[c.tag]||'rgba(249,115,22,0.3)')+';color:'+(tc[c.tag]||'rgba(249,115,22,0.6)')+'">'+esc(c.tag)+'</span>':'')+'</div>';}).join('');
+  zone.innerHTML = (data.intro?'<div class="invert-intro">'+esc(data.intro)+'</div>':'') + '<div class="invert-grid">' + cH + '</div>' + (data.synthesis?'<div class="invert-synthesis"><div class="invert-synthesis-label">✦ What this reveals</div><div class="invert-synthesis-text">'+esc(data.synthesis)+'</div></div>':'');
+}
+
+// ── STEELMAN ──
+async function loadSteelman() {
+  if (!lastData) return;
+  var ck = lastData.concept + '::steelman::' + activeChallenge;
+  if (cache[ck]) { renderSteelman(cache[ck]); return; }
+  var zone = document.getElementById('steelman-inner');
+  if (zone) zone.innerHTML = '<div class="view-loading"><div class="deep-spinner ds-red"></div><div class="deep-loading-text">Building the opposition…</div></div>';
+  try {
+    var raw = await callAIOnce(getSysSteelman(activeChallenge), 'Concept: ' + lastData.concept + '\nSummary: ' + lastData.summary);
+    var parsed = safeJSON(raw); cache[ck] = parsed; renderSteelman(parsed);
+  } catch(e) { var z = document.getElementById('steelman-inner'); if (z) z.innerHTML = '<div class="error-box"><strong>Steelman failed.</strong><br>' + esc(e.message) + '</div>'; }
+}
+function renderSteelman(data) {
+  var zone = document.getElementById('steelman-inner'); if (!zone) return;
+  var ev = (data.evidence||[]).map(function(e,i){return '<div class="steelman-evidence-item"><span class="steelman-evidence-num">'+(i+1)+'</span><div class="steelman-evidence-text">'+esc(e)+'</div></div>';}).join('');
+  zone.innerHTML = '<div class="steelman-opposition-box"><div class="steelman-opp-label">Opposition Brief — ' + activeChallenge + ' mode</div><div class="steelman-thesis">'+esc(data.thesis||'')+'</div><div class="steelman-body">'+esc(data.body||'')+'</div>'+(ev?'<div class="steelman-evidence-label">Supporting evidence</div><div class="steelman-evidence-list">'+ev+'</div>':'')+'</div>'+(data.rebuttal?'<div class="steelman-rebuttal-box"><div class="steelman-rebuttal-label">✦ Strongest rebuttal</div><div class="steelman-rebuttal-text">'+esc(data.rebuttal)+'</div></div>':'');
+}
+
+// ── CONFUSE ──
+async function loadConfuse() {
+  if (!lastData) return;
+  var ck = lastData.concept + '::confuse::' + activeChallenge;
+  if (cache[ck]) { renderConfuse(cache[ck]); return; }
+  var zone = document.getElementById('confuse-inner');
+  if (zone) zone.innerHTML = '<div class="view-loading"><div class="deep-spinner ds-lime"></div><div class="deep-loading-text">Scanning for misconceptions…</div></div>';
+  try {
+    var raw = await callAIOnce(getSysConfuse(activeChallenge), 'Concept: ' + lastData.concept + '\nSummary: ' + lastData.summary);
+    var parsed = safeJSON(raw); cache[ck] = parsed; renderConfuse(parsed);
+  } catch(e) { var z = document.getElementById('confuse-inner'); if (z) z.innerHTML = '<div class="error-box"><strong>Confusion Radar failed.</strong><br>' + esc(e.message) + '</div>'; }
+}
+function renderConfuse(data) {
+  var zone = document.getElementById('confuse-inner'); if (!zone) return;
+  var sd = {'high':3,'medium':2,'low':1};
+  var iH = (data.misconceptions||[]).map(function(m){
+    return '<div class="confuse-item"><div class="confuse-myth-row"><div class="confuse-severity">' + Array.from({length:sd[m.severity]||2},function(){return '<span class="confuse-severity-dot"></span>';}).join('') + '<span class="confuse-severity-label">'+esc(m.severity||'medium')+' prevalence</span></div><div class="confuse-row-label">❌ Common myth</div><div class="confuse-row-text">'+esc(m.myth||'')+'</div></div><div class="confuse-truth-row"><div class="confuse-row-label">✓ Actual truth</div><div class="confuse-row-text">'+esc(m.truth||'')+'</div>'+(m.why_sticky?'<div style="margin-top:8px;font-size:11px;color:var(--muted);font-style:italic">Why it persists: '+esc(m.why_sticky)+'</div>':'')+'</div></div>';
+  }).join('');
+  zone.innerHTML = (data.intro?'<div class="confuse-intro">'+esc(data.intro)+'</div>':'') + '<div class="confuse-items">' + iH + '</div>';
+}
+
+// ── SOCRATIC ──
+async function loadSocratic() {
+  if (!lastData) return;
+  var ck = lastData.concept + '::socratic::' + activeChallenge;
+  if (cache[ck]) { renderSocratic(cache[ck]); return; }
+  var zone = document.getElementById('socratic-inner');
+  if (zone) zone.innerHTML = '<div class="view-loading"><div class="deep-spinner ds-peach"></div><div class="deep-loading-text">Sharpening the questions…</div></div>';
+  try {
+    var raw = await callAIOnce(getSysSocratic(activeChallenge), 'Concept: ' + lastData.concept + '\nSummary: ' + lastData.summary);
+    var parsed = safeJSON(raw); cache[ck] = parsed; renderSocratic(parsed);
+  } catch(e) { var z = document.getElementById('socratic-inner'); if (z) z.innerHTML = '<div class="error-box"><strong>Socratic Probe failed.</strong><br>' + esc(e.message) + '</div>'; }
+}
+function renderSocratic(data) {
+  var zone = document.getElementById('socratic-inner'); if (!zone) return;
+  var qH = (data.questions||[]).map(function(q,i){return '<div class="socratic-q"><div class="socratic-q-num">Question '+(i+1)+'</div><div class="socratic-q-text">'+esc(q.question||'')+'</div>'+(q.assumption?'<div class="socratic-q-assumption-label">Hidden assumption</div><div class="socratic-q-assumption">'+esc(q.assumption)+'</div>':'')+'<div class="socratic-q-hint"><div class="socratic-q-hint-label">Direction</div>'+esc(q.hint||'')+'</div></div>';}).join('');
+  zone.innerHTML = (data.intro?'<div class="socratic-intro">'+esc(data.intro)+'</div>':'') + '<div class="socratic-questions">'+qH+'</div>'+(data.meta?'<div class="socratic-closer"><div class="socratic-closer-label">Meta-pattern</div><div class="socratic-closer-text">'+esc(data.meta)+'</div></div>':'');
+}
+
+// ── TENSION ──
+async function loadTension() {
+  if (!lastData) return;
+  var ck = lastData.concept + '::tension::' + activeChallenge;
+  if (cache[ck]) { renderTension(cache[ck]); return; }
+  var zone = document.getElementById('tension-inner');
+  if (zone) zone.innerHTML = '<div class="view-loading"><div class="deep-spinner ds-fuchsia"></div><div class="deep-loading-text">Mapping the tensions…</div></div>';
+  try {
+    var raw = await callAIOnce(getSysTension(activeChallenge), 'Concept: ' + lastData.concept + '\nSummary: ' + lastData.summary);
+    var parsed = safeJSON(raw); cache[ck] = parsed; renderTension(parsed);
+  } catch(e) { var z = document.getElementById('tension-inner'); if (z) z.innerHTML = '<div class="error-box"><strong>Tension map failed.</strong><br>' + esc(e.message) + '</div>'; }
+}
+function renderTension(data) {
+  var zone = document.getElementById('tension-inner'); if (!zone) return;
+  var tH = (data.tensions||[]).map(function(t){return '<div class="tension-item"><div class="tension-vs-bar"><span class="tension-concept-a">'+esc(t.concept_a||'')+'</span><span class="tension-vs">vs</span><span class="tension-concept-b">'+esc(t.concept_b||'')+'</span></div><div class="tension-type">'+esc(t.type||'tension')+'</div><div class="tension-body">'+esc(t.body||'')+'</div>'+(t.implication?'<div class="tension-implication">'+esc(t.implication)+'</div>':'')+'</div>';}).join('');
+  zone.innerHTML = (data.intro?'<div class="tension-intro">'+esc(data.intro)+'</div>':'') + '<div class="tension-grid">'+tH+'</div>'+(data.summary?'<div class="tension-summary-box"><div class="tension-summary-label">✦ Meta-insight</div><div class="tension-summary-text">'+esc(data.summary)+'</div></div>':'');
+}
+
+// ── SYNTHESIS (new) ──
+async function loadSynthesis() {
+  if (!lastData) return;
+  var ck = lastData.concept + '::synthesis::' + activeChallenge;
+  if (cache[ck]) { renderSynthesis(cache[ck]); return; }
+  var zone = document.getElementById('synthesis-inner');
+  if (zone) zone.innerHTML = '<div class="view-loading"><div class="deep-spinner ds-accent"></div><div class="deep-loading-text">Pushing to the limit…</div></div>';
+  try {
+    var raw = await callAIOnce(getSysSynthesis(activeChallenge), 'Concept: ' + lastData.concept + '\nSummary: ' + lastData.summary);
+    var parsed = safeJSON(raw); cache[ck] = parsed; renderSynthesis(parsed);
+  } catch(e) { var z = document.getElementById('synthesis-inner'); if (z) z.innerHTML = '<div class="error-box"><strong>Synthesis failed.</strong><br>' + esc(e.message) + '</div>'; }
+}
+function renderSynthesis(data) {
+  var zone = document.getElementById('synthesis-inner'); if (!zone) return;
+  var stH = (data.stages||[]).map(function(s){return '<div class="synthesis-stage"><div class="synthesis-stage-num">Stage '+esc(s.num||'')+'</div><div class="synthesis-stage-headline">'+esc(s.headline||'')+'</div><div class="synthesis-stage-body">'+esc(s.body||'')+'</div></div>';}).join('');
+  zone.innerHTML = (data.intro?'<div class="synthesis-intro">'+esc(data.intro)+'</div>':'') + '<div class="synthesis-stages">'+stH+'</div>'+(data.apex?'<div class="synthesis-apex"><div class="synthesis-apex-label">✦ Ultimate synthesis</div><div class="synthesis-apex-text">'+esc(data.apex)+'</div></div>':'');
+}
+
+// ── CONTRAST (new) ──
+async function loadContrast() {
+  if (!lastData) return;
+  var ck = lastData.concept + '::contrast';
+  if (cache[ck]) { renderContrast(cache[ck]); return; }
+  var zone = document.getElementById('contrast-inner');
+  if (zone) zone.innerHTML = '<div class="view-loading"><div class="deep-spinner ds-teal"></div><div class="deep-loading-text">Mapping the negative space…</div></div>';
+  try {
+    var raw = await callAIOnce(getSysContrast(activeChallenge), 'Concept: ' + lastData.concept + '\nSummary: ' + lastData.summary);
+    var parsed = safeJSON(raw); cache[ck] = parsed; renderContrast(parsed);
+  } catch(e) { var z = document.getElementById('contrast-inner'); if (z) z.innerHTML = '<div class="error-box"><strong>Contrast failed.</strong><br>' + esc(e.message) + '</div>'; }
+}
+function renderContrast(data) {
+  var zone = document.getElementById('contrast-inner'); if (!zone) return;
+  var cH = (data.contrasts||[]).map(function(c){return '<div class="contrast-item"><div class="contrast-not-row"><div class="contrast-row-label">✗ Not this</div><div class="contrast-row-text">'+esc(c.not||'')+'</div>'+(c.key_difference?'<div style="margin-top:7px;font-size:11px;color:var(--muted);font-style:italic">'+esc(c.key_difference)+'</div>':'')+'</div><div class="contrast-is-row"><div class="contrast-row-label">✓ But this</div><div class="contrast-row-text">'+esc(c.is||'')+'</div></div></div>';}).join('');
+  zone.innerHTML = (data.intro?'<div class="contrast-intro">'+esc(data.intro)+'</div>':'') + '<div class="contrast-items">'+cH+'</div>'+(data.boundary?'<div class="contrast-boundary"><div class="contrast-boundary-label">Definitive edge</div><div class="contrast-boundary-text">'+esc(data.boundary)+'</div></div>':'');
+}
+
+// ── DEEPER ──
+async function loadDeeper() {
+  if (!lastData) return;
+  var ck = lastData.concept + '::deeper';
+  if (cache[ck]) { renderDeeper(cache[ck]); return; }
+  var zone = document.getElementById('deeper-inner');
+  if (zone) zone.innerHTML = '<div class="view-loading"><div class="deep-spinner ds-cyan"></div><div class="deep-loading-text">Charting deep structure…</div></div>';
+  try {
+    var raw = await callAIOnce(SYS_DEEPER, 'Concept: ' + lastData.concept + '\nSummary: ' + lastData.summary);
+    var parsed = safeJSON(raw); cache[ck] = parsed; renderDeeper(parsed);
+  } catch(e) { var z = document.getElementById('deeper-inner'); if (z) z.innerHTML = '<div class="error-box"><strong>Deep structure failed.</strong><br>' + esc(e.message) + '</div>'; }
+}
+function renderDeeper(data) {
+  var zone = document.getElementById('deeper-inner'); if (!zone) return;
+  var lc = {'foundation':'pl-f','intermediate':'pl-i','adjacent':'pl-a'};
+  var la = {'foundation':'F','intermediate':'I','adjacent':'A'};
+  var prereqHTML = '<div class="deeper-subview' + (activeDeeperTab==='prereq'?' open':'') + '" id="dsub-prereq"><div class="prereq-chain">' +
+    (data.prerequisites||[]).map(function(p){return '<div class="prereq-node"><div class="prereq-level '+(lc[p.level]||'pl-f')+'">'+(la[p.level]||'F')+'</div><div><div class="prereq-concept">'+esc(p.concept||'')+'</div><div class="prereq-why">'+esc(p.why||'')+'</div></div></div>';}).join('') +
+    '</div>'+(data.gap_statement?'<div class="prereq-gap-box"><div class="prereq-gap-label">Epistemic horizon</div><div class="prereq-gap-text">'+esc(data.gap_statement)+'</div></div>':'')+'</div>';
+  var edgeHTML = '<div class="deeper-subview' + (activeDeeperTab==='edge'?' open':'') + '" id="dsub-edge"><div class="edge-grid"><div class="edge-card edge-card-works"><div class="edge-card-label">✓ Where it works</div>' +
+    (data.edge_works||[]).map(function(w){return '<div class="edge-item"><span class="edge-dot" style="background:#22c55e"></span><div class="edge-item-text">'+esc(w)+'</div></div>';}).join('') +
+    '</div><div class="edge-card edge-card-breaks"><div class="edge-card-label">✗ Where it breaks</div>' +
+    (data.edge_breaks||[]).map(function(b){return '<div class="edge-item"><span class="edge-dot" style="background:#ef4444"></span><div class="edge-item-text">'+esc(b)+'</div></div>';}).join('') +
+    '</div></div>'+(data.boundary?'<div class="edge-boundary">Boundary: '+esc(data.boundary)+'</div>':'')+'</div>';
+  var tp=data.temporal_past||{},tn=data.temporal_present||{},tf=data.temporal_future||{};
+  var tempHTML = '<div class="deeper-subview' + (activeDeeperTab==='temporal'?' open':'') + '" id="dsub-temporal"><div class="temporal-strip"><div class="temporal-card past-card"><div class="temporal-era">'+esc(tp.era||'~100 years ago')+'</div><div class="temporal-headline">'+esc(tp.headline||'')+'</div><div class="temporal-body">'+esc(tp.body||'')+'</div>'+(tp.insight?'<div class="temporal-insight">'+esc(tp.insight)+'</div>':'')+'</div><div class="temporal-card present-card"><div class="temporal-era">'+esc(tn.era||'Today')+'</div><div class="temporal-headline">'+esc(tn.headline||'')+'</div><div class="temporal-body">'+esc(tn.body||'')+'</div>'+(tn.insight?'<div class="temporal-insight">'+esc(tn.insight)+'</div>':'')+'</div><div class="temporal-card future-card"><div class="temporal-era">'+esc(tf.era||'~2100')+'</div><div class="temporal-headline">'+esc(tf.headline||'')+'</div><div class="temporal-body">'+esc(tf.body||'')+'</div>'+(tf.insight?'<div class="temporal-insight">'+esc(tf.insight)+'</div>':'')+'</div></div></div>';
+  zone.innerHTML = '<div class="deeper-sub-tabs-bar"><button class="deeper-tab'+(activeDeeperTab==='prereq'?' active':'')+'" onclick="switchDeeperTab(\'prereq\')">Prerequisites</button><button class="deeper-tab'+(activeDeeperTab==='edge'?' active':'')+'" onclick="switchDeeperTab(\'edge\')">Edge Cases</button><button class="deeper-tab'+(activeDeeperTab==='temporal'?' active':'')+'" onclick="switchDeeperTab(\'temporal\')">Temporal Zoom</button></div>' + prereqHTML + edgeHTML + tempHTML;
+}
+function switchDeeperTab(tab) {
+  activeDeeperTab = tab;
+  // sync the header-level sub-tab pills
+  document.querySelectorAll('.deep-sub-pill').forEach(function(p){ p.classList.toggle('active', p.dataset.dt === tab); });
+  // sync within deeper-inner
+  ['prereq','edge','temporal'].forEach(function(s){
+    var el = document.getElementById('dsub-'+s);
+    if (el) el.classList.toggle('open', s===tab);
+  });
+  document.querySelectorAll('.deeper-tab').forEach(function(t){ t.classList.toggle('active', t.textContent.trim().toLowerCase().replace(' ','').includes(tab.replace('prereq','prerequisites').replace('edge','edge').replace('temporal','temporal').replace(' ','')));});
+}
+
+// ── THEME STRIP ──
+function toggleThemeStrip() {
+  var strip = document.getElementById('theme-strip');
+  var wrap = document.getElementById('theme-def-wrap');
+  if (!strip||!wrap) return;
+  strip.classList.toggle('collapsed');
+  wrap.classList.toggle('hidden');
+}
+function collapseThemeStrip() {
+  var strip = document.getElementById('theme-strip');
+  var wrap = document.getElementById('theme-def-wrap');
+  if (!strip||!wrap||strip.classList.contains('collapsed')) return;
+  strip.classList.add('collapsed'); wrap.classList.add('hidden');
+}
+
+// ── HELPERS ──
+function buildChain(chain) {
+  return chain.map(function(s,i){var isL=i===chain.length-1;return '<span class="chain-step'+(isL?' last':'')+'">'+esc(s)+'</span>'+(isL?'':'<span class="chain-arrow">→</span>');}).join('');
+}
+function skeletonHTML() {
+  return [1,2,3].map(function(){return '<div class="skeleton-card"><div class="skel" style="height:9px;width:65px;margin-bottom:8px"></div><div class="skel" style="height:19px;width:220px;margin-bottom:11px"></div><div class="skel" style="height:12px;width:100%;margin-bottom:6px"></div><div class="skel" style="height:12px;width:78%"></div></div>';}).join('');
+}
+function tryChip(t) { document.getElementById('concept-input').value = t; explore(); }
+
+// ── GEAR DRAWER ──
+function openGear() { document.getElementById('gearDrawer').classList.add('open'); document.getElementById('gearBackdrop').classList.add('open'); document.getElementById('gearBtn').classList.add('active'); }
+function closeGear() { document.getElementById('gearDrawer').classList.remove('open'); document.getElementById('gearBackdrop').classList.remove('open'); document.getElementById('gearBtn').classList.remove('active'); }
+
+function saveKeyAndClose(p, inputId) {
+  var val = document.getElementById(inputId).value.trim();
+  if (!val) return;
+  storeKey(p, val);
+  updateWarning();
+  var btn = document.getElementById('save' + p.charAt(0).toUpperCase() + p.slice(1));
+  if (btn) { var orig = btn.textContent; btn.textContent = '✓ Saved'; setTimeout(function(){ btn.textContent = orig; closeGear(); }, 1200); }
+}
+
+// ── EVENT WIRING ──
+document.getElementById('concept-input').addEventListener('keydown', function(e){ if (e.key==='Enter') explore(); });
+document.getElementById('providerSelect').addEventListener('change', updateProviderDot);
+document.getElementById('gearBtn').addEventListener('click', function(e){ e.stopPropagation(); document.getElementById('gearDrawer').classList.contains('open') ? closeGear() : openGear(); });
+document.getElementById('gearBackdrop').addEventListener('click', closeGear);
+document.getElementById('saveGroq').addEventListener('click', function(){ saveKeyAndClose('groq','keyGroq'); });
+document.getElementById('saveOr').addEventListener('click', function(){ saveKeyAndClose('or','keyOr'); });
+var orModeEl = document.getElementById('orModeSelect');
+if (orModeEl) orModeEl.addEventListener('change', updateProviderDot);
+document.getElementById('saveOpenai').addEventListener('click', function(){ saveKeyAndClose('openai','keyOpenai'); });
+document.getElementById('saveGemini').addEventListener('click', function(){ saveKeyAndClose('gemini','keyGemini'); });
+document.getElementById('saveLmstudio').addEventListener('click', function(){ saveKeyAndClose('lmstudio','keyLmstudio'); });
+
+// ── INIT (Constraint 12 — context-aware provider default) ──
+(function init() {
+  var defaultProvider = IS_ARTIFACT ? 'claude' : 'groq';
+  document.getElementById('providerSelect').value = defaultProvider;
+  updateProviderDot();
+  ['groq','or','openai','gemini','lmstudio'].forEach(function(p) {
+    var k = getKey(p);
+    var cap = p === 'or' ? 'Or' : (p.charAt(0).toUpperCase() + p.slice(1));
+    var el = document.getElementById('key' + cap);
+    if (el && k) el.value = k;
+  });
+})();
+
+// expose globals needed by inline onclick attrs
+window.explore = explore;
+window.switchView = switchView;
+window.switchDeeperTab = switchDeeperTab;
+window.setChallenge = setChallenge;
+window.tryChip = tryChip;
+window.loadExplain = loadExplain;
+window.loadDecode = loadDecode;
+window.selectSpoke = selectSpoke;
+window.toggleThemeStrip = toggleThemeStrip;
+
+})();
+</script>
+</body>
+</html>

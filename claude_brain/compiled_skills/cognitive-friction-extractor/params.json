@@ -1,0 +1,18 @@
+{
+  "skill": "cognitive-friction-extractor",
+  "skill_name": "cognitive-friction-extractor",
+  "description": "Scans any build session for resolved friction points and extracts them as named, categorized skills in CATEGORY / SKILL / CONSTRAINT / TRIGGER / ASCENT format. Runs both arms of the recursive-learning flywheel in a single gesture \u2014 the compression arm captures and thickens what resolved, and the ascent arm emits the sharper successor question each resolution now makes askable. Each extraction is matched against the existing skill ecosystem before any new skill is proposed \u2014 the default move is to thicken an installed skill, not to proliferate a new one. Invoke with \"extract skills\" at any point in a session \u2014 mid-session to capture live resolution, or end-of-session for a full retrospective sweep. Also triggers on \"extract skills from what I just described\" for cross-session recall. Each extracted skill is automatically categorized, matched against existing skills, given its successor question, and offered for routing \u2014 upgrade, memory, new file, or discard.",
+  "source_file": "skills/cognitive-friction-extractor/SKILL.md",
+  "source_sha": "5061aca9a08ce7f6aad9556feabf16f32345859666c3d7ff59c8e7ecf48cb342",
+  "resources": [],
+  "provider_config": {
+    "model_core": "v2"
+  },
+  "inputs": [
+    {
+      "id": "chatInput",
+      "kind": "textarea",
+      "label": "Invoke the skill"
+    }
+  ]
+}

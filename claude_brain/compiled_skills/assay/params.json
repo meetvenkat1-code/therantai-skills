@@ -1,0 +1,18 @@
+{
+  "skill": "assay",
+  "skill_name": "assay",
+  "description": ">",
+  "source_file": "skills/assay/SKILL.md",
+  "source_sha": "b7edbebdf08ca3b2af6d24907336a6cf7cce9e3eeece7d7e61bd2d6b215e6c72",
+  "resources": [],
+  "provider_config": {
+    "model_core": "v2"
+  },
+  "inputs": [
+    {
+      "id": "chatInput",
+      "kind": "textarea",
+      "label": "Invoke the skill"
+    }
+  ]
+}

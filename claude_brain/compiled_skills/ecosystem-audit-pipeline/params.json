@@ -1,0 +1,18 @@
+{
+  "skill": "ecosystem-audit-pipeline",
+  "skill_name": "ecosystem-audit-pipeline",
+  "description": "\"The self-executing subtractive health chain for the Therantai ecosystem. Sequences moult --check \u2192 apoptosis sweep \u2192 moult live run \u2192 brain doc sync, then hands off explicitly to harvest --light. Execution posture \u2014 Claude drives the chain; the practitioner confirms only at constitutionally-required surfaces (apoptosis standing-law verdicts and moult live reckoning batch). Refuses to run on incomplete surface visibility. Invoke with /audit, 'ecosystem audit', 'run the audit', 'health sweep', 'subtractive sweep', 'prune the ecosystem', 'full audit chain', 'shed and sync'. Voice-tolerant \u2014 loose trigger matching.\"",
+  "source_file": "skills/ecosystem-audit-pipeline/SKILL.md",
+  "source_sha": "edb0323c6e8c0c869db07c102ae3a538797bd997a60fa392eedde890f70e6e4a",
+  "resources": [],
+  "provider_config": {
+    "model_core": "v2"
+  },
+  "inputs": [
+    {
+      "id": "chatInput",
+      "kind": "textarea",
+      "label": "Invoke the skill"
+    }
+  ]
+}
