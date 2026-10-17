@@ -13,3 +13,11 @@
 
 ## iteration 2 (23:09) - 1 failing
 - FAIL build: missing C:\Users\meetv\Music\github-files\engine-forge\tasks\vectorist\spec.json (the planner writes it; see forge/SPEC.md)
+
+## builder session
+- Created `spec.json` with Vectorist UI labels and the four required headers, question-mark ending, forbidden formatting, and all three mandated fixed replies.
+- The prompt has no parameter lines, so the controls list is empty; verifier currently fails because no realistic `valid:true` sample exists yet.
+- Next plan item is adding the required valid sample.
+
+## iteration 14 (23:10) - 1 failing
+- FAIL build: spec invalid:

@@ -1,4 +1,4 @@
 - [x] Read the complete prompt, `forge/SPEC.md`, and the worked example to identify the persona, required outputs, parameter lines, and spec format.
-- [ ] Create `spec.json` with persona-fit labels and every prompt-stated machine-checkable contract rule, including verbatim headers, final character, forbidden formatting, and fixed replies.
+- [x] Create `spec.json` with persona-fit labels and every prompt-stated machine-checkable contract rule, including verbatim headers, final character, forbidden formatting, and fixed replies.
 - [ ] Add controls for every prompt parameter line and a realistic valid sample that follows the full contract.
 - [ ] Run `bash tasks/vectorist/verify.sh` and fix each reported failure in its permitted source.

@@ -35,5 +35,12 @@
     ],
     "singleQuestionInLast": true,
     "noPreface": true
-  }
+  },
+  "tests": [
+    {
+      "input": "I keep accepting urgent work, but each new commitment leaves less time for the project I value most.",
+      "valid": true,
+      "output": "THE VELOCITY VECTOR\nThe commitments advance along a positive heading toward immediate completion, with high speed and an expanding magnitude as each urgent task adds momentum. The valued project remains on a slower trajectory with no corresponding increase in propulsion.\n\nTHE FIELD DIVERGENCE\nUrgency applies repeated acceleration to the short-term workload, while attention disperses across competing demands. The valued project receives diminishing force; each new commitment steepens the gradient away from its intended path.\n\nTHE INERTIAL RESISTANCE\nThe counter-vector is the finite duration of your attention. As the urgent trajectory gains mass through accumulated obligations, its momentum resists redirection and the valued project stalls under the shear between stated priority and repeated acceleration elsewhere.\n\nTHE MOMENTUM INTERROGATION\nWhat impulse will you remove from the urgent trajectory so the valued project can acquire enough acceleration to change its course?"
+    }
+  ]
 }
