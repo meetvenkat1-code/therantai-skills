@@ -21,3 +21,5 @@
 
 ## iteration 14 (23:10) - 1 failing
 - FAIL build: spec invalid:
+
+## DONE at iteration 2 - verify.sh passes
