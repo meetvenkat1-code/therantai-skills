@@ -1,0 +1,7 @@
+node_modules/
+.verify.log
+.critic.out
+forge.log
+*.bak
+examples/*/out/
+tasks/*/out/.tmp
