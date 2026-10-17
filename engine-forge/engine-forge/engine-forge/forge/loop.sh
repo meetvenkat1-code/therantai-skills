@@ -4,22 +4,21 @@
 #   tasks/<name>/verify.sh      ground truth: exit 0 = objective achieved; prints "FAIL <id> <reason>" per failure
 # Usage: forge/loop.sh tasks/<name> [max_iterations]
 # Exit:  0 achieved | 1 budget exhausted | 2 stuck (see ESCALATE.md) | 3 setup error | 4 STOP file
-# Env:   MAX_ITER=20 MAX_SECONDS=5400 AGENT_TIMEOUT=900 STUCK_REPLAN=3 STUCK_ABORT=6
-#        OPENCODE_BIN=opencode OPENCODE_MODEL=provider/model (optional; default = your configured model)
+# Env:   MAX_ITER=20 MAX_SECONDS=5400 AGENT_TIMEOUT=900 STUCK_REPLAN=3 STUCK_ABORT=6 AGENT_FAIL_ABORT=3
+#        FORGE_BACKEND=auto|codex|opencode  FORGE_MODEL / CODEX_MODEL / OPENCODE_MODEL (optional)  FORGE_SKIP_PREFLIGHT=1
+#        (backend + model details: forge/agent.sh)
 set -uo pipefail
 
 TASK=""; MAX=20; MAX_SECONDS=5400; AGENT_TIMEOUT=900; STUCK_REPLAN=3; STUCK_ABORT=6
-OC="opencode"; TO=""; VRC=1; NFAIL=0; SIG=""
+VRC=1; NFAIL=0; SIG=""; AGENT_FAILS=0
 
 sha() { if command -v sha1sum >/dev/null 2>&1; then sha1sum; else shasum; fi; }
 say()  { printf '[forge %s] %s\n' "$(date +%H:%M:%S)" "$*"; }
 note() { printf '%s\n' "$*" >> "$TASK/PROGRESS.md"; }
 
-oc() { # oc <agent> <message...>
+oc() { # oc <agent> <message...>  (backend-neutral: see forge/agent.sh)
   local agent="$1"; shift
-  local cmd=("$OC" run --agent "$agent")
-  [ -n "${OPENCODE_MODEL:-}" ] && cmd+=(--model "$OPENCODE_MODEL")
-  if [ -n "$TO" ]; then "$TO" "$AGENT_TIMEOUT" "${cmd[@]}" "$@"; else "${cmd[@]}" "$@"; fi
+  AGENT_TIMEOUT="$AGENT_TIMEOUT" bash forge/agent.sh "$agent" "$@"
 }
 
 run_verify() {
@@ -35,7 +34,7 @@ run_verify() {
 guard() {
   local p changed=0
   for p in reference template/core.js template/helpers.js template/style.css template/manifest.json \
-           forge/verify.mjs forge/lib forge/loop.sh forge/split-reference.mjs \
+           forge/verify.mjs forge/lib forge/loop.sh forge/agent.sh forge/split-reference.mjs \
            "$TASK/OBJECTIVE.md" "$TASK/verify.sh" "$TASK/prompt.md"; do
     [ -e "$p" ] || continue
     if ! git diff --quiet HEAD -- "$p" 2>/dev/null; then
@@ -55,13 +54,13 @@ has_open_tasks() { [ -s "$TASK/PLAN.md" ] && grep -q '^- \[ \]' "$TASK/PLAN.md";
 main() {
   TASK="${1:?usage: forge/loop.sh tasks/<name> [max_iterations]}"; TASK="${TASK%/}"
   MAX="${2:-${MAX_ITER:-20}}"; MAX_SECONDS="${MAX_SECONDS:-5400}"; AGENT_TIMEOUT="${AGENT_TIMEOUT:-900}"
-  STUCK_REPLAN="${STUCK_REPLAN:-3}"; STUCK_ABORT="${STUCK_ABORT:-6}"; OC="${OPENCODE_BIN:-opencode}"
+  STUCK_REPLAN="${STUCK_REPLAN:-3}"; STUCK_ABORT="${STUCK_ABORT:-6}"; AGENT_FAIL_ABORT="${AGENT_FAIL_ABORT:-3}"
   cd "$(dirname "$0")/.." || exit 3
-  TO="$(command -v timeout || command -v gtimeout || true)"
 
   [ -f "$TASK/OBJECTIVE.md" ] || { say "missing $TASK/OBJECTIVE.md"; exit 3; }
   [ -f "$TASK/verify.sh" ]    || { say "missing $TASK/verify.sh"; exit 3; }
-  command -v "$OC" >/dev/null 2>&1 || { say "'$OC' not found on PATH (set OPENCODE_BIN)"; exit 3; }
+  FORGE_BACKEND="$(bash forge/agent.sh --resolve 2>&1)" || { say "$FORGE_BACKEND"; exit 3; }
+  export FORGE_BACKEND; say "backend: $FORGE_BACKEND"
   git rev-parse --git-dir >/dev/null 2>&1 || git init -q
   git rev-parse HEAD >/dev/null 2>&1 || { git add -A; git -c user.name=forge -c user.email=forge@local commit -q -m "forge: baseline"; }
   git add -A -- "$TASK" >/dev/null 2>&1; git diff --cached --quiet || git -c user.name=forge -c user.email=forge@local commit -q -m "forge: register $TASK"
@@ -70,6 +69,15 @@ main() {
   local start; start=$(date +%s)
   run_verify
   if [ "$VRC" -eq 0 ]; then say "objective already satisfied; nothing to do"; exit 0; fi
+  if [ -z "${FORGE_SKIP_PREFLIGHT:-}" ]; then
+    say "preflight: checking that the $FORGE_BACKEND backend answers"
+    local pf; pf="$(oc critic "Reply with the single word OK. Do not read or change any files." 2>&1)"; local prc=$?
+    if [ $prc -ne 0 ] || [ -z "$pf" ] || printf '%s' "$pf" | grep -qiE 'cannot connect to api|not logged in|unauthorized|authentication (failed|required)|ECONNREFUSED'; then
+      say "preflight FAILED (exit $prc): $(printf '%s' "$pf" | tail -n 3 | tr '\n' ' ' | cut -c1-300)"
+      say "fix the backend (codex: 'codex login'; opencode: 'opencode auth login') or force one with FORGE_BACKEND=codex|opencode; FORGE_SKIP_PREFLIGHT=1 skips this check"
+      exit 3
+    fi
+  fi
   local prev="$SIG" same=1 i
   say "start: $NFAIL failing check(s); budget $MAX iterations / ${MAX_SECONDS}s"
 
@@ -94,7 +102,11 @@ main() {
     fi
 
     say "iteration $i: builder"
-    oc builder "You are inside the Engine Forge loop. Task directory: $TASK. Read AGENTS.md, $TASK/OBJECTIVE.md, $TASK/PLAN.md, $TASK/PROGRESS.md and $TASK/.verify.log. Do exactly the first unchecked task in PLAN.md. Then run 'bash $TASK/verify.sh', mark the task '- [x]', and append 2-5 lines to $TASK/PROGRESS.md (what you changed, what you learned). Do not declare the objective complete: only verify.sh decides. Never edit protected paths listed in AGENTS.md." || say "builder exited non-zero (continuing)"
+    oc builder "You are inside the Engine Forge loop. Task directory: $TASK. Read AGENTS.md, $TASK/OBJECTIVE.md, $TASK/PLAN.md, $TASK/PROGRESS.md and $TASK/.verify.log. Do exactly the first unchecked task in PLAN.md. Then run 'bash $TASK/verify.sh', mark the task '- [x]', and append 2-5 lines to $TASK/PROGRESS.md (what you changed, what you learned). Do not declare the objective complete: only verify.sh decides. Never edit protected paths listed in AGENTS.md."
+    if [ $? -ne 0 ]; then
+      AGENT_FAILS=$((AGENT_FAILS+1)); say "builder exited non-zero ($AGENT_FAILS in a row)"
+      if [ "$AGENT_FAILS" -ge "$AGENT_FAIL_ABORT" ]; then say "agent backend keeps failing; stopping (not a task problem, check the backend/model/login)"; exit 3; fi
+    else AGENT_FAILS=0; fi
     guard || true
 
     run_verify

@@ -2,6 +2,7 @@
 # Stand-in for `opencode run --agent <name> ... "<message>"`, used only by forge/selftest.sh.
 # FAKE_MODE: good (builder writes a valid spec) | tamper (good + edits a protected file) | idle (does nothing)
 shift   # "run"
+if [ "${FAKE_MODE:-}" = down ]; then echo "Cannot connect to API" >&2; echo "Cannot connect to API"; exit 1; fi
 AGENT=""; MSG=""
 while [ $# -gt 0 ]; do case "$1" in --agent) AGENT="$2"; shift 2;; --model) shift 2;; *) MSG="$1"; shift;; esac; done
 TASK=$(printf '%s' "$MSG" | sed -E 's/.*Task directory: ([^ ]+).*/\1/; s/\.$//')

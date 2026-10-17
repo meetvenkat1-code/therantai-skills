@@ -16,7 +16,7 @@ Only `verify.sh` decides whether the objective is achieved. Never claim completi
 5. No network except package installs. Never `git push`. Never read or print secrets.
 
 ## Protected paths (the loop reverts any edit to these)
-`reference/`, `template/core.js`, `template/helpers.js`, `template/style.css`, `template/manifest.json`, `forge/verify.mjs`, `forge/lib/`, `forge/loop.sh`, `forge/split-reference.mjs`, and per task: `OBJECTIVE.md`, `verify.sh`, `prompt.md`.
+`reference/`, `template/core.js`, `template/helpers.js`, `template/style.css`, `template/manifest.json`, `forge/verify.mjs`, `forge/lib/`, `forge/loop.sh`, `forge/agent.sh`, `forge/split-reference.mjs`, and per task: `OBJECTIVE.md`, `verify.sh`, `prompt.md`.
 Weakening a test, editing the verifier, or hand-patching `out/*.html` to make a check pass is cheating and is undone automatically. If a check seems wrong, say so in PROGRESS.md and keep working on everything else.
 
 ## You may edit

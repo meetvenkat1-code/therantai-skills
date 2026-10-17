@@ -19,8 +19,9 @@ W="$(mktemp -d)"; trap 'rm -rf "$W"' EXIT
 tar --exclude=node_modules --exclude=.git --exclude=tasks --exclude='out' -cf - . | (cd "$W" && tar xf -)
 ln -s "$ROOT/node_modules" "$W/node_modules"; mkdir -p "$W/tasks"
 ( cd "$W" && git init -q && git add -A && git -c user.name=t -c user.email=t@t commit -q -m base )
-export OPENCODE_BIN="$W/forge/testing/fake-opencode.sh" FAKE_SPEC="$W/forge/testing/echo.spec.json" AGENT_TIMEOUT=60
-chmod +x "$OPENCODE_BIN"
+export OPENCODE_BIN="$W/forge/testing/fake-opencode.sh" CODEX_BIN="$W/forge/testing/fake-codex.sh" FAKE_SPEC="$W/forge/testing/echo.spec.json" AGENT_TIMEOUT=60
+export FORGE_BACKEND=opencode FAKE_CODEX_LOG="$W/codex-argv.log"
+chmod +x "$OPENCODE_BIN" "$CODEX_BIN"
 
 cd "$W"
 forge/new-engine.sh ta forge/testing/echo.prompt.md >/dev/null
@@ -48,6 +49,35 @@ FAKE_MODE=arch_weak forge/start.sh task "a weak goal" tw >/tmp/forge-st-w.log 2>
 
 FAKE_MODE=touch forge/start.sh task "make a thing happen" tg 4 >/tmp/forge-st-g.log 2>&1; rc=$?
 [ $rc -eq 0 ] && [ -f tasks/tg/done.txt ] && ok "T9 start.sh task: architect writes the contract, loop achieves it (generic goal)" || { bad "T9 generic task (exit $rc)"; tail -5 /tmp/forge-st-g.log; }
+
+# 10. codex backend: same loop, agents run through `codex exec` (role prompt on stdin, sandbox flags, model prefix stripped)
+forge/new-engine.sh tx forge/testing/echo.prompt.md >/dev/null
+FORGE_BACKEND=codex OPENCODE_MODEL=openai/gpt-6-luna FAKE_MODE=good forge/loop.sh tasks/tx 5 >/tmp/forge-st-x.log 2>&1; rc=$?
+if [ $rc -eq 0 ] && grep -q "agent=builder" "$FAKE_CODEX_LOG" && grep "agent=builder" "$FAKE_CODEX_LOG" | grep -q -- "--sandbox workspace-write" \
+   && grep "agent=builder" "$FAKE_CODEX_LOG" | grep -q -- "--model gpt-6-luna" && ! grep -q "openai/" "$FAKE_CODEX_LOG" \
+   && grep "agent=builder" "$FAKE_CODEX_LOG" | grep -q "role_lines=[1-9]"; then ok "T10 codex backend reaches the objective (workspace-write, model prefix stripped, role prompt delivered)"; else bad "T10 codex backend (exit $rc)"; tail -5 /tmp/forge-st-x.log; cat "$FAKE_CODEX_LOG" 2>/dev/null | tail -3; fi
+
+# 11. codex critic is read-only
+forge/new-engine.sh ty forge/testing/echo.prompt.md >/dev/null; : > "$FAKE_CODEX_LOG"
+FORGE_BACKEND=codex FAKE_MODE=idle STUCK_REPLAN=2 STUCK_ABORT=4 forge/loop.sh tasks/ty 10 >/tmp/forge-st-y.log 2>&1; rc=$?
+[ $rc -eq 2 ] && grep "agent=critic" "$FAKE_CODEX_LOG" | grep -q -- "--sandbox read-only" && ! grep "agent=builder" "$FAKE_CODEX_LOG" | grep -q "read-only" && ok "T11 codex critic runs read-only, builder does not" || { bad "T11 critic sandbox (exit $rc)"; tail -3 /tmp/forge-st-y.log; }
+
+# 12. auto-detect: codex when logged in, opencode when not, error when neither
+r1=$(FORGE_BACKEND=auto FAKE_CODEX_LOGIN=ok bash forge/agent.sh --resolve 2>&1)
+r2=$(FORGE_BACKEND=auto FAKE_CODEX_LOGIN=no bash forge/agent.sh --resolve 2>&1)
+r3=$(FORGE_BACKEND=auto FAKE_CODEX_LOGIN=no OPENCODE_MODEL=opencode/big-pickle bash forge/agent.sh --resolve 2>&1)
+r4=$(FORGE_BACKEND=auto FAKE_CODEX_LOGIN=no OPENCODE_BIN=/nonexistent bash forge/agent.sh --resolve 2>&1); rc4=$?
+[ "$r1" = codex ] && [ "$r2" = opencode ] && [ "$r3" = opencode ] && [ $rc4 -eq 3 ] && ok "T12 auto-detect (codex if logged in, else opencode, else exit 3)" || bad "T12 auto-detect ($r1 / $r2 / $r3 / rc=$rc4)"
+
+# 13. preflight catches an unreachable backend immediately instead of looping
+forge/new-engine.sh tz forge/testing/echo.prompt.md >/dev/null
+FAKE_MODE=down forge/loop.sh tasks/tz 5 >/tmp/forge-st-z.log 2>&1; rc=$?
+[ $rc -eq 3 ] && grep -q "preflight FAILED" /tmp/forge-st-z.log && ! grep -q "iteration 1" /tmp/forge-st-z.log && ok "T13 preflight stops at once when the backend cannot connect (exit 3)" || { bad "T13 preflight (exit $rc)"; tail -3 /tmp/forge-st-z.log; }
+
+# 14. builder failing repeatedly (after a good preflight) aborts as a backend problem, not a task problem
+forge/new-engine.sh tq forge/testing/echo.prompt.md >/dev/null
+FAKE_MODE=down FORGE_SKIP_PREFLIGHT=1 AGENT_FAIL_ABORT=2 forge/loop.sh tasks/tq 9 >/tmp/forge-st-q.log 2>&1; rc=$?
+[ $rc -eq 3 ] && grep -q "backend keeps failing" /tmp/forge-st-q.log && ok "T14 repeated agent failures abort with exit 3" || { bad "T14 agent-fail abort (exit $rc)"; tail -3 /tmp/forge-st-q.log; }
 
 echo; [ $FAILS -eq 0 ] && echo "SELFTEST: all passed" || echo "SELFTEST: $FAILS failed"
 exit $FAILS

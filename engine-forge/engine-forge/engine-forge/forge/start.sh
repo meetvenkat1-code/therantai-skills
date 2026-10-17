@@ -5,7 +5,6 @@
 #                                                                     contract + verify.sh, then the loop runs
 set -euo pipefail
 cd "$(dirname "$0")/.."
-OC="${OPENCODE_BIN:-opencode}"
 case "${1:-}" in
   engine)
     forge/new-engine.sh "${2:?slug}" "${3:?prompt-file}"
@@ -14,10 +13,11 @@ case "${1:-}" in
     GOAL="${2:?goal text}"; NAME="${3:-$(echo "$GOAL" | tr 'A-Z' 'a-z' | tr -cs 'a-z0-9' '-' | cut -c1-32 | sed 's/^-//;s/-$//')}"
     D="tasks/$NAME"; [ -e "$D" ] && { echo "$D exists"; exit 1; }
     mkdir -p "$D"; : > "$D/PLAN.md"; printf '# Progress log for %s\n' "$NAME" > "$D/PROGRESS.md"
-    OCM=(); [ -n "${OPENCODE_MODEL:-}" ] && OCM=(--model "$OPENCODE_MODEL")
-    "$OC" run --agent architect ${OCM[@]+"${OCM[@]}"} "Goal (verbatim from the human): $GOAL
+    FORGE_BACKEND="$(bash forge/agent.sh --resolve 2>&1)" || { echo "$FORGE_BACKEND"; exit 3; }; export FORGE_BACKEND
+    echo "[forge] backend: $FORGE_BACKEND"
+    bash forge/agent.sh architect "Goal (verbatim from the human): $GOAL
 
-Create $D/OBJECTIVE.md and $D/verify.sh following the rules in AGENTS.md ('Writing an objective'). Do not implement the solution. verify.sh must FAIL right now." 
+Create $D/OBJECTIVE.md and $D/verify.sh following the rules in AGENTS.md ('Writing an objective'). Do not implement the solution. verify.sh must FAIL right now."
     [ -f "$D/OBJECTIVE.md" ] && [ -f "$D/verify.sh" ] || { echo "architect did not produce OBJECTIVE.md and verify.sh"; exit 1; }
     chmod +x "$D/verify.sh"
     if bash "$D/verify.sh" >/dev/null 2>&1; then echo "REFUSING TO START: verify.sh already passes before any work, so it cannot measure progress. Tighten it in $D/verify.sh."; exit 1; fi

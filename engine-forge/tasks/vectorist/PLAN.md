@@ -1,4 +1,0 @@
-- [ ] Create spec.json with all required fields derived from prompt.md
-- [ ] Define contract with sections, endsWith, fixedReplies, forbid rules
-- [ ] Write at least one valid test sample that obeys all prompt rules
-- [ ] Run verify.sh and fix any failures
