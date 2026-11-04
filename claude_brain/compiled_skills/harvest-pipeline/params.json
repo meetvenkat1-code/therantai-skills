@@ -1,0 +1,18 @@
+{
+  "skill": "harvest-pipeline",
+  "skill_name": "harvest-pipeline",
+  "description": "\"The self-executing closing chain for any Therantai session. Encodes the five-stage harvest sequence \u2014 extract, place, stage, sweep, sync \u2014 as a sequential pipeline with handoff prompts baked in, so the practitioner never navigates or recalls what comes next. Claude drives the chain; the practitioner only confirms each advance. Built-in pause architecture: at any stage the practitioner says 'defer' or 'park here' to freeze the chain at that point, log what completed, and hold the remaining stages as a named continuation resumable in the same or future session. The staging doc is a legitimate stopping point, not an incomplete run. Invoke with /harvest, 'close session', 'run harvest', 'end of session', 'harvest this session'. Light close: /harvest --light skips to staging only and defers the sweep and brain sync explicitly. After harvest completes, run /handoff if carrying forward to a new session \u2014 never before.\"",
+  "source_file": "skills/harvest-pipeline/SKILL.md",
+  "source_sha": "6b6c1e33bcf5359271adbe5b4d211fca517cfecef2b28371ac49debe2a27d7c7",
+  "resources": [],
+  "provider_config": {
+    "model_core": "v2"
+  },
+  "inputs": [
+    {
+      "id": "chatInput",
+      "kind": "textarea",
+      "label": "Invoke the skill"
+    }
+  ]
+}

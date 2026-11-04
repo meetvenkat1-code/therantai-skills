@@ -1,0 +1,18 @@
+{
+  "skill": "translation-gate",
+  "skill_name": "translation-gate",
+  "description": "Reads generative or creative requests through five translation families \u2014 Pointing, Excluding, Naming the Register, Dimensional Constraining, Metaphorical Anchoring \u2014 as the ambient default lens, no invocation needed. Ambient layer: scans phrasing for an already-present family signal, builds from it silently, discloses nothing. Carries one manually-invoked deep-mode for when ambient reading misses: a single tappable question, two or three concrete options phrased for the fragment at hand, never the abstract family names. Invoke deep-mode with /translate, \"translate this,\" \"help me name what I want,\" or \"close the gap.\" Do NOT let deep-mode grow past one question \u2014 its value is costing the person almost nothing.",
+  "source_file": "skills/translation-gate/SKILL.md",
+  "source_sha": "9c25915b885abf894ca720069e73cf97a585d0fa4ba45e78acf299ebc6bd2c3a",
+  "resources": [],
+  "provider_config": {
+    "model_core": "v2"
+  },
+  "inputs": [
+    {
+      "id": "chatInput",
+      "kind": "textarea",
+      "label": "Invoke the skill"
+    }
+  ]
+}

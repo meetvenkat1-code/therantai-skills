@@ -1,0 +1,192 @@
+{
+  "engine": "12-auto-loop-engine-v15-full-per-role-decompressor-plus-mix-chip",
+  "source_file": "engines/incoming_batch/archive/12-auto-loop-engine-v15-full-per-role-decompressor plus mix chip.html",
+  "archetype": "Multi-Step-Bespoke",
+  "review_required": false,
+  "provider_config": {
+    "engine_name": "12 Auto Loop Engine V15 Full Per Role Decompressor Plus Mix Chip",
+    "model_core": "v2"
+  },
+  "inputs": [
+    {
+      "id": "main-input",
+      "kind": "textarea",
+      "label": "main-input",
+      "placeholder": "Drop your raw idea, question, or charge here. Vague is fine — the engine will reconstruct and sharpen it."
+    },
+    {
+      "id": "hint-input",
+      "kind": "text",
+      "label": "hint-input",
+      "placeholder": "What does a good response look like? This becomes the evaluator's contract.",
+      "default": ""
+    },
+    {
+      "id": "librarySearch",
+      "kind": "text",
+      "label": "librarySearch",
+      "placeholder": "Search saved runs by title, mode, or input…",
+      "default": ""
+    },
+    {
+      "id": "archiveSearch",
+      "kind": "text",
+      "label": "archiveSearch",
+      "placeholder": "Search archived runs by title, mode, or input…",
+      "default": ""
+    },
+    {
+      "id": "thresholdSlider",
+      "kind": "number",
+      "label": "thresholdSlider",
+      "default": "7",
+      "min": "5",
+      "max": "9"
+    },
+    {
+      "id": "maxIter",
+      "kind": "number",
+      "label": "maxIter",
+      "default": "3",
+      "min": "1",
+      "max": "5"
+    },
+    {
+      "id": "' + p.keyStorageName + 'KeyPool",
+      "kind": "textarea",
+      "label": "' + p.keyStorageName + 'KeyPool",
+      "placeholder": "' + (p.keyPlaceholder || '') + '"
+    },
+    {
+      "id": "name-' + editorId + '",
+      "kind": "text",
+      "label": "name-' + editorId + '",
+      "placeholder": "",
+      "default": "' + escapePlibAttr(v.name) + '"
+    },
+    {
+      "id": "body-' + editorId + '",
+      "kind": "textarea",
+      "label": "body-' + editorId + '",
+      "placeholder": ""
+    }
+  ],
+  "selects": [],
+  "actions": [
+    {
+      "id": "promptLibBtn",
+      "kind": "button",
+      "label": "☰"
+    },
+    {
+      "id": "gearBtn",
+      "kind": "button",
+      "label": "⚙"
+    },
+    {
+      "id": "runBtn",
+      "kind": "button",
+      "label": "▶ Run Loop"
+    },
+    {
+      "id": "copyAllBtn",
+      "kind": "button",
+      "label": "📋 Copy Input + Winning Prompt + Response"
+    },
+    {
+      "id": "copyHistoryBtn",
+      "kind": "button",
+      "label": "🗂 Copy Full Iteration History"
+    },
+    {
+      "id": "copyPromptsBtn",
+      "kind": "button",
+      "label": "📝 Copy All Iteration Prompts (MD)"
+    },
+    {
+      "id": "copyResponseBtn",
+      "kind": "button",
+      "label": "Copy"
+    },
+    {
+      "id": "copyPromptBtn",
+      "kind": "button",
+      "label": "Copy"
+    },
+    {
+      "id": "folderConnectBtn",
+      "kind": "button",
+      "label": "folderConnectBtn"
+    },
+    {
+      "id": "libraryMasterArchiveBtn",
+      "kind": "button",
+      "label": "📚 Copy Master Archive (MD)"
+    },
+    {
+      "id": "libraryExportBtn",
+      "kind": "button",
+      "label": "⬇ Export"
+    },
+    {
+      "id": "libraryImportBtn",
+      "kind": "button",
+      "label": "⬆ Import"
+    },
+    {
+      "id": "libraryClearBtn",
+      "kind": "button",
+      "label": "🗑 Clear All"
+    },
+    {
+      "id": "folderConnectBtnArchive",
+      "kind": "button",
+      "label": "folderConnectBtnArchive"
+    },
+    {
+      "id": "archiveExportBtn",
+      "kind": "button",
+      "label": "⬇ Export"
+    },
+    {
+      "id": "archiveImportBtn",
+      "kind": "button",
+      "label": "⬆ Import"
+    },
+    {
+      "id": "archiveClearBtn",
+      "kind": "button",
+      "label": "🗑 Clear All"
+    },
+    {
+      "id": "drawerClose",
+      "kind": "button",
+      "label": "✕"
+    },
+    {
+      "id": "copyRunPrompts_' + e.runId + '",
+      "kind": "button",
+      "label": "📝 Copy All Prompts (MD)"
+    }
+  ],
+  "roles": [
+    "architect",
+    "executor",
+    "evaluator",
+    "rearchitect"
+  ],
+  "versions": [
+    "original",
+    "reforged",
+    "decompressor"
+  ],
+  "playbooks": [
+    "reframe",
+    "analytical",
+    "generative",
+    "exploratory",
+    "diagnostic",
+    "synthesis",
+    "critical"
+  ]
+}

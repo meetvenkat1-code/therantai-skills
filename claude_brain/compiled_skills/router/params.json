@@ -1,0 +1,18 @@
+{
+  "skill": "router",
+  "skill_name": "router",
+  "description": "The Dispatcher organ of the Oracle Suite. Receives untagged tasks from oracle-core and classifies task depth \u2014 WOUNDED, COMPOUND, or SHALLOW \u2014 then dispatches to autopsy (Refiner), decomposition (Mapper), or returns a direct-execution verdict to oracle-core. One classification, one dispatch, one receipt line. Never executes, never maps, never refines. Not invoked directly by the user \u2014 fires only on handoff from oracle-core.",
+  "source_file": "skills/router/SKILL.md",
+  "source_sha": "5a4b5f93ea8b8b131f0014e3754b0a91a057f4e0e5f8bd131d929bf7ffb1bc63",
+  "resources": [],
+  "provider_config": {
+    "model_core": "v2"
+  },
+  "inputs": [
+    {
+      "id": "chatInput",
+      "kind": "textarea",
+      "label": "Invoke the skill"
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "skill": "structure-this",
+  "skill_name": "structure-this",
+  "description": "\"Pre-processing gate that captures genuine intent from raw conversational flow before any answering begins. Clusters questions by domain, deduplicates overlaps, types each by the answer-shape it implicitly wants, surfaces the root question the batch is circling, and presents the structured map back for confirmation. Capture is the DNA \u2014 default output is recognition-faithful. Blueprint mode (optional) adds dependency-ordering and depth-calibration as a subordinate layer that cannot alter the capture beneath it. Invoke with 'structure this', '/structure-this', 'cluster my questions', 'what did I just ask'. Add 'blueprint mode' for response architecture. Does NOT answer \u2014 only structures. Answering begins only after confirmation.\"",
+  "source_file": "skills/structure-this/SKILL.md",
+  "source_sha": "0193e95d86e03ccc062fb381e87b061cca40a648bf9da133af422e25350ac79a",
+  "resources": [],
+  "provider_config": {
+    "model_core": "v2"
+  },
+  "inputs": [
+    {
+      "id": "chatInput",
+      "kind": "textarea",
+      "label": "Invoke the skill"
+    }
+  ]
+}

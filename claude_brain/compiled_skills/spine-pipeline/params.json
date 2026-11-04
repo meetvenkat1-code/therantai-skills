@@ -1,0 +1,18 @@
+{
+  "skill": "spine-pipeline",
+  "skill_name": "spine-pipeline",
+  "description": "\"The self-executing spine-forging chain for standalone identity work \u2014 when the endpoint is a portable system prompt, not a built engine. Discriminates input type (bare theme / loaded fragments / two completed spines), routes to the correct forging organ, enforces assay as a mandatory non-skippable gate, then opens the post-assay fork: compress to paste, radiate to population, or alloy with a second spine. Claude drives the chain; assay failure routes back to the forging organ with the named re-entry constraint. The practitioner chooses only at the post-assay fork. Invoke with /spine-pipe, 'forge a spine', 'I need a system prompt for this', 'spine only no build', 'forging identity not engine', 'portable prompt', or any phrase signaling intent to produce a standalone spine without proceeding to an engine build. Voice-tolerant \u2014 loose trigger matching.\"",
+  "source_file": "skills/spine-pipeline/SKILL.md",
+  "source_sha": "6b79237761c7948783fd2a53ce5483bc3b18ac290353251dea81f49208fe9f66",
+  "resources": [],
+  "provider_config": {
+    "model_core": "v2"
+  },
+  "inputs": [
+    {
+      "id": "chatInput",
+      "kind": "textarea",
+      "label": "Invoke the skill"
+    }
+  ]
+}

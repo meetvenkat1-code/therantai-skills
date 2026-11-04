@@ -1,0 +1,18 @@
+{
+  "skill": "synth",
+  "skill_name": "synth",
+  "description": "\"Standalone auto-parameterizing synthesis skill. Infers the single interpretive lens (systems / dialectical / archetypal / first-principles / developmental / etc.) that the given input most rewards, declares it in one header line alongside the unit and output type it causally determines, then produces a dense, reflective, transformative synthesis with no fixed word count \u2014 length governed entirely by informational-density saturation. Invoke with /synth, 'synth this', or 'synthesize this' followed by or preceding any input. Pure text-in/text-out \u2014 no dependency on other skills, no tag-routing, no oracle-core check.\"",
+  "source_file": "skills/synth/SKILL.md",
+  "source_sha": "f7978bdbe9f127179c1db2d36afdd6d01b1ca25dc75812f2f11efd2f05124dbd",
+  "resources": [],
+  "provider_config": {
+    "model_core": "v2"
+  },
+  "inputs": [
+    {
+      "id": "chatInput",
+      "kind": "textarea",
+      "label": "Invoke the skill"
+    }
+  ]
+}

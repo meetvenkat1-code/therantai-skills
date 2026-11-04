@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<!-- COMPILED by tools/compile_skill.py from claude_brain/compiled_skills/custom-gpt-package/. Source: skills/custom-gpt-package/SKILL.md. DO NOT hand-edit; edit skills/ source and re-ingest. -->
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>custom-gpt-package (skill build)</title>
+<style>
+:root{--bg:#0a0a0f;--panel:#12121a;--line:#26263a;--txt:#e8e8f0;--dim:#8a8aa3;--acc:#22c55e}
+body{background:var(--bg);color:var(--txt);font-family:system-ui,sans-serif;margin:0}
+.header{display:flex;justify-content:space-between;align-items:center;padding:.8rem 1.2rem;border-bottom:1px solid var(--line)}
+.badge{font-size:.65rem;border:1px solid var(--line);border-radius:99px;padding:.15rem .6rem;color:var(--dim)}
+.canvas{max-width:800px;margin:0 auto;padding:1.2rem}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:1rem;margin-bottom:1rem}
+.desc{font-size:.8rem;color:var(--dim);margin:.4rem 0 0}
+.bubble{border:1px solid var(--line);border-radius:10px;padding:.7rem 1rem;margin-top:.6rem;white-space:pre-wrap;font-size:.88rem}
+.bubble.user{border-color:var(--acc)}.who{font-size:.65rem;color:var(--dim);letter-spacing:.1em;text-transform:uppercase}
+textarea{width:100%;min-height:70px;background:#0d0d14;color:var(--txt);border:1px solid var(--line);border-radius:8px;padding:.6rem}
+input[type=password]{background:#0d0d14;color:var(--txt);border:1px solid var(--line);border-radius:6px;padding:.4rem .6rem;width:210px}
+select{background:#0d0d14;color:var(--txt);border:1px solid var(--line);border-radius:6px;padding:.35rem}
+button{background:var(--acc);color:#04120a;border:0;border-radius:8px;padding:.55rem 1.1rem;font-weight:700;cursor:pointer;margin-top:.6rem}
+button.plain{background:#1a1a26;color:var(--txt);border:1px solid var(--line);font-weight:400}
+.keyrow{display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;font-size:.72rem;color:var(--dim);margin-top:.6rem}
+</style></head>
+<body>
+<div class="header"><div><b>CUSTOM-GPT-PACKAGE</b> <span class="badge">skill build</span> <span class="badge" id="cfgBadge">Config: …</span></div>
+<div><select id="providerSelect"><option value="groq">Groq</option><option value="or-auto">OR · Free Router</option><option value="claude">Claude · Native</option></select></div></div>
+<div class="canvas"><div class="panel"><p class="desc">&quot;Converts a design idea, spine, or existing system prompt into a complete, copy-paste-ready ChatGPT Custom GPT package — Name, Description, Instructions (with a mandatory anti-drift block), Conversation Starters, and a Capabilities table. Takes a single input in one pass; does not interview unless the source material is genuinely missing something required to write the Instructions field. Invoke with /custom-gpt-package, 'build a custom GPT package', 'turn this into a custom GPT', 'package this for ChatGPT', 'custom GPT from this spine', or any request to render an existing prompt/idea/engine into ChatGPT's Custom GPT builder format.&quot;</p>
+<div class="keyrow">Keys (this browser only): <input type="password" id="key-groq" placeholder="gsk_…"> <input type="password" id="key-openrouter" placeholder="sk-or-…"> <button class="plain" id="saveKeys">Save</button></div></div>
+<div id="stream"></div>
+<div class="panel"><textarea id="chatInput" placeholder="Invoke the skill… (Enter to send, Shift+Enter for newline)"></textarea><br>
+<button id="sendBtn">Send</button> <button class="plain" id="clearBtn">Clear transcript</button></div></div>
+<script>
+/* ---- Model Core v2 (registry runtime, compact) ---- */
+var ENGINE_NAME = "custom-gpt-package";
+var CANONICAL_CONFIG_URL = "https://raw.githubusercontent.com/meetvenkat1-code/therantai-config/refs/heads/main/model.json";
+var LOCAL_FALLBACK_CONFIG = {
+ "native_model": "claude-sonnet-4-6",
+ "defaultLanes": [
+  "groq::openai/gpt-oss-120b",
+  "or-auto::openrouter/free"
+ ],
+ "providers": [
+  {
+   "id": "groq",
+   "endpoint": "https://api.groq.com/openai/v1/chat/completions",
+   "keyStorageName": "groq",
+   "modelChain": [
+    "openai/gpt-oss-120b",
+    "openai/gpt-oss-20b"
+   ]
+  },
+  {
+   "id": "or-auto",
+   "endpoint": "https://openrouter.ai/api/v1/chat/completions",
+   "keyStorageName": "openrouter",
+   "modelChain": [
+    "openrouter/free"
+   ]
+  }
+ ]
+};
+var liveModelConfig = LOCAL_FALLBACK_CONFIG;
+function getKey(name){ try { return localStorage.getItem("hek_" + name) || ""; } catch(e){ return ""; } }
+async function fetchModelConfig(){
+  try {
+    var r = await fetch(CANONICAL_CONFIG_URL + "?v=" + Date.now(), {cache:"no-store"});
+    if (r.ok) { var j = await r.json(); if (j && j.providers) { liveModelConfig = j; setBadge("live"); return; } }
+  } catch(e){}
+  setBadge("fallback");
+}
+function setBadge(s){ var b = document.getElementById("cfgBadge"); if (b) { b.textContent = "Config: " + s; b.dataset.state = s; } }
+function providers(){ return liveModelConfig.providers || []; }
+async function readOpenAIStream(resp, onText){
+  var reader = resp.body.getReader(), dec = new TextDecoder(), acc = "";
+  var buf = "";
+  while (true) {
+    var chunk = await reader.read(); if (chunk.done) break;
+    buf += dec.decode(chunk.value, {stream:true});
+    var parts = buf.split("\n\n"); buf = parts.pop();
+    for (var p of parts) {
+      var line = p.trim(); if (!line.startsWith("data:")) continue;
+      var data = line.slice(5).trim(); if (data === "[DONE]") continue;
+      try {
+        var d = JSON.parse(data);
+        var t = (d.choices && d.choices[0] && (d.choices[0].delta?.content || d.choices[0].message?.content)) || "";
+        if (t) { acc += t; if (onText) onText(acc); }
+      } catch(e){}
+    }
+  }
+  return acc;
+}
+/* callModel: ONE entry. Proxy first, then direct chain-walk. No scattered fetch. */
+/* Universal skill injection: registry builds define withSkill(); elsewhere this no-ops. */
+async function callModel(opts){
+  try { if (typeof withSkill === 'function') { opts = Object.assign({}, opts, {system: withSkill(opts.system)}); } } catch(e){}
+  var prov = providers().find(p => p.id === opts.provider) || providers()[0];
+  var errors = [];
+  // 1) platform proxy (Netlify) when reachable
+  try {
+    var pr = await fetch("/api/chat", {method:"POST", headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({system: opts.system, user: opts.user, provider: prov.id})});
+    if (pr.ok) {
+      var pj = await pr.json();
+      if (pj && pj.text) { if (opts.onText) opts.onText(pj.text); return {text: pj.text, served: "proxy"}; }
+    }
+  } catch(e){ errors.push("proxy:" + e.message); }
+  // 2) direct BYOK chain
+  var chain = [prov].concat(providers().filter(p => p.id !== prov.id && !p.native));
+  for (var cand of chain) {
+    if (cand.native) continue; // native branch is platform-only; skip standalone
+    var key = getKey(cand.keyStorageName || cand.id);
+    if (!key) { errors.push(cand.id + ":missing_key"); continue; }
+    try {
+      var headers = {"Content-Type":"application/json", "Authorization":"Bearer " + key};
+      var resp = await fetch(cand.endpoint, {method:"POST", headers,
+        body: JSON.stringify({model: (cand.modelChain && cand.modelChain[0]) || "",
+          messages:[{role:"system",content:opts.system},{role:"user",content:opts.user}], stream:true})});
+      if (!resp.ok) { errors.push(cand.id + ":" + resp.status); continue; }
+      var text = await readOpenAIStream(resp, opts.onText);
+      if (text) return {text, served: cand.id};
+    } catch(e){ errors.push(cand.id + ":" + e.message); }
+  }
+  throw new Error("all_providers_failed (" + errors.join("; ") + "). Set keys in Settings.");
+}
+
+/* ---- Skill behavior (verbatim SKILL.md body) ---- */
+function getSkillText(){ return `# CUSTOM GPT PACKAGE
+
+Fires when a design idea/spine/system prompt needs deploying as a ChatGPT Custom GPT — renders it into the five fields the builder requires, plus the anti-drift scaffolding ChatGPT specifically needs. Don't interview first — take reasonable defaults for missing details and note the assumption inline; ask only when there's no reasonable inference (no tone signal at all, no way to infer output caps).
+
+**Why:** ChatGPT Custom GPTs drift in ways single-session engines don't — hedging, self-narration, unsolicited extras, format discipline relaxing by turn 30. A system prompt that works as an HTML engine's \`system\` param isn't drift-resistant in a long ChatGPT thread on its own. The anti-drift block is this skill's entire value-add — mandatory, every package.
+
+## Output — five sections, always this order
+
+1. **NAME** — short, matches actual function, not generic branding.
+2. **DESCRIPTION** — one sentence: what it does, and what it explicitly does NOT do.
+3. **INSTRUCTIONS**:
+   - IDENTITY — role/function, one paragraph, does/doesn't.
+   - INPUT HANDLING — valid input, min/max bounds, behavior at edges. Soft complexity ceilings carry forward as warned-not-blocked, not hard stops.
+   - MODE SELECTION (only if source defines multiple modes) — default stated, switch-trigger language, rule for mid-thread mode-switch requests on already-discussed input.
+   - TONE — derived from source's own voice, never generic "helpful assistant."
+   - OUTPUT RULES — hard format caps pulled from source; if unspecified, infer from apparent purpose and state the assumption.
+   - **ANTI-DRIFT BLOCK** (mandatory, numbered, framed as "does not relax as conversation lengthens"): no narrating reasoning; no unsolicited extras/follow-ups; no restating own instructions to the user; no exceeding format caps "to be more helpful"; no apologizing/padding refusals; no drifting into commentary outside the one job; one-sentence decline pattern for pushback requesting format abandonment; plain-prose lock (no headers/bullets/bold in actual output) unless source format requires structure.
+4. **CONVERSATION STARTERS** — 3-4, concrete, from the actual domain, never placeholders.
+5. **CAPABILITIES TABLE** — Web Browsing / Canvas / Image Generation / Code Interpreter / Actions, all default **Off**. Enable only if core function genuinely requires it (e.g. live-data fetch needs Browsing), stating which and why in one line — every enabled capability is a door the model can wander through instead of staying in its lane.
+
+## Delivery
+Whole package, one copy-paste-ready block, section headers intact, ready for the Configure tab. No preamble, no summary.
+
+## Relations
+Core-extractor/spinal-column produce the platform-agnostic spine. This skill is the downstream render — wraps that spine (or idea, or existing prompt) in the five-field structure + anti-drift hardening. Run core-extractor/spinal-column first if no spine exists; this skill once one does.`; }
+var transcript=[];
+function bubble(who,text,cls){ var d=document.createElement('div'); d.className='bubble '+(cls||''); d.innerHTML='<div class="who">'+who+'</div>'; var b=document.createElement('div'); b.textContent=text; d.appendChild(b); document.getElementById('stream').appendChild(d); d.scrollIntoView(false); return b; }
+function buildUser(){ return transcript.slice(-12).map(function(t){ return t.role+': '+t.content; }).join('\n\n'); }
+async function send(){ var inp=document.getElementById('chatInput').value.trim(); if(!inp) return; document.getElementById('chatInput').value='';
+  transcript.push({role:'user',content:inp}); bubble('you',inp,'user');
+  var body=bubble('skill','…');
+  try{ var r=await callModel({provider:document.getElementById('providerSelect').value,system:getSkillText(),user:buildUser(),onText:function(a){body.textContent=a;}});
+    body.textContent=r.text; transcript.push({role:'assistant',content:r.text}); }
+  catch(e){ body.textContent='Error: '+e.message; } }
+document.getElementById('sendBtn').addEventListener('click',send);
+document.getElementById('chatInput').addEventListener('keydown',function(e){ if(e.key==='Enter'&&!e.shiftKey){ e.preventDefault(); send(); } });
+document.getElementById('clearBtn').addEventListener('click',function(){ transcript=[]; document.getElementById('stream').innerHTML=''; });
+document.getElementById('saveKeys').addEventListener('click',function(){ try{ localStorage.setItem('hek_groq',document.getElementById('key-groq').value); localStorage.setItem('hek_openrouter',document.getElementById('key-openrouter').value); }catch(e){} });
+try{ document.getElementById('key-groq').value=localStorage.getItem('hek_groq')||''; document.getElementById('key-openrouter').value=localStorage.getItem('hek_openrouter')||''; }catch(e){}
+fetchModelConfig();
+</script>
+</body></html>

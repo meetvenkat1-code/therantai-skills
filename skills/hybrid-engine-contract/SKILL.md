@@ -2,8 +2,8 @@
 name: hybrid-engine-contract
 description: >
   Portable architectural contract for building Hybrid HTML Engines from any session or
-  project: provider delegation, streaming, palette, engine taxonomy, build constraints,
-  banned patterns. Provider and model handling is delegated to model-config-contract (the
+  project: provider delegation, streaming, palette, engine taxonomy, model-surface router
+  (None / Lanes / Panel), build constraints, banned patterns. Provider and model handling is delegated to model-config-contract (the
   Model Core): providers, chains, keys, defaults and the call layer come from model.json
   plus one pasted block, never from literals in the HTML. Floor: Claude Native inside
   claude.ai; Groq gpt-oss-120b (soft-falls to gpt-oss-20b, hard-falls to the OpenRouter free
@@ -24,6 +24,7 @@ The portable delta of the **Exploration-Hybrid HTML Engine Architect** project. 
 Invocation: /hybrid-engine  |  "invoke hybrid engine contract"  |  "load engine contract"
 Pair with:  /ui-contract     (read UI Contract in full before writing any code)
             /model-config    (Model Core: providers, models, keys, call layer; implied here for every build)
+Optional:   /catalog         (model-catalog-panel; read only when the MODEL SURFACE router says Lanes or Panel)
 Priority:   This contract > UI Contract > Memory mandates
 Providers:  model-config-contract governs all provider and model handling; nothing here restates it
 ```
@@ -53,7 +54,7 @@ Sourced from Prompt Forge structural DNA (`4c-both-panels-prompt-forge.html`), J
 2. **Many distinct named prompts** — a testing rig (Prompt Forge itself)
 3. **Many versions/registers of one identity** — formal vs. casual, terse vs. expansive, toggleable active/inactive without touching code
 
-**Right panel — response library:** every generated output auto-saves to the right overlay panel per UI Contract Constraint 20, tagged with the producing prompt, timestamped, JSON-exportable. Persistent record sitting behind the live inline output — not a replacement for it.
+**Right panel — response library:** every generated output auto-saves to the right overlay panel per UI Contract Constraint 20, tagged with the producing prompt, timestamped, JSON-exportable. Persistent record sitting behind the live inline output — not a replacement for it. Clicking a saved response opens it in a centered pop-up with a Copy button (UI Contract Constraint 26, mandatory whenever the library is on).
 
 **Storage:** both panels persist through Constraint 21's abstraction for plain standalone builds, or Constraint 23's folder-connect where a real local folder is available; artifacts always use `window.storage`.
 
@@ -122,7 +123,7 @@ runOne('l1').then(() => runOne('l2')).then(() => runOne('l3')).then(() => {
 });
 ```
 
-**Groq, OpenRouter:** `Promise.all()` is fine — they handle parallel calls independently.
+**Groq, OpenRouter:** `Promise.all()` is fine — they handle parallel calls independently. An engine on Model Core 2.1 or later should prefer the Core's `runBatch(tasks, { schedule: 'sequential' | 'parallel' })`: it serialises per provider, staggers starts, and shares one Stop scope (`beginRun` / `stopRun`) instead of hand-chained promises.
 
 **UI pattern:** Set non-active cards to "Queued" on start. Each transitions Queued → Burning → Complete in sequence.
 
@@ -162,7 +163,39 @@ renderProviderSelector(); fetchModelConfig(function (src) { renderProviderSelect
 
 **Gear drawer key rows** are rendered from `providers[]` (see model-config-contract, DYNAMIC DRAWER KEY ROWS): native providers get a read-only "No key needed — platform routes natively"; the rest get a password input with `keyPlaceholder` and, when present, an inline orange `keyNote`.
 
-**Engines with a model picker** (`model-catalog-panel`) replace this selector with a lane button (Lanes mode) or per-stage model chips (Panel mode). A dropdown beside a picker recreates the two-path conflict, so exactly one control chooses the model; the one exception is the catalog skill's matrix variant (A3d), where an engine that already has a second axis of work keeps its curated Run and provider selector and adds a separate `Fan out (n)` button for lanes.
+**Engines with a model picker** (`model-catalog-panel`) replace this selector with a lane button (Lanes mode), per-stage model chips (Panel mode, Full) or the Master control (Panel mode, Master and Dual-Run: `#providerSelect` holding a `providerId::modelSlug` key, not a bare provider id; see `model-catalog-panel` B9). A dropdown beside a picker recreates the two-path conflict, so exactly one control chooses the model; the one exception is the catalog skill's matrix variant (A3d), where an engine that already has a second axis of work keeps its curated Run and provider selector and adds a separate `Fan out (n)` button for lanes.
+
+---
+
+## MODEL SURFACE — ROUTER (build step 4b: decides whether step 5 is the curated selector or a picker)
+
+Coarse decision layer only. The detailed mode gate (what varies, constraint test, deployment test, sub-mode) lives in `model-catalog-panel`; this table decides **whether to read that skill at all**, so the two files do not drift. Inputs: the engine type from ENGINE TAXONOMY (its "Default surface" column) and the words of the brief. Output: one line in the build plan.
+
+| Brief matches | Surface | Action |
+|---|---|---|
+| Topology Mapper, Pattern Library, Learning Engine, Text Transformer, Meta-Intent Engine, Prompt Builder or Hook Generator (unless the brief asks otherwise) | **None** | Stay on the Model Core with the curated provider selector (PROVIDER SELECTOR section above) |
+| Cognitive Pipeline or Lens Interpreter with stages, roles or lenses | **Panel** | Read `model-catalog-panel` in full; its Mode Gate picks the sub-mode (Full, Master, Dual-Run) |
+| Compare or test models, evals, triangulation, fan-out | **Lanes** | Read `model-catalog-panel` in full |
+| A second axis of work (lenses, prompts, personas) crossed with models | **Lanes, matrix variant** | Read `model-catalog-panel` in full (A3d) |
+
+Rules:
+- **No picker unless the brief matches a row.** Default is None.
+- **The catalog skill is never read speculatively.** Read `model-catalog-panel` only when the routing line says `Lanes` or `Panel`.
+- **Precedence:** an explicit request beats the table in both directions. `/catalog lanes|panel` or "add a model picker" forces that surface even for a None-type engine; "no picker", "just the default models" or "Groq only" forces None even for a Pipeline.
+- **Surface unclear** (the brief could be None, Lanes or Panel and the words do not say): ask the catalog's one gate question and build nothing until it is answered. This is the only case that costs the person a question.
+- **Surface is Panel but the sub-mode is unclear** (multi-stage brief, roles clear, model ownership not stated): do not ask. Route to Panel and let the catalog's Mode Gate resolve it; its tie-break is Master Panel, never Dual-Run.
+- **Retrofits:** an existing engine keeps the surface it already has. The router runs on new builds, and on a retrofit only when the person asks to change the model surface.
+- Write the decision as one line in the build plan, for example: `Model surface: Panel (catalog decides Master/Full) because stages share one input`.
+
+Worked examples:
+
+| Brief | Routing line |
+|---|---|
+| "A hook generator with tone chips" | `Model surface: None (Hook Generator default)` |
+| "A 4-stage pipeline where each stage reframes the last" | `Model surface: Panel (catalog decides Master/Full) because stages are roles` |
+| "Run my prompt through several models and compare the answers" | `Model surface: Lanes because the model is the axis` |
+| "A lens interpreter, 6 lenses, and I want to try each lens on different models" | `Model surface: Lanes, matrix variant because lenses cross models` |
+| "A topology mapper, use Groq only" | `Model surface: None (explicit)` |
 
 ---
 
@@ -218,17 +251,19 @@ No footer. Zone C only. (UI Contract Constraint 07.)
 
 When input describes an engine without naming a type, match here:
 
-| Engine Type | Detect When Input Mentions | Structure Pattern |
-|---|---|---|
-| **Cognitive Pipeline** | stages, steps, reorientation, reframe, shift, analysis pipeline | Left panel stage list + right canvas, context injected between stages |
-| **Topology Mapper** | map, diagram, visualize, concept graph, structure, topology | SVG canvas, topology override chips, 4 views (Diagram / Structure / Multi / Export) |
-| **Lens Interpreter** | lenses, dimensions, portals, perspectives, multi-angle, interpret through | Lens family selector, dimension grid, per-lens output cards |
-| **Pattern Library** | patterns, catalog, library, save thinking, recurring, export/import | Pattern cards, save/delete, JSON export/import |
-| **Learning Engine** | curriculum, learn, teach, domain, schema, adaptive, levels | Domain input, schema drag-drop, depth selector, module output |
-| **Prompt Builder** | system prompt, build prompt, prompt architect, raw intent → prompt | Section-structured output (ROLE/FUNCTION/RULES/OUTPUT), copy button |
-| **Text Transformer** | convert, reformat, markdown, rich text, Notion, Google Docs | Mode chips, input → output side by side |
-| **Hook Generator** | hook, headline, opening line, tone variants, audience | Tone selector chips, variant counter, copy per variant |
-| **Meta-Intent Engine** | intent, before building, what do I want, capture goal | Structured intent form → intent document output |
+| Engine Type | Detect When Input Mentions | Structure Pattern | Default surface |
+|---|---|---|---|
+| **Cognitive Pipeline** | stages, steps, reorientation, reframe, shift, analysis pipeline | Left panel stage list + right canvas, context injected between stages | Panel (with stages or roles) |
+| **Topology Mapper** | map, diagram, visualize, concept graph, structure, topology | SVG canvas, topology override chips, 4 views (Diagram / Structure / Multi / Export) | None |
+| **Lens Interpreter** | lenses, dimensions, portals, perspectives, multi-angle, interpret through | Lens family selector, dimension grid, per-lens output cards | Panel (with lenses) |
+| **Pattern Library** | patterns, catalog, library, save thinking, recurring, export/import | Pattern cards, save/delete, JSON export/import | None |
+| **Learning Engine** | curriculum, learn, teach, domain, schema, adaptive, levels | Domain input, schema drag-drop, depth selector, module output | None |
+| **Prompt Builder** | system prompt, build prompt, prompt architect, raw intent → prompt | Section-structured output (ROLE/FUNCTION/RULES/OUTPUT), copy button | None |
+| **Text Transformer** | convert, reformat, markdown, rich text, Notion, Google Docs | Mode chips, input → output side by side | None |
+| **Hook Generator** | hook, headline, opening line, tone variants, audience | Tone selector chips, variant counter, copy per variant | None |
+| **Meta-Intent Engine** | intent, before building, what do I want, capture goal | Structured intent form → intent document output | None |
+
+"Default surface" is the router's starting point (see MODEL SURFACE — ROUTER); a brief that asks for model comparison, fan-out or evals overrides it with Lanes.
 
 No match → default to **Cognitive Pipeline**.
 
@@ -264,6 +299,7 @@ No match → default to **Cognitive Pipeline**.
 - All AI output rendered via `innerHTML` with markdown parser — never `textContent`
 - Providers flagged `standaloneOnly` (OpenRouter) are always blocked at `run()` in artifact context
 - `callAI()` signature is `(systemPrompt, userMessage, onChunk)` — text-only, no vision params
+- Model surface decided at step 4b and written into the build plan; no picker unless the router matched a row or the person asked for one
 
 ---
 
@@ -294,6 +330,7 @@ No match → default to **Cognitive Pipeline**.
 BEFORE step 1 — Invoke UI Contract: read /mnt/skills/user/ui-contract/SKILL.md in full.
 BEFORE step 1 — Invoke the Model Core: read /mnt/skills/user/model-config-contract/SKILL.md in full.
 BEFORE step 1 — Clarify intent, layout, what-renders-where if anything is ambiguous.
+BEFORE step 1 — Name the engine type (ENGINE TAXONOMY) so the model-surface router at step 4b has its input. Do NOT read model-catalog-panel yet.
 ```
 
 1. HTML skeleton + all section divs
@@ -302,11 +339,12 @@ BEFORE step 1 — Clarify intent, layout, what-renders-where if anything is ambi
 3. Paste the Model Core block (model-config-contract), set its three CONSTANTS, add the thin `callAI` wrapper
    ↳ Apply multi-call sequencing rule if engine fires multiple parallel calls
 4. Gear drawer (UI Contract Constraint 06) with key rows rendered from config; keys via the core's `getKey`/`setKey`
+4b. **Model surface** — apply the MODEL SURFACE — ROUTER table and write one line into the build plan (`Model surface: None | Lanes | Panel ...`). Read `model-catalog-panel` only if the line says Lanes or Panel. (Numbered 4b so the step numbers cited by UI Contract stay valid.)
 5. Provider selector rendered from config, context-aware default, warning banner logic (or the picker control, if `model-catalog-panel` is in use)
 6. Engine-specific pipeline/logic (the functional core)
    ↳ Apply UI Contract Constraint 01 (dual-panel layout) and Constraint 02 (markdown rendering)
    ↳ Declare `window.EnginePanels` (UI Contract Constraint 22) — library/importExport/settings flags, decided at Step 3 clarify-before-building, not invented mid-build
-   ↳ If `EnginePanels.library === true`: wire panel per Constraint 01, entry schema per Constraint 20, persistence per Constraint 23
+   ↳ If `EnginePanels.library === true`: wire panel per Constraint 01, entry schema per Constraint 20, persistence per Constraint 23, response pop-up per Constraint 26
    ↳ Wire all copy buttons through UI Contract Constraint 05 (three-path triad)
 7. SVG rendering (if topology/graph engine)
 8. Secondary views / tabs (if multi-view engine)
@@ -319,6 +357,7 @@ BEFORE step 1 — Clarify intent, layout, what-renders-where if anything is ambi
 
 ```
 CONTRACT         : hybrid-engine-contract (delta) + ui-contract (chassis) + model-config-contract (Model Core)
+MODEL SURFACE    : step 4b router: None (default) | Lanes (model is the axis) | Panel (role is the axis); catalog read only on Lanes/Panel; Panel tie-break = Master
 PRIORITY         : This contract > UI Contract > Memory mandates; provider/model handling is the Model Core's
 HYBRID LAW       : One .html file. Works inside claude.ai AND as standalone.
 PROVIDER DEFAULT : Artifact → Claude (claude-sonnet-4-6) | Standalone → Groq gpt-oss-120b (defaultFor, from model.json)

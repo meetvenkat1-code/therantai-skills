@@ -1,0 +1,18 @@
+{
+  "skill": "typography",
+  "skill_name": "typography",
+  "description": "Font pairing rules, descender fixes, and adaptive theme bundles for HTML engine builds. Invoke with /typography or \"invoke typography skill\" when building engines with custom fonts, selecting a typographic register, or applying the Adaptive Vessel Skin. Covers: Syne descender clipping fix, five theme token bundles (RITUAL/ORACULAR/ANALYTICAL/RUPTURE/SOMATIC), font loading via Google Fonts CSS import, and theme persistence in localStorage.",
+  "source_file": "skills/typography/SKILL.md",
+  "source_sha": "505a900c5f9c38333a3d6b55f4c8c6ff2875d4414fdf05965a3767e352d4002b",
+  "resources": [],
+  "provider_config": {
+    "model_core": "v2"
+  },
+  "inputs": [
+    {
+      "id": "chatInput",
+      "kind": "textarea",
+      "label": "Invoke the skill"
+    }
+  ]
+}

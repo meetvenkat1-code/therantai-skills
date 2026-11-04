@@ -1,0 +1,18 @@
+{
+  "skill": "forge-transit",
+  "skill_name": "forge-transit",
+  "description": "Engine-specific session capture skill for transit into the Exploration-Hybrid HTML Engine Architect project. On invocation, scans the session for engine-building signals, fills ENGINE DIMENSIONS from the conversation record using exact QUICK REFERENCE vocabulary, marks unresolved fields as [UNKNOWN] \u2014 never fabricates. Emits a pre-filled block, not a blank template. Invoke with /forge-transit, \"engine handoff\", \"capture for the forge\", \"transit to forge\", \"I'm bringing this to the engine project\", \"forge context capture\". Invoke at the end of any external session where an engine was being designed, explored, or architecturally specified. Stacks with /transit-block \u2014 transit-block first, forge-transit second. The receiving project reads transit-block for session architecture, forge-transit for engine dimensions, then asks only what the combined block leaves unresolved before FORGE IT.",
+  "source_file": "skills/forge-transit/SKILL.md",
+  "source_sha": "dfcbebd1e8a03ca09ac0c7ae6eea7583599fcf0314bcee3d9dbaa72530b0029e",
+  "resources": [],
+  "provider_config": {
+    "model_core": "v2"
+  },
+  "inputs": [
+    {
+      "id": "chatInput",
+      "kind": "textarea",
+      "label": "Invoke the skill"
+    }
+  ]
+}

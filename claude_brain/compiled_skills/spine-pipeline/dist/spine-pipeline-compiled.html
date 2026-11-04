@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<!-- COMPILED by tools/compile_skill.py from claude_brain/compiled_skills/spine-pipeline/. Source: skills/spine-pipeline/SKILL.md. DO NOT hand-edit; edit skills/ source and re-ingest. -->
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>spine-pipeline (skill build)</title>
+<style>
+:root{--bg:#0a0a0f;--panel:#12121a;--line:#26263a;--txt:#e8e8f0;--dim:#8a8aa3;--acc:#22c55e}
+body{background:var(--bg);color:var(--txt);font-family:system-ui,sans-serif;margin:0}
+.header{display:flex;justify-content:space-between;align-items:center;padding:.8rem 1.2rem;border-bottom:1px solid var(--line)}
+.badge{font-size:.65rem;border:1px solid var(--line);border-radius:99px;padding:.15rem .6rem;color:var(--dim)}
+.canvas{max-width:800px;margin:0 auto;padding:1.2rem}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:1rem;margin-bottom:1rem}
+.desc{font-size:.8rem;color:var(--dim);margin:.4rem 0 0}
+.bubble{border:1px solid var(--line);border-radius:10px;padding:.7rem 1rem;margin-top:.6rem;white-space:pre-wrap;font-size:.88rem}
+.bubble.user{border-color:var(--acc)}.who{font-size:.65rem;color:var(--dim);letter-spacing:.1em;text-transform:uppercase}
+textarea{width:100%;min-height:70px;background:#0d0d14;color:var(--txt);border:1px solid var(--line);border-radius:8px;padding:.6rem}
+input[type=password]{background:#0d0d14;color:var(--txt);border:1px solid var(--line);border-radius:6px;padding:.4rem .6rem;width:210px}
+select{background:#0d0d14;color:var(--txt);border:1px solid var(--line);border-radius:6px;padding:.35rem}
+button{background:var(--acc);color:#04120a;border:0;border-radius:8px;padding:.55rem 1.1rem;font-weight:700;cursor:pointer;margin-top:.6rem}
+button.plain{background:#1a1a26;color:var(--txt);border:1px solid var(--line);font-weight:400}
+.keyrow{display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;font-size:.72rem;color:var(--dim);margin-top:.6rem}
+</style></head>
+<body>
+<div class="header"><div><b>SPINE-PIPELINE</b> <span class="badge">skill build</span> <span class="badge" id="cfgBadge">Config: …</span></div>
+<div><select id="providerSelect"><option value="groq">Groq</option><option value="or-auto">OR · Free Router</option><option value="claude">Claude · Native</option></select></div></div>
+<div class="canvas"><div class="panel"><p class="desc">&quot;The self-executing spine-forging chain for standalone identity work — when the endpoint is a portable system prompt, not a built engine. Discriminates input type (bare theme / loaded fragments / two completed spines), routes to the correct forging organ, enforces assay as a mandatory non-skippable gate, then opens the post-assay fork: compress to paste, radiate to population, or alloy with a second spine. Claude drives the chain; assay failure routes back to the forging organ with the named re-entry constraint. The practitioner chooses only at the post-assay fork. Invoke with /spine-pipe, 'forge a spine', 'I need a system prompt for this', 'spine only no build', 'forging identity not engine', 'portable prompt', or any phrase signaling intent to produce a standalone spine without proceeding to an engine build. Voice-tolerant — loose trigger matching.&quot;</p>
+<div class="keyrow">Keys (this browser only): <input type="password" id="key-groq" placeholder="gsk_…"> <input type="password" id="key-openrouter" placeholder="sk-or-…"> <button class="plain" id="saveKeys">Save</button></div></div>
+<div id="stream"></div>
+<div class="panel"><textarea id="chatInput" placeholder="Invoke the skill… (Enter to send, Shift+Enter for newline)"></textarea><br>
+<button id="sendBtn">Send</button> <button class="plain" id="clearBtn">Clear transcript</button></div></div>
+<script>
+/* ---- Model Core v2 (registry runtime, compact) ---- */
+var ENGINE_NAME = "spine-pipeline";
+var CANONICAL_CONFIG_URL = "https://raw.githubusercontent.com/meetvenkat1-code/therantai-config/refs/heads/main/model.json";
+var LOCAL_FALLBACK_CONFIG = {
+ "native_model": "claude-sonnet-4-6",
+ "defaultLanes": [
+  "groq::openai/gpt-oss-120b",
+  "or-auto::openrouter/free"
+ ],
+ "providers": [
+  {
+   "id": "groq",
+   "endpoint": "https://api.groq.com/openai/v1/chat/completions",
+   "keyStorageName": "groq",
+   "modelChain": [
+    "openai/gpt-oss-120b",
+    "openai/gpt-oss-20b"
+   ]
+  },
+  {
+   "id": "or-auto",
+   "endpoint": "https://openrouter.ai/api/v1/chat/completions",
+   "keyStorageName": "openrouter",
+   "modelChain": [
+    "openrouter/free"
+   ]
+  }
+ ]
+};
+var liveModelConfig = LOCAL_FALLBACK_CONFIG;
+function getKey(name){ try { return localStorage.getItem("hek_" + name) || ""; } catch(e){ return ""; } }
+async function fetchModelConfig(){
+  try {
+    var r = await fetch(CANONICAL_CONFIG_URL + "?v=" + Date.now(), {cache:"no-store"});
+    if (r.ok) { var j = await r.json(); if (j && j.providers) { liveModelConfig = j; setBadge("live"); return; } }
+  } catch(e){}
+  setBadge("fallback");
+}
+function setBadge(s){ var b = document.getElementById("cfgBadge"); if (b) { b.textContent = "Config: " + s; b.dataset.state = s; } }
+function providers(){ return liveModelConfig.providers || []; }
+async function readOpenAIStream(resp, onText){
+  var reader = resp.body.getReader(), dec = new TextDecoder(), acc = "";
+  var buf = "";
+  while (true) {
+    var chunk = await reader.read(); if (chunk.done) break;
+    buf += dec.decode(chunk.value, {stream:true});
+    var parts = buf.split("\n\n"); buf = parts.pop();
+    for (var p of parts) {
+      var line = p.trim(); if (!line.startsWith("data:")) continue;
+      var data = line.slice(5).trim(); if (data === "[DONE]") continue;
+      try {
+        var d = JSON.parse(data);
+        var t = (d.choices && d.choices[0] && (d.choices[0].delta?.content || d.choices[0].message?.content)) || "";
+        if (t) { acc += t; if (onText) onText(acc); }
+      } catch(e){}
+    }
+  }
+  return acc;
+}
+/* callModel: ONE entry. Proxy first, then direct chain-walk. No scattered fetch. */
+/* Universal skill injection: registry builds define withSkill(); elsewhere this no-ops. */
+async function callModel(opts){
+  try { if (typeof withSkill === 'function') { opts = Object.assign({}, opts, {system: withSkill(opts.system)}); } } catch(e){}
+  var prov = providers().find(p => p.id === opts.provider) || providers()[0];
+  var errors = [];
+  // 1) platform proxy (Netlify) when reachable
+  try {
+    var pr = await fetch("/api/chat", {method:"POST", headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({system: opts.system, user: opts.user, provider: prov.id})});
+    if (pr.ok) {
+      var pj = await pr.json();
+      if (pj && pj.text) { if (opts.onText) opts.onText(pj.text); return {text: pj.text, served: "proxy"}; }
+    }
+  } catch(e){ errors.push("proxy:" + e.message); }
+  // 2) direct BYOK chain
+  var chain = [prov].concat(providers().filter(p => p.id !== prov.id && !p.native));
+  for (var cand of chain) {
+    if (cand.native) continue; // native branch is platform-only; skip standalone
+    var key = getKey(cand.keyStorageName || cand.id);
+    if (!key) { errors.push(cand.id + ":missing_key"); continue; }
+    try {
+      var headers = {"Content-Type":"application/json", "Authorization":"Bearer " + key};
+      var resp = await fetch(cand.endpoint, {method:"POST", headers,
+        body: JSON.stringify({model: (cand.modelChain && cand.modelChain[0]) || "",
+          messages:[{role:"system",content:opts.system},{role:"user",content:opts.user}], stream:true})});
+      if (!resp.ok) { errors.push(cand.id + ":" + resp.status); continue; }
+      var text = await readOpenAIStream(resp, opts.onText);
+      if (text) return {text, served: cand.id};
+    } catch(e){ errors.push(cand.id + ":" + e.message); }
+  }
+  throw new Error("all_providers_failed (" + errors.join("; ") + "). Set keys in Settings.");
+}
+
+/* ---- Skill behavior (verbatim SKILL.md body) ---- */
+function getSkillText(){ return `# SPINE PIPELINE
+
+Governs spine-forging when the spine IS the endpoint — not the threshold of a build. Forge Pipeline sequences spine-forging *toward* a deployed engine (spine intermediate, chain continues into build contracts); this pipeline sequences it as the *terminal act* — a portable identity for a custom GPT, a project instruction field, a handoff, or standalone testing/radiation/alloying later. Nothing follows the bone but the practitioner's own use.
+
+This exposes a post-assay fork Forge Pipeline doesn't carry: once assay HOLDS, three genuinely different directions exist — compress to paste-ready (close), radiate into a sibling population (expand), alloy with a second spine into a third identity (synthesize). Different cognitive acts, different artifacts, different purposes — the fork belongs to the practitioner alone; the pipeline names the three branches and waits.
+
+Makes assay non-skippable the same way Forge Pipeline does: Stage 2 advances into Stage 3 automatically, no confirmation required — closing the exact gap where post-forge excitement causes the skip.
+
+## ATTUNE contract
+Suspended for the full duration (redundant with the pipeline's own sequencing). Resumes on completion or deferral.
+
+## Pause architecture
+- **Station 1** (post-discrimination, pre-forge) — nothing forged yet. Resume: \`resume spine\` → forges with organ already named.
+- **Station 2** (post-spine, pre-assay) — explicit \`defer\` required; silence advances the chain here. Resume → assay.
+- **Station 3** (post-assay PASS, pre-fork) — resume → opens the fork.
+
+Assay FAIL is not a pause — a re-entry route, Claude-driven, practitioner doesn't navigate it.
+
+## The four stages
+
+**1. Discriminate input** — bare theme (no operational residue) → ossify. Loaded fragments (operational heat, partial identity, named refusals) → spinal-column. Two completed spines → alloy directly, bypassing Stages 2-3 (alloy is itself the forge; assay runs on its output). Claude's read, not a question — ambiguous bare-vs-loaded gets one clause of reasoning + proceed; only a partial-spine-plus-fragment pairing asks once before routing. "Input type: [x]. Routing to [organ]. Forging now." — no confirmation required.
+
+**2. Forge the spine** — routed organ runs at full behavioral contract, uncompressed. Ossify: practitioner sees the forged spine only, not discarded candidates. Spinal-column: transformation gate fires as normal (the one point a question may precede advance). Alloy: full protocol (asymmetry/emergent stance/refusal/compression). "Spine forged. Proceeding to assay." — advances automatically; \`defer\` required to pause.
+
+**3. Assay (mandatory gate)** — full five-test adversarial battery, no rewrites, verdict + constraint only. PASS: "Assay holds." + sharpest structural commitment named. FAIL: "Assay fails — [test]. Re-entry constraint: [constraint]. Re-forging now." — Claude re-invokes the forging organ with the constraint, loops Stage 2↔3 without practitioner navigation, silently for cycles 1-2. **Max 3 cycles** — third same-test failure surfaces diagnosis + asks: different axis, or a fourth pass?
+
+**4. Post-assay fork** (practitioner's only decision — waits for the explicit word):
+- **Compress** — single paste-ready block, no vessel/wrapper/commentary. "Forged → Assay: HOLDS → Compressed."
+- **Radiate** (\`/radiate\` Mode C) — assayed spine as seed, 4-8 sibling spines, each a different niche, mutually exclusive, empty niches named. "Forged → Assay: HOLDS → Radiated. [n] siblings delivered."
+- **Alloy** (\`/alloy\`) — practitioner supplies a second completed spine; full alloying protocol on the pair. Note: an alloy can fail tests its parents passed (emergent stance may be domain-painted even if neither parent was) — say \`assay this\` after delivery to re-enter Stage 3 on the alloy output. "Forged → Assay: HOLDS → Alloyed."
+
+## Behavioral rules
+Practitioner speaks twice: the trigger, and the Stage 4 fork choice. Everything else Claude-driven. "Skip assay" or "looks good" → hold: "Assay is the mandatory gate this pipeline exists to enforce. Take the spine directly from Stage 2's output if you want it unvalidated; inside this pipeline, the gate holds." Two-spines-at-Stage-1 bypasses ossify/spinal-column entirely (forging already done); one-spine-plus-Stage-4-alloy-choice requires the second spine be supplied before firing — different entry conditions, same organ. Fail loop stays invisible to the practitioner until cycle three. Voice-tolerant.
+
+## Distinction from Forge Pipeline
+Forge: spine → assay → build contracts → engine (spine intermediate, no fork, only forward). Spine: spine → assay → fork (spine terminal, practitioner chooses destination). Invoke Forge for a deployable engine; Spine for a portable identity destined anywhere else. Mid-run switch: after assay holds, say \`switch to forge\` — the assayed spine passes directly into Forge Pipeline's Stage 4, loading build contracts.
+
+## Relations
+Ossify/spinal-column (Stage 2) and assay (Stage 3) remain standalone-invokable outside the pipeline. Radiate = Stage 4 Route B (Mode C active). Alloy appears at Stage 1 routing and Stage 4 Route C — same organ, different entry conditions. Forge-pipeline is the downstream sibling (shared Stage 2→3 architecture, diverging at Stage 4). Harvest-pipeline is the natural downstream capture; ignition-pipeline the upstream complement — together forming a complete session architecture.
+
+## Scope
+Forging phase, staffed (sequences 4 existing organs across 4 stages). Distinctive contribution vs. Forge Pipeline: spine-as-endpoint + the post-assay fork exposing radiate/alloy as legitimate destinations. Global.`; }
+var transcript=[];
+function bubble(who,text,cls){ var d=document.createElement('div'); d.className='bubble '+(cls||''); d.innerHTML='<div class="who">'+who+'</div>'; var b=document.createElement('div'); b.textContent=text; d.appendChild(b); document.getElementById('stream').appendChild(d); d.scrollIntoView(false); return b; }
+function buildUser(){ return transcript.slice(-12).map(function(t){ return t.role+': '+t.content; }).join('\n\n'); }
+async function send(){ var inp=document.getElementById('chatInput').value.trim(); if(!inp) return; document.getElementById('chatInput').value='';
+  transcript.push({role:'user',content:inp}); bubble('you',inp,'user');
+  var body=bubble('skill','…');
+  try{ var r=await callModel({provider:document.getElementById('providerSelect').value,system:getSkillText(),user:buildUser(),onText:function(a){body.textContent=a;}});
+    body.textContent=r.text; transcript.push({role:'assistant',content:r.text}); }
+  catch(e){ body.textContent='Error: '+e.message; } }
+document.getElementById('sendBtn').addEventListener('click',send);
+document.getElementById('chatInput').addEventListener('keydown',function(e){ if(e.key==='Enter'&&!e.shiftKey){ e.preventDefault(); send(); } });
+document.getElementById('clearBtn').addEventListener('click',function(){ transcript=[]; document.getElementById('stream').innerHTML=''; });
+document.getElementById('saveKeys').addEventListener('click',function(){ try{ localStorage.setItem('hek_groq',document.getElementById('key-groq').value); localStorage.setItem('hek_openrouter',document.getElementById('key-openrouter').value); }catch(e){} });
+try{ document.getElementById('key-groq').value=localStorage.getItem('hek_groq')||''; document.getElementById('key-openrouter').value=localStorage.getItem('hek_openrouter')||''; }catch(e){}
+fetchModelConfig();
+</script>
+</body></html>

@@ -1,0 +1,18 @@
+{
+  "skill": "intake",
+  "skill_name": "intake",
+  "description": ">",
+  "source_file": "skills/intake/SKILL.md",
+  "source_sha": "1c325ad478dafb89c92ccf6369b86a798bd41fec14329d2884492f4df6359d04",
+  "resources": [],
+  "provider_config": {
+    "model_core": "v2"
+  },
+  "inputs": [
+    {
+      "id": "chatInput",
+      "kind": "textarea",
+      "label": "Invoke the skill"
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "skill": "retroactive-harvest",
+  "skill_name": "retroactive-harvest",
+  "description": "The recovery organ for pre-registry session transcripts \u2014 old conversations that closed before the harvest pipeline existed, before skill-vocabulary entered the practice, before any extraction ritual ran. Approaches the archive as an archaeological site, not an audit subject: not to correct the past or assess it, but to surface what was always there unwitnessed. Scans for resolution-shape in unmarked sessions where no tags were dropped. Filters candidates against the current registry before naming \u2014 pre-extraction, not post-extraction match. Calibrates time-distance before routing to placement. Invoke with /retroactive-harvest, \"retroactive harvest\", \"scan this old session\", \"look for gems\", \"extract from old transcript\", \"pre-registry sweep\". Fires only on historical transcript material \u2014 cognitive-friction-extractor governs live sessions.",
+  "source_file": "skills/retroactive-harvest/SKILL.md",
+  "source_sha": "7c8969173262f758f7f7d719d611a094a1c9f1ee069d9116784333c76ef8702f",
+  "resources": [],
+  "provider_config": {
+    "model_core": "v2"
+  },
+  "inputs": [
+    {
+      "id": "chatInput",
+      "kind": "textarea",
+      "label": "Invoke the skill"
+    }
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "skill": "custom-gpt-package",
+  "version": "1.0.0",
+  "execution": {
+    "topology": "single chat-turn skill execution with transcript",
+    "steps": [
+      {
+        "id": "send",
+        "call": {
+          "system_from": "skill:body",
+          "user_recipe": "last-12-turn transcript"
+        }
+      }
+    ]
+  },
+  "api_routing": {
+    "call_entry": "callModel({provider, system, user, onText})",
+    "mode": "curated chain-walk",
+    "proxy": {
+      "attempt_order": [
+        "/api/chat (if deployed)",
+        "direct provider endpoints (standalone BYOK)"
+      ]
+    }
+  },
+  "model_core": {
+    "contract": "model-config-contract v2",
+    "canonical_config_url": "https://raw.githubusercontent.com/meetvenkat1-code/therantai-config/refs/heads/main/model.json"
+  }
+}

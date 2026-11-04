@@ -1,0 +1,21 @@
+{
+  "skill": "fuse-delta",
+  "skill_name": "fuse-delta",
+  "description": ">",
+  "source_file": "skills/fuse-delta/SKILL.md",
+  "source_sha": "ea5b88c4935ad00bd63386fc6f4f9ec1fe242c5462ed5870f9686d1ac7392358",
+  "resources": [
+    "references/provenance-format.md",
+    "references/report-template.md"
+  ],
+  "provider_config": {
+    "model_core": "v2"
+  },
+  "inputs": [
+    {
+      "id": "chatInput",
+      "kind": "textarea",
+      "label": "Invoke the skill"
+    }
+  ]
+}

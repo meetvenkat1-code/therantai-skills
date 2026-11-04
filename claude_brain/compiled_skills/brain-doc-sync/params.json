@@ -1,0 +1,18 @@
+{
+  "skill": "brain-doc-sync",
+  "skill_name": "brain-doc-sync",
+  "description": "The third command in the standing capture/resolve/sync triad. Refreshes therantai-brain.md \u2014 the portable narrative wrapper \u2014 to reflect the current state of skill-registry.md. Deliberately separate from \"sweep\" so every registry merge doesn't pay the cost of re-rendering a full narrative document; invoke only when the portable version is actually about to be needed (opening a browser session without MCP, cross-account handoff). Invoke with \"sync\", /sync, \"sync brain doc\", \"update brain document\", \"refresh brain doc\".",
+  "source_file": "skills/brain-doc-sync/SKILL.md",
+  "source_sha": "12dae6c75fdeac7a4663f9f61f4fd169b74f3ce31346a20c913c70f3510a2c2a",
+  "resources": [],
+  "provider_config": {
+    "model_core": "v2"
+  },
+  "inputs": [
+    {
+      "id": "chatInput",
+      "kind": "textarea",
+      "label": "Invoke the skill"
+    }
+  ]
+}

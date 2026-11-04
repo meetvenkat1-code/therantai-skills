@@ -1,0 +1,18 @@
+{
+  "skill": "slider-discovery",
+  "skill_name": "slider-discovery",
+  "description": "\"Discovers load-bearing slider dimensions native to a specific artifact or HTML engine \u2014 a judgment organ that first decides if a slider is structurally warranted, then surfaces only the 1-3 dimensions carrying real weight for that artifact's execution logic and output range. Two modes: manual (/slider) and ambient (watches builds under ui-contract/hybrid-engine-contract, speaks unprompted when a slider-shaped decision is live). Subordinate-but-invocable to both contracts. Default output is compressed; --full or 'full taxonomy' unlocks the four-category sweep (Intensity, Frequency, Tonality, Structural Depth). Invoke with /slider, 'slider this', 'discover sliders for this', 'what sliders does this need'. Never generates parameter values or numbers \u2014 only the dimension, its core tension, and its functional impact.\"",
+  "source_file": "skills/slider-discovery/SKILL.md",
+  "source_sha": "9d978f3ab7e184535913397b1ca142c61f326fe7c6ac0df5f667c039809317df",
+  "resources": [],
+  "provider_config": {
+    "model_core": "v2"
+  },
+  "inputs": [
+    {
+      "id": "chatInput",
+      "kind": "textarea",
+      "label": "Invoke the skill"
+    }
+  ]
+}

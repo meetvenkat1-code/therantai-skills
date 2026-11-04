@@ -1,0 +1,18 @@
+{
+  "skill": "substrate-capture",
+  "skill_name": "substrate-capture",
+  "description": "Catches the failure where a correct realization mid-build (\"this needs to live outside X\") opens an unbounded engineering tail that quietly replaces the original intuition as the thing being optimized. Unlike scope creep, the drift is straight underneath the goal, not away from it, so every step still feels justified. Pre-build: self-trigger a Ceiling Line the moment such a realization surfaces, before infra work begins. Live: self-trigger an interrupt, mid-sentence if needed, once several consecutive decisions test against \"does the substrate work\" rather than the Ceiling Line. Manual triggers: \"ceiling check\", \"is this substrate capture\". Prospective, unlike recursion-ledger which is retrospective \u2014 logs there only after a capture event resolves.",
+  "source_file": "skills/substrate-capture/SKILL.md",
+  "source_sha": "3278cc87299625eaebe1cb20a3296715f3aa13436889de38dabca250fc54f205",
+  "resources": [],
+  "provider_config": {
+    "model_core": "v2"
+  },
+  "inputs": [
+    {
+      "id": "chatInput",
+      "kind": "textarea",
+      "label": "Invoke the skill"
+    }
+  ]
+}

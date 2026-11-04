@@ -1,0 +1,2064 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vector Forge v2</title>
+<style>
+:root {
+  --bg-void:        #0a0a0f;
+  --bg-surface:     #12121a;
+  --bg-elevated:    #1a1a28;
+  --bg-border:      #2a2a3d;
+  --text-primary:   #e8e8f0;
+  --text-secondary: #9090a8;
+  --text-muted:     #505068;
+  --accent-main:    #7c6ef5;
+  --accent-glow:    rgba(124,110,245,0.15);
+  --amber:          #f5a623;
+  --green:          #4caf82;
+  --coral:          #f56565;
+  --teal:           #38bdf8;
+  --orange-warn:    #f97316;
+  --serif: Georgia, 'Iowan Old Style', 'Times New Roman', serif;
+  --sans: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --mono: ui-monospace, 'SF Mono', 'Cascadia Code', Menlo, Consolas, monospace;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  height: 100%;
+  background: var(--bg-void);
+  color: var(--text-primary);
+  font-family: var(--sans);
+  font-size: 15px;
+  line-height: 1.55;
+}
+
+body { display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+
+/* ─── HEADER ─────────────────────────────────────────────── */
+.header {
+  display: flex; align-items: center; justify-content: space-between;
+  height: 52px; padding: 0 1.5rem;
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--bg-border);
+  position: sticky; top: 0; z-index: 100;
+  flex-shrink: 0;
+}
+.zone-a { display: flex; align-items: baseline; gap: 0.6rem; }
+.engine-name {
+  font-family: var(--serif); font-size: 1.18rem; letter-spacing: 0.01em;
+  color: var(--text-primary);
+}
+.engine-name .accent { color: var(--accent-main); }
+.engine-tag { font-size: 0.68rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.16em; }
+.zone-b { display: flex; align-items: center; gap: 0.6rem; }
+.provider-selector { display: flex; align-items: center; gap: 0.4rem; }
+.provider-dot { width: 8px; height: 8px; border-radius: 50%; background: #ef4444; flex-shrink: 0; }
+#providerSelect {
+  background: var(--bg-elevated); color: var(--text-primary);
+  border: 1px solid var(--bg-border); border-radius: 7px;
+  padding: 0.4rem 0.6rem; font-size: 0.8rem; font-family: var(--sans); cursor: pointer;
+}
+.gear-btn {
+  background: var(--bg-elevated); border: 1px solid var(--bg-border);
+  color: var(--text-secondary); width: 34px; height: 34px;
+  border-radius: 7px; cursor: pointer; font-size: 1rem;
+  display: grid; place-items: center; transition: all .15s;
+}
+.gear-btn:hover { color: var(--accent-main); border-color: var(--accent-main); }
+.panel-toggle-btn {
+  background: var(--bg-elevated); border: 1px solid var(--bg-border);
+  color: var(--text-secondary); width: 34px; height: 34px;
+  border-radius: 7px; cursor: pointer; font-size: 1rem;
+  display: grid; place-items: center; transition: all .15s;
+}
+.panel-toggle-btn:hover, .panel-toggle-btn.active { color: var(--accent-main); border-color: var(--accent-main); }
+.zone-c { font-size: 0.74rem; color: var(--text-muted); font-family: var(--mono); }
+
+/* ─── WARNING BANNER ─────────────────────────────────────── */
+.warn-banner {
+  background: rgba(249,115,22,0.12);
+  border-bottom: 1px solid rgba(249,115,22,0.3);
+  color: var(--orange-warn);
+  font-size: 0.78rem; padding: 0.5rem 1.5rem; text-align: center;
+  flex-shrink: 0;
+}
+[hidden] { display: none !important; }
+
+/* ─── GEAR DRAWER ────────────────────────────────────────── */
+.drawer-scrim {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.55);
+  z-index: 200; opacity: 0; pointer-events: none; transition: opacity .2s;
+}
+.drawer-scrim.open { opacity: 1; pointer-events: auto; }
+.drawer {
+  position: fixed; top: 0; right: 0; height: 100%; width: 380px; max-width: 90vw;
+  background: var(--bg-surface); border-left: 1px solid var(--bg-border);
+  z-index: 201; transform: translateX(100%); transition: transform .22s ease;
+  padding: 1.4rem; overflow-y: auto;
+}
+.drawer.open { transform: translateX(0); }
+.drawer h3 { font-family: var(--serif); font-size: 1.05rem; font-weight: 400; margin-bottom: 1.2rem; }
+.drawer h3 .x { float: right; cursor: pointer; color: var(--text-muted); }
+.prov-row { margin-bottom: 1.1rem; }
+.prov-row label { display: block; font-size: 0.74rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-secondary); margin-bottom: 0.35rem; }
+.prov-row .field { display: flex; gap: 0.4rem; }
+.prov-row input { flex: 1; background: var(--bg-void); border: 1px solid var(--bg-border); color: var(--text-primary); border-radius: 6px; padding: 0.45rem 0.55rem; font-family: var(--mono); font-size: 0.78rem; }
+.prov-row input:focus { outline: none; border-color: var(--accent-main); }
+.prov-row button { background: var(--accent-main); color: #fff; border: none; border-radius: 6px; padding: 0 0.8rem; font-size: 0.78rem; cursor: pointer; }
+.prov-row .native-note { font-size: 0.78rem; color: var(--text-muted); font-style: italic; padding: 0.45rem 0; font-family: var(--mono); }
+.drawer-divider { height: 1px; background: var(--bg-border); margin: 1.4rem 0; }
+.cfg-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.9rem; }
+.cfg-row label { font-size: 0.8rem; color: var(--text-secondary); }
+.cfg-row input { width: 70px; background: var(--bg-void); border: 1px solid var(--bg-border); color: var(--text-primary); border-radius: 6px; padding: 0.35rem; text-align: center; font-family: var(--mono); }
+.save-flash { color: var(--green); font-size: 0.72rem; margin-left: 0.5rem; }
+
+/* ─── SEED BAR ───────────────────────────────────────────── */
+.seed-bar {
+  padding: 1.3rem 1.5rem 1.1rem;
+  border-bottom: 1px solid var(--bg-border);
+  background: linear-gradient(180deg, var(--bg-surface), var(--bg-void));
+  flex-shrink: 0;
+}
+.seed-bar .seed-label { font-family: var(--serif); font-size: 0.92rem; color: var(--text-secondary); margin-bottom: 0.55rem; font-style: italic; }
+#seed-input {
+  width: 100%; background: var(--bg-elevated); color: var(--text-primary);
+  border: 1px solid var(--bg-border); border-radius: 10px;
+  padding: 0.85rem 1rem; font-family: var(--serif); font-size: 1.02rem;
+  line-height: 1.5; resize: vertical; min-height: 78px;
+  word-break: break-word;
+}
+#seed-input:focus { outline: none; border-color: var(--accent-main); box-shadow: 0 0 0 3px var(--accent-glow); }
+#seed-input::placeholder { color: var(--text-muted); font-style: italic; }
+.seed-controls { display: flex; align-items: center; gap: 1rem; margin-top: 0.8rem; flex-wrap: wrap; }
+#hint-input {
+  flex: 1; min-width: 200px; background: var(--bg-elevated); color: var(--text-primary);
+  border: 1px solid var(--bg-border); border-radius: 8px; padding: 0.55rem 0.75rem;
+  font-size: 0.84rem; font-family: var(--sans);
+}
+#hint-input:focus { outline: none; border-color: var(--accent-main); }
+#hint-input::placeholder { color: var(--text-muted); }
+.mode-toggle { display: flex; align-items: center; gap: 0.5rem; }
+.mode-toggle .mode-name { font-size: 0.78rem; color: var(--text-secondary); width: 64px; text-align: right; }
+.switch { position: relative; width: 46px; height: 24px; cursor: pointer; }
+.switch input { opacity: 0; width: 0; height: 0; }
+.slider { position: absolute; inset: 0; background: var(--bg-border); border-radius: 24px; transition: .2s; }
+.slider::before { content: ''; position: absolute; height: 18px; width: 18px; left: 3px; top: 3px; background: var(--text-secondary); border-radius: 50%; transition: .2s; }
+.switch input:checked + .slider { background: var(--accent-glow); }
+.switch input:checked + .slider::before { transform: translateX(22px); background: var(--accent-main); }
+.forge-btn {
+  background: var(--accent-main); color: #fff; border: none; border-radius: 8px;
+  padding: 0.6rem 1.5rem; font-size: 0.9rem; font-weight: 600; cursor: pointer;
+  letter-spacing: 0.04em; transition: all .15s;
+}
+.forge-btn:hover:not(:disabled) { box-shadow: 0 0 22px var(--accent-glow); transform: translateY(-1px); }
+.forge-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+/* ─── MAIN ───────────────────────────────────────────────── */
+.main { flex: 1; display: block; min-height: 0; height: 100%; overflow: hidden; position: relative; }
+
+.panel-scrim {
+  position: fixed; inset: 0; background: rgba(6,6,12,0.55);
+  opacity: 0; pointer-events: none; transition: opacity .2s ease; z-index: 89;
+}
+.panel-scrim.open { opacity: 1; pointer-events: auto; }
+
+.path-rail {
+  position: fixed; top: 48px; bottom: 0; left: 0;
+  width: min(300px, 86vw); z-index: 90;
+  background: var(--bg-surface); border-right: 1px solid var(--bg-border);
+  padding: 1.2rem 1rem; overflow-y: auto;
+  transform: translateX(-100%); transition: transform .25s ease;
+}
+.path-rail.open { transform: translateX(0); }
+
+#responsePanel {
+  position: fixed; top: 48px; bottom: 0; right: 0;
+  width: min(340px, 86vw); z-index: 90;
+  background: var(--bg-surface); border-left: 1px solid var(--bg-border);
+  padding: 1.2rem 1rem; overflow-y: auto;
+  transform: translateX(100%); transition: transform .25s ease;
+}
+#responsePanel.open { transform: translateX(0); }
+
+/* ─── LIBRARY (prompt + response) SHARED ────────────────── */
+.lib-section { margin-bottom: 1.3rem; }
+.lib-section:last-child { margin-bottom: 0; }
+.lib-actions { display: flex; gap: 0.4rem; flex-wrap: wrap; margin-bottom: 0.8rem; }
+.lib-actions button, .lib-actions label {
+  background: var(--bg-elevated); border: 1px solid var(--bg-border); color: var(--text-secondary);
+  border-radius: 6px; padding: 0.35rem 0.6rem; font-size: 0.7rem; cursor: pointer; transition: all .15s;
+  display: inline-flex; align-items: center; gap: 0.3rem;
+}
+.lib-actions button:hover, .lib-actions label:hover { border-color: var(--accent-main); color: var(--accent-main); }
+.lib-actions input[type="file"] { display: none; }
+
+.prompt-entry, .response-entry {
+  background: var(--bg-elevated); border: 1px solid var(--bg-border); border-radius: 8px;
+  padding: 0.7rem 0.8rem; margin-bottom: 0.6rem; cursor: pointer; transition: all .15s;
+}
+.prompt-entry:hover, .response-entry:hover { border-color: var(--accent-main); }
+.prompt-entry.active { border-color: var(--accent-main); box-shadow: 0 0 0 1px var(--accent-main) inset; }
+.pe-name, .re-name { font-family: var(--serif); font-size: 0.86rem; color: var(--text-primary); margin-bottom: 0.2rem; }
+.pe-desc { font-size: 0.72rem; color: var(--text-muted); line-height: 1.4; margin-bottom: 0.3rem; }
+.pe-meta, .re-meta { font-size: 0.65rem; font-family: var(--mono); color: var(--text-muted); display: flex; gap: 0.5rem; flex-wrap: wrap; }
+.pe-meta span, .re-meta span { padding: 0.1rem 0.4rem; border-radius: 4px; background: rgba(124,110,245,0.1); color: var(--accent-main); }
+.re-score { color: var(--green) !important; background: rgba(76,175,130,0.12) !important; }
+.re-preview { font-size: 0.72rem; color: var(--text-secondary); line-height: 1.5; margin-top: 0.4rem;
+  overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.entry-row-actions { display: flex; gap: 0.3rem; margin-top: 0.5rem; }
+.entry-row-actions button {
+  background: none; border: 1px solid var(--bg-border); color: var(--text-muted);
+  border-radius: 5px; padding: 0.2rem 0.5rem; font-size: 0.65rem; cursor: pointer;
+}
+.entry-row-actions button:hover { border-color: var(--coral); color: var(--coral); }
+.lib-editor {
+  width: 100%; background: var(--bg-void); border: 1px solid var(--bg-border); color: var(--text-primary);
+  border-radius: 6px; padding: 0.5rem 0.6rem; font-family: var(--mono); font-size: 0.76rem;
+  line-height: 1.5; resize: vertical; min-height: 90px; margin-top: 0.4rem;
+}
+.lib-editor:focus { outline: none; border-color: var(--accent-main); }
+
+.rail-title { font-family: var(--serif); font-size: 0.82rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.16em; margin-bottom: 0.4rem; }
+.rail-sub { font-size: 0.72rem; color: var(--text-muted); margin-bottom: 1rem; font-style: italic; }
+#spine { width: 100%; display: block; }
+.spine-empty { color: var(--text-muted); font-size: 0.8rem; font-style: italic; padding: 1rem 0; }
+
+.path-back-btn {
+  background: var(--bg-elevated); border: 1px solid var(--bg-border); color: var(--text-secondary);
+  border-radius: 7px; padding: 0.4rem 0.7rem; font-size: 0.76rem; cursor: pointer;
+  margin-bottom: 0.9rem; transition: all .15s;
+}
+.path-back-btn:hover { color: var(--accent-main); border-color: var(--accent-main); }
+
+.spine-tree { display: flex; flex-direction: column; gap: 0.15rem; }
+.spine-node {
+  display: flex; flex-direction: column; gap: 0.1rem;
+  padding: 0.4rem 0.5rem; border-radius: 6px; cursor: pointer;
+  border-left: 2px solid transparent; opacity: 0.4; transition: all .15s;
+}
+.spine-node:hover { background: var(--bg-elevated); opacity: 0.75; }
+.spine-node.on-path { opacity: 1; border-left-color: var(--accent-main); }
+.spine-node.is-active { background: var(--bg-elevated); border-left-color: var(--accent-main); }
+.spine-node .sn-top { display: flex; align-items: center; gap: 0.4rem; }
+.spine-node .sn-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.spine-node .sn-label { font-family: var(--serif); font-size: 0.8rem; color: var(--text-primary); }
+.spine-node .sn-sub { font-family: var(--mono); font-size: 0.68rem; color: var(--text-muted); padding-left: 1.05rem; }
+
+.stage { padding: 1.6rem 2rem; overflow-y: auto; width: 100%; height: 100%; }
+
+/* ─── STAGE : EMPTY ──────────────────────────────────────── */
+.empty-state { display: grid; place-items: center; height: 100%; min-height: 50vh; text-align: center; }
+.empty-icon { font-size: 2.4rem; color: var(--accent-main); opacity: 0.5; margin-bottom: 1rem; }
+.empty-title { font-family: var(--serif); font-size: 1.3rem; color: var(--text-primary); margin-bottom: 0.5rem; }
+.empty-label { color: var(--text-muted); max-width: 460px; line-height: 1.6; }
+
+/* ─── STAGE : DIVERGE ────────────────────────────────────── */
+.stage-head { margin-bottom: 1.3rem; }
+.stage-eyebrow { font-size: 0.7rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--accent-main); margin-bottom: 0.4rem; }
+.stage-h { font-family: var(--serif); font-size: 1.45rem; font-weight: 400; }
+.anchored {
+  background: var(--bg-elevated); border: 1px solid var(--bg-border);
+  border-left: 3px solid var(--teal); border-radius: 8px;
+  padding: 0.8rem 1rem; margin-bottom: 1.4rem; color: var(--text-secondary);
+  font-style: italic; width: 100%; word-break: break-word;
+}
+.anchored .lbl { font-style: normal; font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.14em; color: var(--text-muted); display: block; margin-bottom: 0.3rem; }
+.fan-grid { display: grid; gap: 0.9rem; }
+.vector-card {
+  background: var(--bg-elevated); border: 1px solid var(--bg-border);
+  border-radius: 10px; padding: 1rem 1.1rem; cursor: pointer;
+  transition: all .15s; width: 100%; word-break: break-word; position: relative;
+}
+.vector-card:hover { border-color: var(--accent-main); transform: translateX(3px); box-shadow: -3px 0 0 var(--accent-main); }
+.vector-card .vc-label { font-family: var(--serif); font-size: 1.08rem; color: var(--text-primary); margin-bottom: 0.4rem; }
+.vector-card .vc-dir { color: var(--text-secondary); line-height: 1.55; margin-bottom: 0.6rem; }
+.vector-card .vc-trace { font-size: 0.74rem; color: var(--text-muted); font-family: var(--mono); border-top: 1px dashed var(--bg-border); padding-top: 0.5rem; }
+.vector-card .vc-trace b { color: var(--teal); font-weight: 400; }
+
+/* resonance depth bar */
+.vc-resonance {
+  display: flex; align-items: center; gap: 0.5rem; margin-top: 0.55rem;
+  border-top: 1px dashed var(--bg-border); padding-top: 0.5rem;
+}
+.vc-resonance-label { font-size: 0.65rem; font-family: var(--mono); color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.1em; width: 60px; flex-shrink: 0; }
+.vc-resonance-bar { flex: 1; height: 4px; background: var(--bg-border); border-radius: 2px; overflow: hidden; }
+.vc-resonance-fill { height: 100%; border-radius: 2px; transition: width 0.4s ease; }
+.vc-resonance-val { font-size: 0.65rem; font-family: var(--mono); color: var(--text-muted); width: 24px; text-align: right; }
+.vc-atomic { position: absolute; top: 0.8rem; right: 1rem; font-size: 0.62rem; color: var(--coral); text-transform: uppercase; letter-spacing: 0.1em; }
+
+/* ─── DOORS ──────────────────────────────────────────────── */
+.doors { margin-top: 1.6rem; padding-top: 1.4rem; border-top: 1px solid var(--bg-border); }
+.doors-prompt { color: var(--text-secondary); margin-bottom: 1rem; font-style: italic; font-family: var(--serif); }
+.doors-prompt b { color: var(--accent-main); font-style: normal; }
+.door-row { display: flex; gap: 1rem; flex-wrap: wrap; }
+.door {
+  flex: 1; min-width: 220px; background: var(--bg-elevated); border: 1px solid var(--bg-border);
+  border-radius: 10px; padding: 1.1rem; cursor: pointer; transition: all .15s;
+}
+.door:hover { border-color: var(--accent-main); box-shadow: 0 0 18px var(--accent-glow); }
+.door.deepen:hover { border-color: var(--green); box-shadow: 0 0 18px rgba(76,175,130,0.18); }
+.door .d-name { font-family: var(--serif); font-size: 1.05rem; margin-bottom: 0.3rem; }
+.door.deepen .d-name { color: var(--green); }
+.door.fan .d-name { color: var(--accent-main); }
+.door .d-desc { font-size: 0.8rem; color: var(--text-muted); line-height: 1.5; }
+.door.disabled { opacity: 0.4; cursor: not-allowed; }
+.door.disabled:hover { border-color: var(--bg-border); box-shadow: none; }
+
+/* ─── STAGE : CRYSTALLIZE ────────────────────────────────── */
+.crystal-box {
+  background: rgba(124,110,245,0.06); border: 1px solid rgba(124,110,245,0.25);
+  border-radius: 10px; padding: 1.1rem 1.2rem; margin-bottom: 1.4rem;
+  width: 100%; word-break: break-word;
+}
+.crystal-box .crystal-label {
+  font-size: 0.65rem; font-family: var(--mono); color: var(--accent-main);
+  text-transform: uppercase; letter-spacing: 0.14em; margin-bottom: 0.6rem; display: block;
+}
+.crystal-stance {
+  font-family: var(--serif); font-size: 1.05rem; color: var(--text-primary); line-height: 1.65;
+  margin-bottom: 0.9rem;
+}
+.crystal-reorientations { list-style: none; }
+.crystal-reorientations li {
+  font-size: 0.82rem; color: var(--text-secondary); padding: 0.35rem 0 0.35rem 1.2rem;
+  border-left: 1px solid rgba(124,110,245,0.3); margin-left: 0.4rem; position: relative;
+  margin-bottom: 0.3rem;
+}
+.crystal-reorientations li::before {
+  content: '↳'; position: absolute; left: -0.55rem; color: var(--accent-main);
+  background: var(--bg-void); font-size: 0.8rem;
+}
+.crystal-what-changes {
+  font-size: 0.78rem; color: var(--text-muted); font-family: var(--mono);
+  margin-top: 0.75rem; padding-top: 0.65rem; border-top: 1px dashed var(--bg-border);
+}
+.crystal-what-changes span { color: var(--amber); }
+
+/* ─── STAGE : DEEPEN ─────────────────────────────────────── */
+.loop-log { margin-bottom: 1.4rem; }
+.log-entry {
+  font-family: var(--mono); font-size: 0.78rem; padding: 0.4rem 0.7rem;
+  border-left: 2px solid var(--bg-border); margin-bottom: 0.4rem; color: var(--text-secondary);
+  width: 100%; word-break: break-word;
+}
+.log-entry.pass { border-left-color: var(--green); color: var(--green); }
+.log-entry.fail { border-left-color: var(--coral); color: var(--coral); }
+.log-entry.info { border-left-color: var(--teal); }
+.log-entry.architect { border-left-color: var(--accent-main); }
+.log-entry.crystal { border-left-color: var(--amber); color: var(--amber); }
+.prompt-stream {
+  background: var(--bg-void); border: 1px solid var(--bg-border); border-radius: 10px;
+  padding: 1.1rem 1.2rem; font-family: var(--mono); font-size: 0.86rem;
+  line-height: 1.65; color: var(--text-primary); white-space: pre-wrap;
+  width: 100%; word-break: break-word; min-height: 60px;
+}
+
+/* ─── STAGE : FORGED ─────────────────────────────────────── */
+.forged-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.6rem; }
+.forged-badge {
+  font-size: 0.72rem; font-family: var(--mono); padding: 0.25rem 0.6rem; border-radius: 20px;
+  background: rgba(76,175,130,0.14); color: var(--green); border: 1px solid rgba(76,175,130,0.3);
+}
+.copy-btn {
+  background: var(--bg-elevated); border: 1px solid var(--bg-border); color: var(--text-secondary);
+  border-radius: 7px; padding: 0.4rem 0.9rem; font-size: 0.8rem; cursor: pointer; transition: all .15s;
+}
+.copy-btn:hover { border-color: var(--accent-main); color: var(--accent-main); }
+.forged-prompt {
+  background: var(--bg-void); border: 1px solid var(--accent-main); border-radius: 12px;
+  padding: 1.3rem 1.4rem; font-family: var(--mono); font-size: 0.88rem; line-height: 1.7;
+  white-space: pre-wrap; width: 100%; word-break: break-word;
+  box-shadow: 0 0 30px var(--accent-glow);
+}
+.section-h { font-family: var(--serif); font-size: 0.92rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.14em; margin: 1.8rem 0 0.7rem; }
+
+/* ─── COLLAPSIBLE DETAIL (crystallization + trajectory) ──── */
+.detail-toggle {
+  display: flex; align-items: center; gap: 0.5rem; width: 100%;
+  background: var(--bg-elevated); border: 1px solid var(--bg-border); border-radius: 8px;
+  padding: 0.65rem 0.9rem; margin-top: 1.6rem; cursor: pointer; transition: all .15s;
+  color: var(--text-secondary); font-size: 0.82rem; font-family: var(--sans);
+}
+.detail-toggle:hover { border-color: var(--accent-main); color: var(--accent-main); }
+.detail-toggle .dt-chevron { transition: transform .2s ease; font-size: 0.7rem; margin-left: auto; }
+.detail-toggle.expanded .dt-chevron { transform: rotate(90deg); }
+.detail-body {
+  max-height: 0; overflow: hidden; transition: max-height .3s ease;
+}
+.detail-body.expanded { max-height: 4000px; }
+.detail-body-inner { padding-top: 0.9rem; }
+.confirm-box {
+  background: var(--bg-elevated); border: 1px solid var(--bg-border); border-radius: 10px;
+  padding: 1rem 1.1rem; width: 100%; word-break: break-word;
+}
+.confirm-box.ok { border-left: 3px solid var(--green); }
+.confirm-box.drift { border-left: 3px solid var(--coral); }
+.confirm-verdict { font-family: var(--mono); font-size: 0.78rem; margin-bottom: 0.6rem; }
+.confirm-verdict.ok { color: var(--green); }
+.confirm-verdict.drift { color: var(--coral); }
+.confirm-sample { color: var(--text-secondary); font-style: italic; line-height: 1.6; }
+.confirm-note { font-size: 0.78rem; color: var(--text-muted); margin-top: 0.6rem; font-family: var(--mono); }
+.traj-list { list-style: none; }
+.traj-list li { padding: 0.45rem 0 0.45rem 1.2rem; position: relative; color: var(--text-secondary); border-left: 1px solid var(--bg-border); margin-left: 0.4rem; }
+.traj-list li::before { content: '→'; position: absolute; left: -0.5rem; color: var(--teal); background: var(--bg-void); }
+.traj-list li b { color: var(--text-primary); font-weight: 600; }
+.err-box {
+  background: rgba(245,101,101,0.1); border: 1px solid rgba(245,101,101,0.35);
+  border-radius: 10px; padding: 1rem 1.1rem; color: var(--coral); font-family: var(--mono);
+  font-size: 0.84rem; width: 100%; word-break: break-word;
+}
+.thinking { display: flex; align-items: center; gap: 0.6rem; color: var(--text-muted); font-style: italic; padding: 1rem 0; }
+.pulse { width: 8px; height: 8px; border-radius: 50%; background: var(--accent-main); animation: pulse 1.1s ease-in-out infinite; }
+@keyframes pulse { 0%,100% { opacity: 0.25; transform: scale(0.8);} 50% { opacity: 1; transform: scale(1.2);} }
+.restart-btn {
+  margin-top: 1.8rem; background: transparent; border: 1px solid var(--bg-border);
+  color: var(--text-secondary); border-radius: 8px; padding: 0.5rem 1.1rem; cursor: pointer;
+  font-size: 0.82rem; transition: all .15s;
+}
+.restart-btn:hover { border-color: var(--accent-main); color: var(--accent-main); }
+
+/* ─── CRYSTAL PANEL (right of forged) ───────────────────── */
+.crystal-sidebar {
+  background: rgba(124,110,245,0.04); border: 1px solid rgba(124,110,245,0.2);
+  border-radius: 10px; padding: 1rem; align-self: start;
+}
+.crystal-sidebar .cs-label {
+  font-size: 0.62rem; font-family: var(--mono); color: var(--accent-main);
+  text-transform: uppercase; letter-spacing: 0.14em; margin-bottom: 0.8rem; display: block;
+}
+.cs-entry { margin-bottom: 0.8rem; }
+.cs-entry:last-child { margin-bottom: 0; }
+.cs-entry .cs-key { font-size: 0.68rem; font-family: var(--mono); color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.1em; display: block; margin-bottom: 0.25rem; }
+.cs-entry .cs-val { font-size: 0.8rem; color: var(--text-secondary); line-height: 1.55; word-break: break-word; }
+
+@media (max-width: 760px) {
+  .zone-c { display: none; }
+}
+</style>
+</head>
+<body>
+
+<!-- ═══ HEADER ═══ -->
+<header class="header">
+  <div class="zone-a">
+    <span class="engine-name">Vector <span class="accent">Forge</span></span>
+    <span class="engine-tag">intuition → dense prompt</span>
+  </div>
+  <div class="zone-b">
+    <button class="panel-toggle-btn" id="railToggleBtn" title="Path &amp; Prompt Library">☰</button>
+    <div class="provider-selector">
+      <span class="provider-dot" id="providerDot"></span>
+      <select id="providerSelect" onchange="updateProviderDot()">
+        <optgroup label="── Core ──────────────">
+          <option value="claude">Claude · Sonnet 4.6</option>
+          <option value="groq">Groq · gpt-oss-120b</option>
+        </optgroup>
+        <optgroup label="── OpenRouter ─────────">
+          <option value="or-text">OR · Free Router (text)</option>
+        </optgroup>
+      </select>
+    </div>
+    <button class="panel-toggle-btn" id="responseToggleBtn" title="Response Library">▤</button>
+    <button class="gear-btn" id="gearBtn" title="Settings">⚙</button>
+  </div>
+  <div class="zone-c">meet.venkat1@gmail.com</div>
+</header>
+
+<!-- ═══ WARNING BANNER ═══ -->
+<div id="keyWarn" class="warn-banner" hidden>
+  ⚠ No API key configured. Open ⚙ Settings to add one.
+</div>
+
+<!-- ═══ GEAR DRAWER ═══ -->
+<div class="drawer-scrim" id="scrim"></div>
+<aside class="drawer" id="drawer">
+  <h3>API Settings <span class="x" id="drawerClose">✕</span></h3>
+  <div class="prov-row">
+    <label>Claude (Native)</label>
+    <div class="native-note">No key needed — platform routes natively</div>
+  </div>
+  <div class="prov-row">
+    <label>Groq</label>
+    <div class="field">
+      <input type="password" id="key-groq" placeholder="gsk_…">
+      <button data-prov="groq">Save</button>
+    </div>
+  </div>
+  <div class="prov-row">
+    <label>OpenRouter</label>
+    <div class="field">
+      <input type="password" id="key-openrouter" placeholder="sk-or-…">
+      <button data-prov="openrouter">Save</button>
+    </div>
+  </div>
+
+  <div class="drawer-divider"></div>
+
+  <div class="cfg-row">
+    <label>Deepen iterations (max)</label>
+    <input type="number" id="cfg-maxiter" min="1" max="8" value="4">
+  </div>
+  <div class="cfg-row">
+    <label>Path-fidelity threshold</label>
+    <input type="number" id="cfg-threshold" min="1" max="10" value="8">
+  </div>
+</aside>
+
+<!-- ═══ SEED BAR ═══ -->
+<div class="seed-bar">
+  <div class="seed-label">Drop the intuition — raw, unfinished, half-named.</div>
+  <textarea id="seed-input" placeholder="The thing you're reaching for but can't quite say yet…"></textarea>
+  <div class="seed-controls">
+    <input type="text" id="hint-input" placeholder="Optional: a success hint — what would make this feel right?">
+    <div class="mode-toggle">
+      <span class="mode-name" id="mode-name">Explorer</span>
+      <label class="switch">
+        <input type="checkbox" id="mode-switch" checked>
+        <span class="slider"></span>
+      </label>
+    </div>
+    <button class="forge-btn" id="forgeBtn">Throw the fan ◈</button>
+  </div>
+</div>
+
+<!-- ═══ MAIN ═══ -->
+<div class="panel-scrim" id="leftScrim"></div>
+<div class="panel-scrim" id="responseScrim"></div>
+<div class="main">
+  <aside class="path-rail" id="pathRail">
+    <div class="lib-section">
+      <div class="rail-title">Prompt Library</div>
+      <div class="rail-sub">The pipeline's six stage prompts — each editable in place.</div>
+      <div class="lib-actions">
+        <button id="promptExportBtn">↓ Export JSON</button>
+        <label for="promptImportJson">↑ Import JSON</label>
+        <input type="file" id="promptImportJson" accept=".json">
+      </div>
+      <div id="promptLibraryList"></div>
+    </div>
+
+    <div class="drawer-divider"></div>
+
+    <div class="lib-section">
+      <div class="rail-title">The Path</div>
+      <div class="rail-sub">The trail of recognitions — every node is revisitable. Click one to jump back; branching from it opens a new sibling without erasing the old one.</div>
+      <button class="path-back-btn" id="pathBackBtn" hidden>← Back</button>
+      <div class="spine-tree" id="spine"></div>
+      <div class="spine-empty" id="spineEmpty">No path yet. Drop a seed above.</div>
+    </div>
+  </aside>
+
+  <aside id="responsePanel">
+    <div class="rail-title">Response Library</div>
+    <div class="rail-sub">Every forged prompt — with its full trace and fan — auto-saves here.</div>
+    <div class="lib-actions">
+      <button id="responseExportBtn">↓ Export JSON</button>
+      <label for="responseImportJson">↑ Import JSON</label>
+      <input type="file" id="responseImportJson" accept=".json">
+      <button id="responseClearBtn">✕ Clear all</button>
+    </div>
+    <div id="folderControls" class="lib-section"></div>
+    <div class="drawer-divider"></div>
+    <div id="responseLibraryList"></div>
+    <div class="spine-empty" id="responseEmpty">No forged prompts yet — forge one to see it saved here.</div>
+  </aside>
+
+  <section class="stage" id="stage">
+    <div class="empty-state">
+      <div class="empty-icon">◈</div>
+      <div class="empty-title">Forge a dimension</div>
+      <div class="empty-label">Drop an intuition above. The engine locates where it sits, throws orthogonal directions it could be reaching toward. You recognize the one that's yours. Then — before the prompt is written — the engine crystallizes what the path actually changed: the new operative stance, each reorientation, what the resulting cognition must do and must refuse.</div>
+    </div>
+  </section>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+//  API ROUTING — Claude Native + Groq (fallback chain) + OpenRouter Free Router
+//  Per hybrid-engine-contract — text-only, streaming SSE, three providers only
+// ═══════════════════════════════════════════════════════════
+const IS_ARTIFACT = window.self !== window.top;
+
+// ── UI Contract Constraint 22: Universal Optional Panel Architecture ──
+window.EnginePanels = { library: true, importExport: true, settings: true };
+
+// ── UI Contract Constraint 21: Storage abstraction layer ──
+function storageSet(key, value) {
+  if (IS_ARTIFACT && window.storage) { window.storage.set(key, value); return true; }
+  localStorage.setItem(key, value); return true;
+}
+function storageGet(key) {
+  if (IS_ARTIFACT && window.storage) { return null; } // artifact reads are async; use storageGetAsync
+  return localStorage.getItem(key);
+}
+async function storageGetAsync(key) {
+  if (IS_ARTIFACT && window.storage) {
+    try { const r = await window.storage.get(key); return r ? r.value : null; } catch (e) { return null; }
+  }
+  return localStorage.getItem(key);
+}
+function storageRemove(key) {
+  if (IS_ARTIFACT && window.storage) { window.storage.delete(key); return true; }
+  localStorage.removeItem(key); return true;
+}
+function storageList(prefix) {
+  const keys = [];
+  for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (k && k.startsWith(prefix)) keys.push(k); }
+  return keys;
+}
+
+// OpenRouter: one route, one stable slug — no named models, no churn
+const OR_MODEL_MAP = { 'or-text': 'openrouter/free' };
+function isOpenRouterProvider(p) { return p && p.startsWith('or-'); }
+
+async function callAI(systemPrompt, userMessage, onChunk) {
+  const provider = getSelectedProvider();
+
+  if (provider === 'claude') {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+        // NO Authorization header — intentional. Platform proxies it.
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 4000,
+        stream: true,
+        system: systemPrompt,
+        messages: [{ role: 'user', content: userMessage }]
+      })
+    });
+    return await readStream(res, 'anthropic', onChunk);
+
+  } else if (provider === 'groq') {
+    // Groq — model-family fallback, three tries, dropdown label never changes
+    const GROQ_MODEL_CHAIN = ['openai/gpt-oss-120b', 'openai/gpt-oss-20b'];
+    let res, lastErr;
+    for (const model of GROQ_MODEL_CHAIN) {
+      try {
+        res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${getKey('groq')}` },
+          body: JSON.stringify({
+            model, stream: true,
+            messages: [{ role: 'system', content: systemPrompt }, { role: 'user', content: userMessage }]
+          })
+        });
+        if (res.status === 429 || res.status >= 500) { lastErr = `groq:${res.status}`; res = null; continue; }
+        if (!res.ok) { lastErr = `groq:${res.status}`; res = null; continue; }
+        break;
+      } catch (e) { lastErr = e; res = null; }
+    }
+    if (res) {
+      return await readStream(res, 'openai', onChunk);
+    } else {
+      const orKey = getKey('openrouter');
+      if (!orKey) throw new Error(`Groq unavailable (${lastErr}) and no OpenRouter key set for fallback.`);
+      const fbRes = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${orKey}`,
+          'HTTP-Referer': 'https://therantai.engine',
+          'X-Title': 'Therantai Hybrid Engine'
+        },
+        body: JSON.stringify({
+          model: 'openrouter/free', stream: true,
+          messages: [{ role: 'system', content: systemPrompt }, { role: 'user', content: userMessage }]
+        })
+      });
+      return await readStream(fbRes, 'openai', onChunk);
+    }
+
+  } else if (isOpenRouterProvider(provider)) {
+    // Standalone only — no CORS proxy inside claude.ai; blocked at run() before reaching here.
+    const orKey = getKey('openrouter');
+    if (!orKey) throw new Error('OpenRouter key not set. Open Settings (⚙) and save your sk-or- key.');
+    const modelId = OR_MODEL_MAP[provider] || 'openrouter/free';
+    const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${orKey}`,
+        'HTTP-Referer': 'https://therantai.engine',
+        'X-Title': 'Therantai Hybrid Engine'
+      },
+      body: JSON.stringify({
+        model: modelId, stream: true,
+        messages: [{ role: 'system', content: systemPrompt }, { role: 'user', content: userMessage }]
+      })
+    });
+    return await readStream(res, 'openai', onChunk);
+  }
+}
+
+async function readStream(response, format, onChunk) {
+  if (!response.ok) {
+    let detail = '';
+    try { detail = (await response.text()).slice(0, 300); } catch (e) {}
+    throw new Error(`HTTP ${response.status} — ${detail || 'request failed'}`);
+  }
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let buf = '', full = '';
+
+  // ── Four-layer streaming safety (UI Contract Constraint 13) ──
+  // IDLE_TIMEOUT: no bytes at all for this long → dead connection, finalize.
+  // HARD_TIMEOUT: absolute ceiling as a last-resort safety net only — must stay
+  // well above any realistic full-response generation time, or it truncates
+  // legitimate long completions (e.g. multi-vector JSON) mid-stream.
+  const IDLE_TIMEOUT = 8000, HARD_TIMEOUT = 90000;
+  let done = false;
+  let idleTimer = null, hardTimer = null;
+  let resolveFn, rejectFn;
+  const finished = new Promise((resolve, reject) => { resolveFn = resolve; rejectFn = reject; });
+
+  function finalize() {
+    if (done) return;
+    done = true;
+    clearTimeout(idleTimer);
+    clearTimeout(hardTimer);
+    try { reader.cancel(); } catch (e) {}
+    resolveFn(full);
+  }
+  function armIdle() {
+    clearTimeout(idleTimer);
+    idleTimer = setTimeout(finalize, IDLE_TIMEOUT);
+  }
+
+  hardTimer = setTimeout(finalize, HARD_TIMEOUT);
+  armIdle();
+
+  (async () => {
+    try {
+      while (!done) {
+        const { done: readerDone, value } = await reader.read();
+        if (done) return; // already finalized by a timer
+        if (readerDone) { finalize(); return; }
+        armIdle();
+        buf += decoder.decode(value, { stream: true });
+        const lines = buf.split('\n');
+        buf = lines.pop();
+        for (const line of lines) {
+          if (!line.startsWith('data: ')) continue;
+          const data = line.slice(6).trim();
+          if (data === '[DONE]') { finalize(); return; }
+          try {
+            const p = JSON.parse(data);
+            if (p.type === 'message_stop') { finalize(); return; }
+            const chunk =
+              format === 'anthropic' ? p.delta?.text :
+              format === 'openai'    ? p.choices?.[0]?.delta?.content :
+              format === 'gemini'    ? p.candidates?.[0]?.content?.parts?.[0]?.text : '';
+            if (chunk) { full += chunk; if (onChunk) onChunk(chunk); }
+          } catch (e) {}
+        }
+      }
+    } catch (e) {
+      if (!done) { done = true; clearTimeout(idleTimer); clearTimeout(hardTimer); rejectFn(e); }
+    }
+  })();
+
+  return finished;
+}
+
+function getKey(p) { return localStorage.getItem(`hek_${p}`) || ''; }
+function storeKey(p, v) { localStorage.setItem(`hek_${p}`, v); }
+function getSelectedProvider() { return document.getElementById('providerSelect')?.value || 'claude'; }
+
+function getConfig() {
+  return {
+    maxIter: parseInt(document.getElementById('cfg-maxiter').value) || 4,
+    threshold: parseInt(document.getElementById('cfg-threshold').value) || 8
+  };
+}
+
+function openDrawer() { document.getElementById('drawer').classList.add('open'); document.getElementById('scrim').classList.add('open'); }
+function closeDrawer() { document.getElementById('drawer').classList.remove('open'); document.getElementById('scrim').classList.remove('open'); }
+
+const DOT_COLORS = { claude: '#ef4444', groq: '#22c55e' };
+function updateProviderDot() {
+  const provider = getSelectedProvider();
+  const color = provider.startsWith('or-') ? '#f97316' : (DOT_COLORS[provider] || '#9090a8');
+  document.getElementById('providerDot').style.background = color;
+}
+
+function updateWarning() {
+  const p = getSelectedProvider(); const w = document.getElementById('keyWarn');
+  updateProviderDot();
+  if (p === 'claude') { w.hidden = true; return; }
+  if (isOpenRouterProvider(p) && IS_ARTIFACT) {
+    w.hidden = false; w.textContent = '⚠ OpenRouter has no CORS proxy inside claude.ai — standalone only.';
+    return;
+  }
+  w.textContent = '⚠ No API key configured. Open ⚙ Settings to add one.';
+  w.hidden = !!getKey(isOpenRouterProvider(p) ? 'openrouter' : p);
+}
+
+document.getElementById('gearBtn').addEventListener('click', openDrawer);
+document.getElementById('drawerClose').addEventListener('click', closeDrawer);
+document.getElementById('scrim').addEventListener('click', closeDrawer);
+document.getElementById('providerSelect').addEventListener('change', updateWarning);
+
+document.querySelectorAll('.prov-row button[data-prov]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const prov = btn.dataset.prov;
+    const val = document.getElementById(`key-${prov}`).value.trim();
+    storeKey(prov, val); updateWarning();
+    const flash = document.createElement('span');
+    flash.className = 'save-flash'; flash.textContent = '✓ saved';
+    btn.parentElement.appendChild(flash);
+    setTimeout(() => flash.remove(), 1400);
+  });
+});
+
+['groq','openrouter'].forEach(p => {
+  const el = document.getElementById(`key-${p}`);
+  if (el) el.value = getKey(p);
+});
+
+// Context-aware provider default: artifact → Claude, standalone → Groq
+document.getElementById('providerSelect').value = IS_ARTIFACT ? 'claude' : 'groq';
+updateProviderDot();
+
+const modeSwitch = document.getElementById('mode-switch');
+modeSwitch.addEventListener('change', () => {
+  document.getElementById('mode-name').textContent = modeSwitch.checked ? 'Explorer' : 'Commit';
+});
+function isExplorerMode() { return modeSwitch.checked; }
+
+function checkReady() {
+  const p = getSelectedProvider();
+  if (p === 'claude') return true;
+  if (isOpenRouterProvider(p)) {
+    if (IS_ARTIFACT) { updateWarning(); return false; } // no CORS proxy inside claude.ai
+    if (!getKey('openrouter')) { openDrawer(); updateWarning(); return false; }
+    return true;
+  }
+  if (!getKey(p)) { openDrawer(); updateWarning(); return false; }
+  return true;
+}
+
+// ═══════════════════════════════════════════════════════════
+//  SYSTEM PROMPTS — v2 upgraded gate stack
+// ═══════════════════════════════════════════════════════════
+
+// ── STAGE 1: DIVERGE ────────────────────────────────────────
+// v2 change: adds "resonance_depth" scoring per vector (1-5).
+// Resonance depth measures how far the vector moves from the seed
+// register — tethered but genuinely reorienting vs merely extending.
+// This gives the user a signal beyond just "here are options."
+const DIVERGE_SYSTEM = `You are the DIVERGENCE stage of a prompt-forging engine. You do NOT write prompts. Your sole job: from a seed intuition (and, when descending, the path of recognitions taken so far), locate the current position faithfully, then throw 3 to 5 genuinely ORTHOGONAL vectors the intuition could be reaching toward.
+
+A vector is a short, recognizable DIRECTION (one or two sentences) — not a paraphrase of the seed, not a finished prompt. It names where the intuition could go, so its owner can feel which one is theirs.
+
+Hard rules:
+- TRACEABILITY GATE: every vector must trace back to the seed's own trajectory. It must be something the seed was already reaching toward — never your favorite move imposed on it. Silently discard any vector that is projection. Returning 3 tethered vectors is better than 5 with filler.
+- ORTHOGONALITY: vectors must be real alternatives to one another, spread as wide as tethering allows — not variations on a single theme.
+- HOME-TETHER (only when a path is provided): each vector must trace to BOTH its immediate parent (the vector being descended into) AND the origin seed. Reject any vector that follows the parent but U-turns away from the origin.
+- FLOOR: if the current position is already so specific that no genuinely orthogonal sub-directions remain (only paraphrases would result), set floor_reached to true and return an empty vectors array. Never fabricate forks to keep descending.
+- can_subdivide: for each surviving vector, judge whether it still contains orthogonal sub-directions (true) or is near-atomic (false).
+- resonance_depth: for each vector, score 1–5 how far it moves the cognition from the seed's register into new territory. 1 = barely extends, 5 = genuinely reorients. A tethered vector that deeply shifts the operative mode scores higher than one that merely continues the same mode in a new domain. This is a signal to the user — not a quality ranking. A low-resonance-depth vector may be exactly right for a shallow refinement; a high-resonance-depth vector may be right for a radical shift.
+
+Respond ONLY with valid JSON. No markdown, no preamble, no code fences:
+{
+  "anchored_position": "1-2 sentences naming where the intuition currently sits",
+  "floor_reached": false,
+  "vectors": [
+    {
+      "id": "v1",
+      "label": "short evocative name",
+      "direction": "the direction, 1-2 sentences",
+      "traces_via": "how this traces back to the seed/path",
+      "can_subdivide": true,
+      "resonance_depth": 3
+    }
+  ]
+}`;
+
+// ── STAGE 2: CRYSTALLIZE ─────────────────────────────────────
+// NEW IN v2. Sits between recognition and forge.
+// Before writing a single word of the system prompt, the engine
+// must answer: what did this path actually change?
+// This forces the architect to inhabit the new orientation
+// rather than describe it from outside. The crystallization
+// becomes the load-bearing input to the architect.
+const CRYSTALLIZE_SYSTEM = `You are the CRYSTALLIZATION stage of a prompt-forging engine. You sit between recognition and forge.
+
+You receive: an origin seed and the chain of vectors the user recognized.
+
+Your job: before a single word of the system prompt is written, name what the path actually changed. Not what it pointed at — what it *did* to the orientation.
+
+You are not summarizing. You are crystallizing: compressing the transformation into its most operative form, so the architect can build from inhabitation rather than description.
+
+Produce exactly:
+
+1. operative_stance — ONE sentence. The new cognitive posture the resulting AI should inhabit. Written in second person ("You are...") as if already addressed to the model. This is not a role title — it is a living instruction. It must be false of the origin seed (where you started) and true of the terminal vector (where you arrived). If it could have been written before the path was walked, it failed.
+
+2. reorientations — an ordered list of the moves the path performed. One sentence per recognized vector, naming specifically what that step changed (not merely what it was about). Format: "Step N [vector label]: changed X from Y to Z" or "Step N [vector label]: moved the frame from X into Y." Be surgical. Vague reorientations ("deepened the thinking") are failures.
+
+3. what_must_change_in_the_cognition — a short paragraph (3-5 sentences). What behaviors, tendencies, defaults, and failure modes must the resulting prompt actively prohibit or redirect, given where the path arrived? This is what the prompt must push against, not just what it must move toward. Name the specific cognitive habits the dimension is in tension with.
+
+4. what_the_cognition_must_refuse — 2-4 short phrases listing the specific moves or outputs the resulting AI should refuse, given the terminal vector. These become the negative constraints in the prompt.
+
+Respond ONLY with valid JSON. No markdown, no preamble, no code fences:
+{
+  "operative_stance": "You are...",
+  "reorientations": ["Step 1 [label]: changed...", "Step 2 [label]: moved..."],
+  "what_must_change_in_the_cognition": "paragraph",
+  "what_the_cognition_must_refuse": ["refusing X", "refusing Y"]
+}`;
+
+// ── STAGE 3: ARCHITECT ───────────────────────────────────────
+// v2 change: architect now receives the crystallization as its
+// primary input — it builds FROM the crystallization, not FROM
+// a trajectory summary. This shifts from "describe the path"
+// to "inhabit what the path crystallized."
+// Also: explicit structural grammar (ROLE / OPERATIVE STANCE /
+// FRAME / PROHIBITED MOVES / OUTPUT CONSTRAINTS) forces
+// architectural completeness rather than hoping for it.
+const DEEPEN_ARCHITECT_SYSTEM = `You are the ARCHITECT stage of a prompt-forging engine. You receive a PATH (origin seed + chain of recognized vectors) and a CRYSTALLIZATION (what the path actually changed — the operative stance, the reorientations, what must change in the cognition, what must be refused).
+
+You forge ONE dense system prompt from this material.
+
+MANDATORY ARCHITECTURAL GRAMMAR — every forged prompt must contain all five of these sections, in this order, unlabeled in the final output:
+
+1. ROLE — Who the AI is, at the level of fundamental cognitive posture. Not a job title. Not "you are an assistant who helps with X." A declaration of what kind of mind is operating. Derived from the operative_stance in the crystallization.
+
+2. FRAME — The specific conceptual lens, method, or operating premise the AI brings to every input. What the AI sees THROUGH, not merely AT. This encodes the trajectory of recognitions — each vector the user walked shifted the frame; the prompt must carry that shift as working method, not as description.
+
+3. OPERATIVE STANCE — How the AI engages: its characteristic move, its first gesture toward any input, what it does before it does anything else. Derive this from what_must_change_in_the_cognition. Make it specific enough to be falsifiable: "you approach every input by first locating X" is a stance; "you are thoughtful and careful" is not.
+
+4. PROHIBITED MOVES — The specific outputs, tendencies, and default behaviors this AI refuses. Derived directly from what_the_cognition_must_refuse. These are hard constraints, not suggestions. Write them as prohibitions: "You never X." "You refuse to Y." "When Z arises, you do W instead."
+
+5. OUTPUT CONSTRAINTS — What the AI produces: in what form, at what level of abstraction, with what markers of quality. Specific enough that an output either clearly passes or fails this standard.
+
+Do NOT label these sections in the output. The prompt reads as continuous, forceful prose — but it must contain all five architecturally.
+
+Additional constraints:
+- Dense, not padded. Cut every sentence that restates a prior sentence. Cut every modifier that does not change meaning.
+- Forceful, not hedged. "You may occasionally" is not operative. "You always" or "You never" are operative.
+- Inhabit the dimension. The prompt must feel written from inside the new orientation — not describing it from outside. If it reads like a specification for an AI to inhabit a dimension, it failed. It should read as if the AI already is there.
+- The path is not a topic. Do not mention the user's seed, the vectors, or the forging process inside the forged prompt. The path was the method; the prompt is the product.
+
+Output ONLY the system prompt as plain text. No JSON, no commentary, no markdown fences, no preamble. The first word is the first word of the forged prompt.`;
+
+// ── STAGE 4: PATH-FIDELITY GATE ─────────────────────────────
+// v2 change: evaluator now grades against the crystallization
+// as primary ground truth (not just the path summary).
+// Also: revision_guidance is now structured — must name the
+// specific architectural section that failed and the specific
+// move to fix it. Generic guidance ("be more specific") fails.
+const PATH_FIDELITY_SYSTEM = `You are the PATH-FIDELITY gate of a prompt-forging engine — the optimizer. You receive a PATH, a CRYSTALLIZATION (operative stance, reorientations, what must change, what must be refused), and a forged system prompt.
+
+You judge the prompt against BOTH the path AND the crystallization. The crystallization is the primary ground truth — a prompt that perfectly traces the path but fails to inhabit the crystallized operative stance has failed.
+
+Grade on five axes (each 0-2 points, 10 total):
+
+A. OPERATIVE STANCE FIDELITY (0-2) — Does the prompt carry the operative_stance from the crystallization as a living instruction, not a description? Does it feel written from inside that posture?
+
+B. REORIENTATION ENCODING (0-2) — Does the prompt carry the specific cognitive moves each vector performed (not just the endpoint)? Are the reorientations embodied in the FRAME and METHOD — not merely mentioned?
+
+C. PROHIBITION COMPLETENESS (0-2) — Does the prompt contain hard prohibitions covering all items in what_the_cognition_must_refuse? Are they written as genuine refusals ("You never X") not soft suggestions?
+
+D. ARCHITECTURAL INTEGRITY (0-2) — Does the prompt contain all five architectural elements (role, frame, operative stance, prohibited moves, output constraints) in a continuous, forceful way? Is anything structurally missing?
+
+E. DENSITY (0-2) — Is the prompt free of padding, restatement, and hedging? Does every sentence change meaning? Could it be shorter without losing anything operative?
+
+Respond ONLY with valid JSON. No markdown, no fences:
+{
+  "score": 7,
+  "axis_scores": {"A": 1, "B": 2, "C": 1, "D": 2, "E": 1},
+  "weaknesses": [
+    "AXIS A: operative stance described externally ('the model is oriented toward X') rather than written from inside it",
+    "AXIS C: prohibition against Y is soft — 'try to avoid' instead of 'You never'"
+  ],
+  "verdict": "fail",
+  "revision_guidance": "Rewrite the opening role declaration in second person from inside the stance. Harden every soft prohibition into 'You never' form. Check that each reorientation from the crystallization appears as a specific method step, not as a topic sentence."
+}`;
+
+// ── STAGE 5: REVISE ─────────────────────────────────────────
+// v2 change: reviser explicitly receives crystallization and
+// axis-level scores, not just a generic "fix weaknesses" prompt.
+const DEEPEN_REVISE_SYSTEM = `You are the REVISION stage of a prompt-forging engine. A forged system prompt failed path-fidelity scoring. Rewrite it to fix every weakness named.
+
+You receive: the PATH, the CRYSTALLIZATION, the previous prompt, the evaluator's axis scores, and specific revision guidance.
+
+Revision priorities (apply in order):
+1. If OPERATIVE STANCE FIDELITY (A) failed: rewrite the role/opening so it is written from inside the operative_stance — in second person, inhabiting the posture rather than describing it.
+2. If REORIENTATION ENCODING (B) failed: locate each reorientation in the crystallization and ensure it appears as a specific METHOD STEP in the frame — not as a topic or description.
+3. If PROHIBITION COMPLETENESS (C) failed: locate each item in what_the_cognition_must_refuse and write it as a hard prohibition: "You never X." "You refuse to Y." Remove all soft forms ("try to avoid," "generally," "when possible").
+4. If ARCHITECTURAL INTEGRITY (D) failed: check that all five elements are present (role, frame, operative stance, prohibited moves, output constraints). Add whichever is missing without losing what passed.
+5. If DENSITY (E) failed: cut every sentence that restates a prior sentence. Cut every modifier that does not change meaning. The prompt should feel compressed to its load-bearing structure.
+
+Output ONLY the revised system prompt as plain text — no JSON, no commentary, no fences.`;
+
+// ── STAGE 6: CONFIRM PROBE ──────────────────────────────────
+// v2 change: probe now also checks for operative_stance
+// continuity, not just terminal vector continuity.
+const CONFIRM_PROBE_SYSTEM = `You are the final CONFIRMATION PROBE — sitting OUTSIDE the optimization loop. You receive a forged system prompt, the terminal vector it was meant to reach, and the crystallization (especially the operative_stance).
+
+Do three things:
+1. Execute briefly: produce a short (3-5 sentence) sample of the kind of cognition the prompt steers toward — as if you are actually running under that prompt right now.
+2. Judge terminal vector continuity: does that sample move toward the recognized dimension the user chose?
+3. Judge operative stance continuity: does the voice and method of the sample match the operative_stance from the crystallization — or does it drift back toward a generic AI register?
+
+You confirm. You do not optimize or rewrite.
+
+Respond ONLY with valid JSON. No markdown, no fences:
+{
+  "sample": "the short sample of steered cognition, written as if under the prompt",
+  "continuous": true,
+  "stance_continuous": true,
+  "note": "1-2 sentences on continuity or drift — naming specifically whether the sample is in the right dimension AND in the right voice"
+}`;
+
+// ═══════════════════════════════════════════════════════════
+//  PROMPT LIBRARY — left panel · UI Contract Constraint 20
+//  Entry schema: { name, triggers, description, body, source, imported }
+//  The pipeline's five stage prompts start as built-in editable entries;
+//  .md imports and JSON imports merge additional entries alongside them.
+// ═══════════════════════════════════════════════════════════
+const STAGE_PROMPT_DEFS = [
+  { slug: 'diverge',   name: 'Diverge',        varName: 'DIVERGE_SYSTEM',         desc: 'Throws orthogonal vectors from the seed.' },
+  { slug: 'crystallize', name: 'Crystallize',  varName: 'CRYSTALLIZE_SYSTEM',     desc: 'Names what the recognized path actually changed.' },
+  { slug: 'architect', name: 'Architect',      varName: 'DEEPEN_ARCHITECT_SYSTEM', desc: 'Forges the dense system prompt from the crystallization.' },
+  { slug: 'fidelity',  name: 'Path-Fidelity',  varName: 'PATH_FIDELITY_SYSTEM',   desc: 'Scores the forged prompt against the path.' },
+  { slug: 'revise',    name: 'Revise',         varName: 'DEEPEN_REVISE_SYSTEM',   desc: 'Rewrites the prompt to fix scored weaknesses.' },
+  { slug: 'confirm',   name: 'Confirm Probe',  varName: 'CONFIRM_PROBE_SYSTEM',   desc: 'Off-loop check for terminal-vector and stance continuity.' }
+];
+const STAGE_PROMPT_VARS = {
+  diverge: () => DIVERGE_SYSTEM, crystallize: () => CRYSTALLIZE_SYSTEM,
+  architect: () => DEEPEN_ARCHITECT_SYSTEM, fidelity: () => PATH_FIDELITY_SYSTEM,
+  revise: () => DEEPEN_REVISE_SYSTEM, confirm: () => CONFIRM_PROBE_SYSTEM
+};
+const PROMPT_LIB_KEY = 'prompts:vector-forge';
+let PROMPT_OVERRIDES = {};   // slug -> edited body, for the six built-in stage prompts
+
+function activeStagePrompt(slug) {
+  return PROMPT_OVERRIDES[slug] != null ? PROMPT_OVERRIDES[slug] : STAGE_PROMPT_VARS[slug]();
+}
+
+async function loadPromptLibrary() {
+  const raw = await storageGetAsync(PROMPT_LIB_KEY);
+  if (raw) {
+    try { PROMPT_OVERRIDES = JSON.parse(raw) || {}; } catch (e) {}
+  }
+  renderPromptLibrary();
+}
+function savePromptLibrary() {
+  storageSet(PROMPT_LIB_KEY, JSON.stringify(PROMPT_OVERRIDES));
+}
+
+function renderPromptLibrary() {
+  const list = document.getElementById('promptLibraryList');
+  let html = '';
+  STAGE_PROMPT_DEFS.forEach(def => {
+    const body = esc(activeStagePrompt(def.slug));
+    html += `<div class="prompt-entry" data-slug="${def.slug}">
+      <div class="pe-name">${esc(def.name)}</div>
+      <div class="pe-desc">${esc(def.desc)}</div>
+      <div class="pe-meta"><span>built-in</span>${PROMPT_OVERRIDES[def.slug] != null ? '<span>edited</span>' : ''}</div>
+      <textarea class="lib-editor" data-slug="${def.slug}" style="display:none;">${body}</textarea>
+      <div class="entry-row-actions">
+        <button data-act="toggle-edit" data-slug="${def.slug}">Edit</button>
+        ${PROMPT_OVERRIDES[def.slug] != null ? `<button data-act="reset" data-slug="${def.slug}">Reset</button>` : ''}
+      </div>
+    </div>`;
+  });
+  list.innerHTML = html || '<div class="spine-empty">No prompts yet.</div>';
+
+  list.querySelectorAll('[data-act="toggle-edit"]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const slug = btn.dataset.slug;
+      const ta = list.querySelector(`textarea[data-slug="${slug}"]`);
+      const showing = ta.style.display !== 'none';
+      ta.style.display = showing ? 'none' : 'block';
+      btn.textContent = showing ? 'Edit' : 'Save';
+      if (showing) { PROMPT_OVERRIDES[slug] = ta.value; savePromptLibrary(); renderPromptLibrary(); }
+    });
+  });
+  list.querySelectorAll('[data-act="reset"]').forEach(btn => {
+    btn.addEventListener('click', () => { delete PROMPT_OVERRIDES[btn.dataset.slug]; savePromptLibrary(); renderPromptLibrary(); });
+  });
+}
+
+document.getElementById('promptExportBtn').addEventListener('click', () => {
+  const blob = new Blob([JSON.stringify(PROMPT_OVERRIDES, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = 'vector-forge-prompts.json'; a.click(); URL.revokeObjectURL(a.href);
+});
+document.getElementById('promptImportJson').addEventListener('change', async (e) => {
+  const f = e.target.files[0]; if (!f) return;
+  try {
+    const parsed = JSON.parse(await f.text());
+    PROMPT_OVERRIDES = Object.assign({}, PROMPT_OVERRIDES, parsed || {});
+    savePromptLibrary(); renderPromptLibrary();
+  } catch (err) { alert('Invalid prompt library JSON.'); }
+  e.target.value = '';
+});
+
+// ═══════════════════════════════════════════════════════════
+//  RESPONSE LIBRARY — right panel · UI Contract Constraint 20
+//  Auto-saves on every completed forge (never opt-in). Tagged with
+//  the producing prompt/slug, timestamped, JSON-exportable.
+// ═══════════════════════════════════════════════════════════
+const RESPONSE_LIB_KEY = 'responses:vector-forge';
+let RESPONSE_LIBRARY = [];
+
+async function loadResponseLibrary() {
+  const raw = await storageGetAsync(RESPONSE_LIB_KEY);
+  if (raw) { try { RESPONSE_LIBRARY = JSON.parse(raw) || []; } catch (e) { RESPONSE_LIBRARY = []; } }
+  renderResponseLibrary();
+}
+function saveResponseLibrary() { storageSet(RESPONSE_LIB_KEY, JSON.stringify(RESPONSE_LIBRARY)); }
+
+// Serializes the complete path from root to this commit: the seed, every fan
+// that was thrown along the way (all vectors offered, not just the one taken),
+// which vector was recognized at each step, and the final forged output.
+function buildFullTrace(commitNode) {
+  const chain = ancestorChain(commitNode.id); // root(seed-adjacent vector) ... vector ... commit
+  const vectorAncestors = chain.filter(n => n.kind === 'vector');
+
+  const steps = vectorAncestors.map(v => {
+    const parent = v.parentId ? NODES[v.parentId] : null;
+    const fanAtThisStep = parent ? parent.fanResult : null;
+    return {
+      recognized: { label: v.label, direction: v.direction, traces_via: v.traces_via, can_subdivide: v.can_subdivide },
+      fanOffered: fanAtThisStep ? {
+        anchored_position: fanAtThisStep.anchored_position,
+        vectors: (fanAtThisStep.vectors || []).map(fv => ({
+          label: fv.label, direction: fv.direction, traces_via: fv.traces_via,
+          resonance_depth: fv.resonance_depth, can_subdivide: fv.can_subdivide
+        }))
+      } : null
+    };
+  });
+
+  return { seed: SEED, hint: HINT, steps };
+}
+
+function saveResponseEntry(node) {
+  const trace = buildFullTrace(node);
+  const entry = {
+    id: 'r_' + Date.now() + '_' + Math.floor(Math.random()*1000),
+    promptSlug: 'architect', promptSource: 'Vector Forge — Architect stage',
+    seed: SEED, hint: HINT, score: node.score, converged: node.converged,
+    output: node.prompt, crystallization: node.crystallization,
+    confirm: node.confirm || null,
+    trace,
+    timestamp: new Date().toISOString()
+  };
+  RESPONSE_LIBRARY.unshift(entry);
+  saveResponseLibrary();
+  renderResponseLibrary();
+  persistResponseToFolder(entry); // additive — never blocks/replaces the localStorage write above
+  return entry;
+}
+
+function renderResponseLibrary() {
+  const list = document.getElementById('responseLibraryList');
+  const empty = document.getElementById('responseEmpty');
+  if (!RESPONSE_LIBRARY.length) { list.innerHTML = ''; empty.style.display = 'block'; return; }
+  empty.style.display = 'none';
+  list.innerHTML = RESPONSE_LIBRARY.map((r, i) => `
+    <div class="response-entry" data-idx="${i}">
+      <div class="re-name">${esc((r.seed || 'untitled').slice(0, 46))}${(r.seed||'').length > 46 ? '…' : ''}</div>
+      <div class="re-meta">
+        <span class="re-score">${r.score}/10</span>
+        <span>${r.converged ? 'converged' : 'best available'}</span>
+        <span>${esc(r.timestamp.slice(0,10))}</span>
+      </div>
+      <div class="re-preview">${esc((r.output || '').slice(0, 140))}</div>
+      <div class="entry-row-actions">
+        <button data-act="copy-resp" data-idx="${i}">Copy</button>
+        <button data-act="delete-resp" data-idx="${i}">Delete</button>
+      </div>
+    </div>`).join('');
+
+  list.querySelectorAll('[data-act="copy-resp"]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const r = RESPONSE_LIBRARY[parseInt(btn.dataset.idx)];
+      navigator.clipboard.writeText(r.output).then(() => {
+        const orig = btn.textContent; btn.textContent = '✓'; setTimeout(() => btn.textContent = orig, 1200);
+      });
+    });
+  });
+  list.querySelectorAll('[data-act="delete-resp"]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const idx = parseInt(btn.dataset.idx);
+      const removed = RESPONSE_LIBRARY[idx];
+      RESPONSE_LIBRARY.splice(idx, 1); saveResponseLibrary(); renderResponseLibrary();
+      if (removed) deleteResponseFromFolder(removed.id);
+    });
+  });
+}
+
+document.getElementById('responseExportBtn').addEventListener('click', () => {
+  const blob = new Blob([JSON.stringify(RESPONSE_LIBRARY, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = 'vector-forge-responses.json'; a.click(); URL.revokeObjectURL(a.href);
+});
+document.getElementById('responseImportJson').addEventListener('change', async (e) => {
+  const f = e.target.files[0]; if (!f) return;
+  try {
+    const parsed = JSON.parse(await f.text());
+    if (Array.isArray(parsed)) { RESPONSE_LIBRARY = RESPONSE_LIBRARY.concat(parsed); saveResponseLibrary(); renderResponseLibrary(); }
+  } catch (err) { alert('Invalid response library JSON.'); }
+  e.target.value = '';
+});
+document.getElementById('responseClearBtn').addEventListener('click', () => {
+  if (!RESPONSE_LIBRARY.length) return;
+  if (confirm('Clear all saved responses? This cannot be undone.')) {
+    const ids = RESPONSE_LIBRARY.map(r => r.id);
+    RESPONSE_LIBRARY = []; saveResponseLibrary(); renderResponseLibrary();
+    ids.forEach(id => deleteResponseFromFolder(id));
+  }
+});
+
+// ═══════════════════════════════════════════════════════════
+//  FOLDER-CONNECT — UI Contract Constraint 23 / 23B
+//  Standalone-only persistence layer mirroring the Response Library to real
+//  files on disk. Strictly additive: localStorage write (saveResponseEntry
+//  above) always fires first and unconditionally — folder-connect never
+//  gates it. Reuses IS_ARTIFACT — never a second context check.
+// ═══════════════════════════════════════════════════════════
+const ENGINE_ID = 'vector-forge';
+const SCHEMA_VERSION = 1;
+const IDB_NAME = 'hek-folder-connect', IDB_STORE = 'handles', IDB_KEY = ENGINE_ID;
+
+let FOLDER_DIR_HANDLE = null;
+let FOLDER_STATE = 'not-connected'; // 'not-connected' | 'connected' | 'reconnect-required'
+
+function idbOpen() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(IDB_NAME, 1);
+    req.onupgradeneeded = () => { req.result.createObjectStore(IDB_STORE); };
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+async function idbSetHandle(handle) {
+  const db = await idbOpen();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(IDB_STORE, 'readwrite');
+    tx.objectStore(IDB_STORE).put(handle, IDB_KEY);
+    tx.oncomplete = () => resolve(true);
+    tx.onerror = () => reject(tx.error);
+  });
+}
+async function idbGetHandle() {
+  const db = await idbOpen();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(IDB_STORE, 'readonly');
+    const req = tx.objectStore(IDB_STORE).get(IDB_KEY);
+    req.onsuccess = () => resolve(req.result || null);
+    req.onerror = () => reject(req.error);
+  });
+}
+async function idbClearHandle() {
+  const db = await idbOpen();
+  return new Promise((resolve) => {
+    const tx = db.transaction(IDB_STORE, 'readwrite');
+    tx.objectStore(IDB_STORE).delete(IDB_KEY);
+    tx.oncomplete = () => resolve(true);
+  });
+}
+
+function folderSupported() { return !IS_ARTIFACT && 'showDirectoryPicker' in window; }
+
+function responseFileName(entry) {
+  return `response-${entry.id}.json`;
+}
+
+async function readIndexManifest() {
+  try {
+    const fh = await FOLDER_DIR_HANDLE.getFileHandle('index.json');
+    const file = await fh.getFile();
+    return JSON.parse(await file.text());
+  } catch (e) { return { engine: ENGINE_ID, schemaVersion: SCHEMA_VERSION, entries: [] }; }
+}
+async function writeIndexManifest(manifest) {
+  const fh = await FOLDER_DIR_HANDLE.getFileHandle('index.json', { create: true });
+  const w = await fh.createWritable();
+  await w.write(JSON.stringify(manifest, null, 2));
+  await w.close();
+}
+
+// Single entry write — file-per-entry + index.json update. Reuses the
+// localStorage-assigned id; never mints a new one on folder write.
+async function writeResponseFile(entry) {
+  const record = {
+    id: entry.id, engine: ENGINE_ID, schemaVersion: SCHEMA_VERSION,
+    name: (entry.seed || 'untitled').slice(0, 60),
+    content: entry, tags: [entry.converged ? 'converged' : 'best-available'],
+    provider_preference: getSelectedProvider ? getSelectedProvider() : null,
+    created: entry.timestamp, modified: new Date().toISOString()
+  };
+  const fh = await FOLDER_DIR_HANDLE.getFileHandle(responseFileName(entry), { create: true });
+  const w = await fh.createWritable();
+  await w.write(JSON.stringify(record, null, 2));
+  await w.close();
+
+  const manifest = await readIndexManifest();
+  manifest.engine = ENGINE_ID; manifest.schemaVersion = SCHEMA_VERSION;
+  const idx = manifest.entries.findIndex(e => e.id === entry.id);
+  const manifestRow = { id: entry.id, file: responseFileName(entry), modified: record.modified };
+  if (idx === -1) manifest.entries.push(manifestRow); else manifest.entries[idx] = manifestRow;
+  await writeIndexManifest(manifest);
+}
+
+async function deleteResponseFile(id) {
+  try { await FOLDER_DIR_HANDLE.removeEntry(`response-${id}.json`); } catch (e) {}
+  const manifest = await readIndexManifest();
+  manifest.entries = manifest.entries.filter(e => e.id !== id);
+  await writeIndexManifest(manifest);
+}
+
+// Additive mirror hook called from saveResponseEntry — must never throw
+// upstream or roll back the localStorage write that already succeeded.
+async function persistResponseToFolder(entry) {
+  if (FOLDER_STATE !== 'connected' || !FOLDER_DIR_HANDLE) return;
+  try { await writeResponseFile(entry); }
+  catch (e) { console.warn('Folder write failed (localStorage entry is unaffected):', e); }
+}
+async function deleteResponseFromFolder(id) {
+  if (FOLDER_STATE !== 'connected' || !FOLDER_DIR_HANDLE) return;
+  try { await deleteResponseFile(id); }
+  catch (e) { console.warn('Folder delete failed:', e); }
+}
+
+// Backfill-on-connect: push any browser-only entries to disk, batched so a
+// large existing library doesn't freeze the UI.
+async function backfillToFolder() {
+  const manifest = await readIndexManifest();
+  const onDiskIds = new Set(manifest.entries.map(e => e.id));
+  const toPush = RESPONSE_LIBRARY.filter(e => !onDiskIds.has(e.id));
+  const BATCH = 5;
+  for (let i = 0; i < toPush.length; i += BATCH) {
+    const batch = toPush.slice(i, i + BATCH);
+    for (const entry of batch) { try { await writeResponseFile(entry); } catch (e) {} }
+    await new Promise(r => setTimeout(r, 0));
+  }
+  if (toPush.length) updateFolderStatusUI(`Synced ${toPush.length} local ${toPush.length === 1 ? 'entry' : 'entries'} to folder.`);
+}
+
+// Untagged-file claim guard — only claim files that structurally match this
+// engine's response shape. Filename match alone is never sufficient.
+function looksLikeResponseRecord(obj) {
+  return obj && typeof obj === 'object' && obj.content &&
+    typeof obj.content.seed !== 'undefined' && typeof obj.content.output !== 'undefined';
+}
+
+// Folder scan is source of truth on manifest/disk conflict — reconcile
+// same-id duplicates (newest mtime wins) and pull any disk-only entries
+// into the in-browser library.
+async function syncFromDisk() {
+  const manifest = await readIndexManifest();
+  const seen = new Map(); // id -> {record, fileName}
+  for await (const [name, handle] of FOLDER_DIR_HANDLE.entries()) {
+    if (handle.kind !== 'file' || name === 'index.json') continue;
+    try {
+      const file = await handle.getFile();
+      const record = JSON.parse(await file.text());
+      const tagged = record.engine === ENGINE_ID;
+      if (!tagged && !looksLikeResponseRecord(record)) continue; // untagged + no structural match → not ours
+      if (!record.id) continue;
+      const existing = seen.get(record.id);
+      if (!existing || new Date(record.modified) > new Date(existing.record.modified)) {
+        seen.set(record.id, { record, fileName: name });
+      }
+    } catch (e) {}
+  }
+
+  // Reconcile: newest mtime wins, delete stale duplicate files.
+  const byId = {};
+  for (const [id, { record, fileName }] of seen) {
+    if (!byId[id] || new Date(record.modified) > new Date(byId[id].record.modified)) byId[id] = { record, fileName };
+  }
+
+  let pulled = 0;
+  for (const id in byId) {
+    const already = RESPONSE_LIBRARY.find(e => e.id === id);
+    if (!already) { RESPONSE_LIBRARY.push(byId[id].record.content); pulled++; }
+  }
+  if (pulled) {
+    RESPONSE_LIBRARY.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+    saveResponseLibrary(); renderResponseLibrary();
+  }
+
+  // Rebuild manifest from disk-confirmed survivors (source of truth on conflict).
+  const rebuiltManifest = { engine: ENGINE_ID, schemaVersion: SCHEMA_VERSION,
+    entries: Object.keys(byId).map(id => ({ id, file: byId[id].fileName, modified: byId[id].record.modified })) };
+  await writeIndexManifest(rebuiltManifest);
+
+  return pulled;
+}
+
+function updateFolderStatusUI(msg) {
+  const el = document.getElementById('folderStatus');
+  if (el) el.textContent = msg;
+}
+function renderFolderControls() {
+  const el = document.getElementById('folderControls');
+  if (!el) return;
+  if (!folderSupported()) {
+    el.innerHTML = `<div class="pe-desc">Folder sync needs a Chromium browser (Chrome/Edge), standalone — not available in artifact preview.</div>`;
+    return;
+  }
+  if (FOLDER_STATE === 'connected') {
+    el.innerHTML = `<div class="re-meta"><span>📁 folder connected</span></div>
+      <div id="folderStatus" class="pe-desc"></div>
+      <div class="entry-row-actions"><button id="folderForgetBtn">Disconnect</button></div>`;
+    document.getElementById('folderForgetBtn').addEventListener('click', forgetFolder);
+  } else if (FOLDER_STATE === 'reconnect-required') {
+    el.innerHTML = `<div class="re-meta"><span style="color:var(--amber);background:rgba(245,166,35,0.12);">⚠ reconnect required</span></div>
+      <div class="entry-row-actions"><button id="folderReconnectBtn">Reconnect folder</button></div>`;
+    document.getElementById('folderReconnectBtn').addEventListener('click', reconnectFolder);
+  } else {
+    el.innerHTML = `<div class="entry-row-actions"><button id="folderConnectBtn">📁 Connect local folder</button></div>`;
+    document.getElementById('folderConnectBtn').addEventListener('click', connectFolder);
+  }
+}
+
+async function connectFolder() {
+  if (!folderSupported()) return;
+  try {
+    const handle = await window.showDirectoryPicker({ id: 'hek-vector-forge', mode: 'readwrite' });
+    FOLDER_DIR_HANDLE = handle;
+    await idbSetHandle(handle);
+    FOLDER_STATE = 'connected';
+    renderFolderControls();
+    updateFolderStatusUI('Syncing…');
+    await syncFromDisk();       // disk is source of truth on conflict
+    await backfillToFolder();   // push any browser-only entries out
+    updateFolderStatusUI('Up to date.');
+  } catch (e) {
+    if (e.name !== 'AbortError') console.warn('Folder connect failed:', e);
+  }
+}
+async function forgetFolder() {
+  FOLDER_DIR_HANDLE = null;
+  FOLDER_STATE = 'not-connected';
+  await idbClearHandle();
+  renderFolderControls();
+}
+
+// On load: try to restore a previously-connected handle from IndexedDB and
+// re-verify permission — a saved handle is never trusted without this.
+async function initFolderConnect() {
+  if (!folderSupported()) { renderFolderControls(); return; }
+  try {
+    const handle = await idbGetHandle();
+    if (!handle) { renderFolderControls(); return; }
+    const perm = await handle.queryPermission({ mode: 'readwrite' });
+    if (perm === 'granted') {
+      FOLDER_DIR_HANDLE = handle;
+      FOLDER_STATE = 'connected';
+      renderFolderControls();
+      updateFolderStatusUI('Syncing…');
+      await syncFromDisk();
+      await backfillToFolder();
+      updateFolderStatusUI('Up to date.');
+    } else {
+      // Distinct "reconnect required" state — do NOT silently request; wait for user gesture.
+      FOLDER_DIR_HANDLE = handle;
+      FOLDER_STATE = 'reconnect-required';
+      renderFolderControls();
+    }
+  } catch (e) { renderFolderControls(); }
+}
+// Reconnect flow when state is reconnect-required: re-request permission on click.
+async function reconnectFolder() {
+  if (!FOLDER_DIR_HANDLE) return connectFolder();
+  try {
+    const perm = await FOLDER_DIR_HANDLE.requestPermission({ mode: 'readwrite' });
+    if (perm === 'granted') {
+      FOLDER_STATE = 'connected';
+      await idbSetHandle(FOLDER_DIR_HANDLE);
+      renderFolderControls();
+      updateFolderStatusUI('Syncing…');
+      await syncFromDisk();
+      await backfillToFolder();
+      updateFolderStatusUI('Up to date.');
+    }
+  } catch (e) { console.warn('Reconnect failed:', e); }
+}
+
+// ═══════════════════════════════════════════════════════════
+//  STATE — branching tree. Every recognition, deepen, and commit
+//  is a node with a parent and children. Nothing is ever deleted
+//  by navigation — jumping to an old node opens a new sibling
+//  branch from it; existing branches stay intact and revisitable.
+// ═══════════════════════════════════════════════════════════
+let SEED = '';
+let HINT = '';
+let NODES = {};        // id -> node
+let ROOT_ID = null;
+let ACTIVE_ID = null;
+let nodeSeq = 0;
+let CURRENT_FAN = null;
+let CRYSTALLIZATION = null; // crystallization of the most recently shown commit
+
+function parseJSON(raw) {
+  const clean = raw.replace(/```json|```/g, '').trim();
+  const first = clean.indexOf('{');
+  const last = clean.lastIndexOf('}');
+  const slice = (first !== -1 && last !== -1) ? clean.slice(first, last + 1) : clean;
+  try {
+    return JSON.parse(slice);
+  } catch (e) {
+    throw new Error(`Model response was cut short or malformed (${e.message}). Try again — this is usually a one-off streaming hiccup, not a config problem.`);
+  }
+}
+
+function esc(s) { return (s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+const stage = document.getElementById('stage');
+
+function newNode(kind, data, parentId) {
+  const id = 'n' + (nodeSeq++);
+  const node = Object.assign({ id, kind, parentId: parentId || null, children: [] }, data);
+  NODES[id] = node;
+  if (parentId) NODES[parentId].children.push(id);
+  return node;
+}
+
+function ancestorChain(id) {
+  const chain = [];
+  let cur = id ? NODES[id] : null;
+  while (cur) { chain.unshift(cur); cur = cur.parentId ? NODES[cur.parentId] : null; }
+  return chain;
+}
+function activeVectors() { return ancestorChain(ACTIVE_ID).filter(n => n.kind === 'vector'); }
+
+// ═══════════════════════════════════════════════════════════
+//  SPINE — HTML tree render (path rail)
+// ═══════════════════════════════════════════════════════════
+function renderSpine() {
+  const mount = document.getElementById('spine');
+  const empty = document.getElementById('spineEmpty');
+  const backBtn = document.getElementById('pathBackBtn');
+  if (!ROOT_ID) { mount.innerHTML = ''; empty.hidden = false; backBtn.hidden = true; return; }
+  empty.hidden = true;
+
+  const onPathIds = new Set(ancestorChain(ACTIVE_ID).map(n => n.id));
+  const activeNode = NODES[ACTIVE_ID];
+  backBtn.hidden = !(activeNode && activeNode.parentId);
+
+  let out = '';
+  function paint(id, depth) {
+    const node = NODES[id];
+    let fill, label, sub;
+    if (node.kind === 'seed') { fill = '#7c6ef5'; label = 'SEED'; sub = node.text; }
+    else if (node.kind === 'commit') { fill = '#f5a623'; label = 'Forged prompt'; sub = `score ${node.score}/10 · ${node.converged ? 'converged' : 'best available'}`; }
+    else if (node.terminal) { fill = '#4caf82'; label = node.label; sub = node.direction; }
+    else { fill = '#38bdf8'; label = node.label; sub = node.direction; }
+
+    const cls = ['spine-node'];
+    if (onPathIds.has(id)) cls.push('on-path');
+    if (id === ACTIVE_ID) cls.push('is-active');
+
+    out += `<div class="${cls.join(' ')}" data-id="${id}" style="margin-left:${depth*14}px">
+        <div class="sn-top"><span class="sn-dot" style="background:${fill}"></span><span class="sn-label">${esc(trunc(label, 30))}</span></div>
+        <span class="sn-sub">${esc(trunc(sub, 40))}</span>
+      </div>`;
+    node.children.forEach(cid => paint(cid, depth + 1));
+  }
+  paint(ROOT_ID, 0);
+  mount.innerHTML = out;
+
+  mount.querySelectorAll('.spine-node').forEach(el => {
+    el.addEventListener('click', () => jumpToNode(el.dataset.id));
+  });
+}
+function trunc(s, n) { s = s || ''; return s.length > n ? s.slice(0, n-1) + '…' : s; }
+
+// ═══════════════════════════════════════════════════════════
+//  CONTENT BUILDERS
+// ═══════════════════════════════════════════════════════════
+function pathText() {
+  let t = `Origin seed: "${SEED}"`;
+  const vectors = activeVectors();
+  if (vectors.length) {
+    t += `\n\nRecognized trajectory:`;
+    vectors.forEach((v, i) => { t += `\n  ${i+1}. ${v.label}: ${v.direction}`; });
+    t += `\n\nTerminal vector: ${vectors[vectors.length-1].label}: ${vectors[vectors.length-1].direction}`;
+  }
+  if (HINT) t += `\n\nUser success hint: "${HINT}"`;
+  return t;
+}
+
+function crystalText(c) {
+  if (!c) return '';
+  return `CRYSTALLIZATION:\n\nOperative stance: ${c.operative_stance}\n\nReorientations:\n${(c.reorientations||[]).map((r,i) => `  ${i+1}. ${r}`).join('\n')}\n\nWhat must change in the cognition: ${c.what_must_change_in_the_cognition}\n\nWhat the cognition must refuse:\n${(c.what_the_cognition_must_refuse||[]).map(r => `  - ${r}`).join('\n')}`;
+}
+
+function divergeContent(scope) {
+  const vectors = activeVectors();
+  if (!scope) {
+    let c = `This is the FIRST fan, thrown directly from the seed.\n\nOrigin seed: "${SEED}"`;
+    if (HINT) c += `\n\nUser success hint: "${HINT}"`;
+    c += `\n\nLocate the seed's position, then throw orthogonal vectors it could be reaching toward.`;
+    return c;
+  }
+  let c = `You are DESCENDING into a recognized vector. Enforce the home-tether to the origin seed.\n\nOrigin seed: "${SEED}"`;
+  c += `\n\nPath of recognitions so far:`;
+  vectors.forEach((v, i) => { c += `\n  ${i+1}. ${v.label}: ${v.direction}`; });
+  c += `\n\nCurrently descending into: "${scope.label}: ${scope.direction}"`;
+  if (HINT) c += `\n\nUser success hint: "${HINT}"`;
+  c += `\n\nThrow orthogonal SUB-vectors from this position. Each must trace to both this parent and the origin seed. If only paraphrases remain, set floor_reached true.`;
+  return c;
+}
+
+// ═══════════════════════════════════════════════════════════
+//  UI HELPERS
+// ═══════════════════════════════════════════════════════════
+function showThinking(label) {
+  stage.innerHTML = `<div class="thinking"><span class="pulse"></span>${esc(label)}</div>`;
+}
+function showError(where, msg) {
+  stage.innerHTML = `<div class="stage-head"><div class="stage-eyebrow">error · ${esc(where)}</div></div>
+    <div class="err-box">${esc(msg)}</div>
+    <button class="restart-btn" id="restartBtn">↺ Start over</button>`;
+  document.getElementById('restartBtn').addEventListener('click', resetAll);
+}
+
+function resonanceColor(depth) {
+  if (depth <= 1) return '#38bdf8';
+  if (depth <= 2) return '#7c6ef5';
+  if (depth <= 3) return '#f5a623';
+  if (depth <= 4) return '#f97316';
+  return '#f56565';
+}
+
+// Crystallization detail now surfaces inline in stage output (renderForged's
+// trajectory section) rather than a dedicated panel — right panel is the
+// Response Library. This is kept as a safe no-op so existing call sites don't error.
+function updateCrystalPanel(c) { /* no-op — see renderForged() for inline crystallization display */ }
+
+// ═══════════════════════════════════════════════════════════
+//  RENDER FAN
+// ═══════════════════════════════════════════════════════════
+function renderFan(result) {
+  CURRENT_FAN = result;
+  if (ACTIVE_ID) NODES[ACTIVE_ID].fanResult = result; // cache on the node we fanned from
+
+  if (result.floor_reached || !result.vectors || result.vectors.length === 0) {
+    stage.innerHTML = `<div class="stage-head">
+        <div class="stage-eyebrow">floor reached</div>
+        <div class="stage-h">No orthogonal sub-directions remain</div>
+      </div>
+      <div class="anchored"><span class="lbl">position</span>${esc(result.anchored_position || 'This vector is near-atomic.')}</div>
+      <p style="color:var(--text-secondary);margin-bottom:1rem;font-family:var(--serif);font-style:italic;">This direction is sharp enough — fanning further would only produce paraphrases. Deepen it into the prompt.</p>
+      <div class="door-row"><div class="door deepen" id="doorDeepen"><div class="d-name">Deepen ↓</div><div class="d-desc">Crystallize the path, then forge the dense system prompt.</div></div></div>`;
+    document.getElementById('doorDeepen').addEventListener('click', runCrystallizeAndDeepen);
+    return;
+  }
+
+  let cards = result.vectors.map(v => {
+    const rd = v.resonance_depth || 3;
+    const col = resonanceColor(rd);
+    return `
+    <div class="vector-card" data-id="${esc(v.id)}">
+      ${v.can_subdivide === false ? '<span class="vc-atomic">atomic</span>' : ''}
+      <div class="vc-label">${esc(v.label)}</div>
+      <div class="vc-dir">${esc(v.direction)}</div>
+      <div class="vc-trace"><b>traces via</b> · ${esc(v.traces_via || '—')}</div>
+      <div class="vc-resonance">
+        <div class="vc-resonance-label">resonance</div>
+        <div class="vc-resonance-bar"><div class="vc-resonance-fill" style="width:${rd*20}%;background:${col};"></div></div>
+        <div class="vc-resonance-val" style="color:${col};">${rd}/5</div>
+      </div>
+    </div>`;
+  }).join('');
+
+  const depth = activeVectors().length;
+  stage.innerHTML = `<div class="stage-head">
+      <div class="stage-eyebrow">${depth === 0 ? 'diverge · first fan' : 'diverge · descent ' + depth}</div>
+      <div class="stage-h">Which one is <em>yours?</em></div>
+    </div>
+    <div class="anchored"><span class="lbl">anchored position</span>${esc(result.anchored_position)}</div>
+    <div class="fan-grid" id="fanGrid">${cards}</div>
+    <div id="doorsMount"></div>`;
+
+  document.querySelectorAll('.vector-card').forEach(card => {
+    card.addEventListener('click', () => recognize(card.dataset.id));
+  });
+}
+
+function recognize(vectorId) {
+  const v = CURRENT_FAN.vectors.find(x => x.id === vectorId);
+  if (!v) return;
+
+  // Reuse an existing child branch if this exact vector was already recognized
+  // from this position — otherwise open a NEW sibling branch. Nothing is discarded.
+  const parent = NODES[ACTIVE_ID];
+  let node = parent.children.map(cid => NODES[cid])
+    .find(n => n.kind === 'vector' && n.sourceVectorId === v.id);
+  if (!node) {
+    node = newNode('vector', {
+      sourceVectorId: v.id, label: v.label, direction: v.direction,
+      traces_via: v.traces_via, can_subdivide: v.can_subdivide
+    }, ACTIVE_ID);
+  }
+  ACTIVE_ID = node.id;
+  renderSpine();
+
+  if (!isExplorerMode()) { runCrystallizeAndDeepen(); return; }
+
+  document.querySelectorAll('.vector-card').forEach(c => {
+    if (c.dataset.id === vectorId) { c.style.borderColor = 'var(--accent-main)'; c.style.boxShadow = '-3px 0 0 var(--accent-main)'; }
+    else { c.style.opacity = '0.4'; c.style.pointerEvents = 'none'; }
+  });
+
+  const canFan = v.can_subdivide !== false;
+  const mount = document.getElementById('doorsMount');
+  mount.innerHTML = `<div class="doors">
+      <div class="doors-prompt">You recognized <b>${esc(v.label)}</b>. Travel further, or crystallize and build?</div>
+      <div class="door-row">
+        <div class="door fan ${canFan ? '' : 'disabled'}" id="doorFan">
+          <div class="d-name">Fan finer →</div>
+          <div class="d-desc">${canFan ? 'Open a finer fan inside this vector and descend.' : 'Near-atomic — no orthogonal sub-directions to open.'}</div>
+        </div>
+        <div class="door deepen" id="doorDeepen">
+          <div class="d-name">Deepen ↓</div>
+          <div class="d-desc">Crystallize the path, then forge the dense system prompt.</div>
+        </div>
+      </div>
+    </div>`;
+  if (canFan) document.getElementById('doorFan').addEventListener('click', () => fanFiner(node));
+  document.getElementById('doorDeepen').addEventListener('click', runCrystallizeAndDeepen);
+  mount.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+// ═══════════════════════════════════════════════════════════
+//  ARRIVAL — landing directly on a node via the path rail
+// ═══════════════════════════════════════════════════════════
+function renderVectorArrival(node) {
+  const canFan = node.can_subdivide !== false;
+  stage.innerHTML = `<div class="stage-head">
+      <div class="stage-eyebrow">at · ${esc(node.label)}</div>
+      <div class="stage-h">You recognized <em>${esc(node.label)}</em></div>
+    </div>
+    <div class="anchored"><span class="lbl">direction</span>${esc(node.direction)}</div>
+    <p style="color:var(--text-secondary);margin-bottom:1rem;font-family:var(--serif);font-style:italic;">Revisited from the path. Fan finer to branch further from here, or deepen straight into a prompt — either opens a fresh branch alongside anything already forged from this point.</p>
+    <div class="doors">
+      <div class="door-row">
+        <div class="door fan ${canFan ? '' : 'disabled'}" id="doorFan">
+          <div class="d-name">Fan finer →</div>
+          <div class="d-desc">${canFan ? (node.fanResult ? 'Reopen the fan already thrown from here.' : 'Open a finer fan inside this vector and descend.') : 'Near-atomic — no orthogonal sub-directions to open.'}</div>
+        </div>
+        <div class="door deepen" id="doorDeepen">
+          <div class="d-name">Deepen ↓</div>
+          <div class="d-desc">Crystallize the path, then forge the dense system prompt.</div>
+        </div>
+      </div>
+    </div>`;
+  if (canFan) document.getElementById('doorFan').addEventListener('click', () => fanFiner(node));
+  document.getElementById('doorDeepen').addEventListener('click', runCrystallizeAndDeepen);
+}
+
+function jumpToNode(id) {
+  const node = NODES[id];
+  if (!node) return;
+  ACTIVE_ID = id;
+  renderSpine();
+
+  if (node.kind === 'seed') {
+    if (node.fanResult) renderFan(node.fanResult);
+    else showThinking('Restoring the first fan…');
+  } else if (node.kind === 'vector') {
+    renderVectorArrival(node);
+  } else if (node.kind === 'commit') {
+    renderForged(node);
+  }
+}
+
+function goBack() {
+  const node = NODES[ACTIVE_ID];
+  if (node && node.parentId) jumpToNode(node.parentId);
+}
+
+// ═══════════════════════════════════════════════════════════
+//  FLOW
+// ═══════════════════════════════════════════════════════════
+async function startForge() {
+  SEED = document.getElementById('seed-input').value.trim();
+  HINT = document.getElementById('hint-input').value.trim();
+  if (!SEED) { document.getElementById('seed-input').focus(); return; }
+  if (!checkReady()) return;
+
+  NODES = {}; nodeSeq = 0; CRYSTALLIZATION = null;
+  updateCrystalPanel(null);
+  const root = newNode('seed', { text: SEED }, null);
+  ROOT_ID = root.id; ACTIVE_ID = root.id;
+  renderSpine();
+  document.getElementById('forgeBtn').disabled = true;
+
+  showThinking('Locating the seed, throwing the first fan…');
+  try {
+    const raw = await callAI(activeStagePrompt('diverge'), divergeContent(null), null);
+    const result = parseJSON(raw);
+    renderFan(result);
+  } catch (e) {
+    showError('diverge', e.message);
+  } finally {
+    document.getElementById('forgeBtn').disabled = false;
+  }
+}
+
+async function fanFiner(scopeNode) {
+  if (scopeNode.fanResult) { renderFan(scopeNode.fanResult); return; } // cached — no refetch
+  showThinking('Descending — opening a finer fan, tethered to the origin…');
+  try {
+    const raw = await callAI(activeStagePrompt('diverge'), divergeContent(scopeNode), null);
+    const result = parseJSON(raw);
+    renderFan(result);
+  } catch (e) {
+    showError('fan finer', e.message);
+  }
+}
+
+// ─── CRYSTALLIZE THEN DEEPEN ─────────────────────────────────
+// Runs crystallization before the architect, then seals the result
+// as a COMMIT node — a child of the vector it was deepened from.
+async function runCrystallizeAndDeepen() {
+  const cfg = getConfig();
+  const vectorNodeId = ACTIVE_ID;
+  const vectors = activeVectors();
+  if (vectors.length) vectors[vectors.length-1].terminal = true;
+  renderSpine();
+
+  stage.innerHTML = `<div class="stage-head">
+      <div class="stage-eyebrow">crystallize + deepen</div>
+      <div class="stage-h">What did the path change?</div>
+    </div>
+    <div class="loop-log" id="loopLog"></div>
+    <div class="section-h">Current prompt</div>
+    <div class="prompt-stream" id="promptStream"></div>`;
+
+  const log = document.getElementById('loopLog');
+  const streamEl = document.getElementById('promptStream');
+  const addLog = (cls, txt) => {
+    const d = document.createElement('div');
+    d.className = 'log-entry ' + cls; d.textContent = txt; log.appendChild(d);
+    log.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  };
+
+  let bestPrompt = '', bestScore = -1, converged = false, lastEval = null;
+
+  try {
+    // ── STEP 1: CRYSTALLIZE ──────────────────────────────────
+    addLog('crystal', 'Crystallizing what the path changed…');
+    const crystalContent = `${pathText()}\n\nCrystallize what this path actually changed — the operative stance, the specific reorientations, what must change in the cognition, and what must be refused.`;
+    const crystalRaw = await callAI(activeStagePrompt('crystallize'), crystalContent, null);
+    CRYSTALLIZATION = parseJSON(crystalRaw);
+    addLog('crystal', `Crystallized — operative stance: "${trunc(CRYSTALLIZATION.operative_stance, 80)}"`);
+
+    // ── STEP 2: ARCHITECT / REVISE LOOP ─────────────────────
+    for (let iter = 1; iter <= cfg.maxIter; iter++) {
+      addLog('info', `Iteration ${iter} of ${cfg.maxIter}`);
+      streamEl.textContent = '';
+      let prompt = '';
+
+      const architectInput = `${pathText()}\n\n${crystalText(CRYSTALLIZATION)}\n\nForge the dense system prompt that inhabits this crystallized dimension.`;
+      const reviseInput = (evalResult) =>
+        `${pathText()}\n\n${crystalText(CRYSTALLIZATION)}\n\nPrevious prompt:\n---\n${bestPrompt}\n---\n\nEvaluator axis scores: ${JSON.stringify(evalResult.axis_scores)}\nWeaknesses: ${(evalResult.weaknesses||[]).join('; ')}\nRevision guidance: ${evalResult.revision_guidance || ''}\n\nRewrite to fix every weakness while inhabiting the crystallized operative stance.`;
+
+      if (iter === 1) {
+        addLog('architect', 'Architect forging from crystallized trajectory…');
+        prompt = await callAI(activeStagePrompt('architect'), architectInput, ch => { streamEl.textContent += ch; });
+      } else {
+        addLog('architect', 'Revising against path-fidelity and crystallization…');
+        prompt = await callAI(activeStagePrompt('revise'), reviseInput(lastEval), ch => { streamEl.textContent += ch; });
+      }
+      prompt = prompt.trim();
+
+      // ── STEP 3: PATH-FIDELITY EVALUATE ──────────────────────
+      const evalContent = `${pathText()}\n\n${crystalText(CRYSTALLIZATION)}\n\nForged prompt to judge:\n---\n${prompt}\n---\nThreshold for pass: ${cfg.threshold}/10.`;
+      const evalRaw = await callAI(activeStagePrompt('fidelity'), evalContent, null);
+      lastEval = parseJSON(evalRaw);
+      const score = parseInt(lastEval.score) || 0;
+      const pass = score >= cfg.threshold;
+
+      if (score > bestScore) { bestScore = score; bestPrompt = prompt; }
+
+      addLog(pass ? 'pass' : 'fail',
+        `Path-fidelity · iter ${iter} — score ${score}/10 (A:${lastEval.axis_scores?.A} B:${lastEval.axis_scores?.B} C:${lastEval.axis_scores?.C} D:${lastEval.axis_scores?.D} E:${lastEval.axis_scores?.E}) · ${pass ? 'PASS ✓' : 'FAIL — ' + (lastEval.weaknesses||[]).slice(0,2).join('; ')}`);
+
+      if (pass) { converged = true; break; }
+      if (iter < cfg.maxIter) addLog('info', 'Feeding axis scores and weaknesses back into revision…');
+    }
+
+    if (!converged) addLog('fail', `Did not reach threshold within ${cfg.maxIter} iterations — keeping best (score ${bestScore}/10).`);
+
+    // ── STEP 4: CONFIRM PROBE ────────────────────────────────
+    addLog('info', 'Confirmation probe (off-loop): testing output and stance continuity…');
+    const terminal = vectors.length ? vectors[vectors.length-1] : { label: 'seed', direction: SEED };
+    let confirm = null;
+    try {
+      const probeContent = `Forged prompt:\n---\n${bestPrompt}\n---\n\nTerminal vector: "${terminal.label}: ${terminal.direction}"\n\nCrystallized operative stance: "${CRYSTALLIZATION?.operative_stance || ''}"\n\nExecute briefly, then judge both terminal vector continuity and operative stance continuity.`;
+      const probeRaw = await callAI(activeStagePrompt('confirm'), probeContent, null);
+      confirm = parseJSON(probeRaw);
+      const stanceOk = confirm.stance_continuous !== false;
+      addLog(
+        (confirm.continuous && stanceOk) ? 'pass' : 'fail',
+        `Probe — vector: ${confirm.continuous ? 'continuous ✓' : 'drift ⚠'} | stance: ${stanceOk ? 'continuous ✓' : 'drift ⚠'}`
+      );
+    } catch (e) {
+      addLog('fail', 'Probe failed: ' + e.message);
+    }
+
+    // Seal as a COMMIT node — child of the vector, sibling to any prior commit.
+    const commitNode = newNode('commit', {
+      prompt: bestPrompt, score: bestScore, converged, confirm,
+      crystallization: CRYSTALLIZATION
+    }, vectorNodeId);
+    ACTIVE_ID = commitNode.id;
+    renderSpine();
+    renderForged(commitNode);
+    saveResponseEntry(commitNode);
+
+  } catch (e) {
+    showError('deepen', e.message);
+  }
+}
+
+function renderForged(node) {
+  const { prompt, score, converged, confirm, crystallization } = node;
+
+  const vectors = ancestorChain(node.id).filter(n => n.kind === 'vector');
+  const trajItems = [`<li><b>Seed</b> — ${esc(SEED)}</li>`]
+    .concat(vectors.map(v => `<li><b>${esc(v.label)}</b> — ${esc(v.direction)}</li>`)).join('');
+
+  let confirmHtml = '';
+  if (confirm) {
+    const ok = confirm.continuous && confirm.stance_continuous !== false;
+    confirmHtml = `<div class="section-h">Confirmation probe · off-loop</div>
+      <div class="confirm-box ${ok ? 'ok' : 'drift'}">
+        <div class="confirm-verdict ${ok ? 'ok' : 'drift'}">${ok ? '✓ continuous with terminal vector + operative stance' : '⚠ drift — check note below'}</div>
+        <div class="confirm-sample">${esc(confirm.sample || '')}</div>
+        <div class="confirm-note">${esc(confirm.note || '')}</div>
+      </div>`;
+  }
+
+  let crystalHtml = '';
+  if (crystallization) {
+    const reors = (crystallization.reorientations || []).map(r => `<li>${esc(r)}</li>`).join('');
+    const refuses = (crystallization.what_the_cognition_must_refuse || [])
+      .map(r => `<span style="display:block;margin-bottom:0.3rem;">→ ${esc(r)}</span>`).join('');
+    crystalHtml = `<div class="section-h">✦ Crystallization — what this path changed</div>
+      <div class="crystal-box">
+        <span class="crystal-label">Operative stance</span>
+        <div class="crystal-stance">${esc(crystallization.operative_stance || '')}</div>
+        <ul class="crystal-reorientations">${reors}</ul>
+        <div class="crystal-what-changes">Must refuse:<br>${refuses}</div>
+      </div>`;
+  }
+
+  stage.innerHTML = `<div class="stage-head">
+      <div class="stage-eyebrow">forged</div>
+      <div class="forged-head">
+        <div class="stage-h">The dense prompt</div>
+        <div style="display:flex;gap:0.6rem;align-items:center;">
+          <span class="forged-badge">${converged ? 'converged' : 'best available'} · ${score}/10</span>
+          <button class="copy-btn" id="copyBtn">Copy prompt</button>
+        </div>
+      </div>
+    </div>
+    <div class="forged-prompt" id="forgedPrompt">${esc(prompt)}</div>
+    ${confirmHtml}
+    <div class="detail-toggle" id="detailToggle">
+      <span>✦ Crystallization &amp; trajectory — how this prompt was reached</span>
+      <span class="dt-chevron">▶</span>
+    </div>
+    <div class="detail-body" id="detailBody">
+      <div class="detail-body-inner">
+        ${crystalHtml}
+        <div class="section-h">The trajectory it encodes</div>
+        <ul class="traj-list">${trajItems}</ul>
+      </div>
+    </div>
+    <p style="color:var(--text-muted);font-size:0.78rem;font-style:italic;margin-top:0.9rem;">Saved to the Response Library — open ▤ in the header to browse, copy, or export past forges.</p>
+    <button class="restart-btn" id="restartBtn">↺ Forge another</button>`;
+
+  document.getElementById('detailToggle').addEventListener('click', () => {
+    document.getElementById('detailToggle').classList.toggle('expanded');
+    document.getElementById('detailBody').classList.toggle('expanded');
+  });
+
+  document.getElementById('copyBtn').addEventListener('click', () => {
+    navigator.clipboard.writeText(prompt).then(() => {
+      const b = document.getElementById('copyBtn'); b.textContent = '✓ copied';
+      setTimeout(() => b.textContent = 'Copy prompt', 1400);
+    });
+  });
+  document.getElementById('restartBtn').addEventListener('click', resetAll);
+}
+
+function resetAll() {
+  NODES = {}; ROOT_ID = null; ACTIVE_ID = null; nodeSeq = 0;
+  CURRENT_FAN = null; SEED = ''; HINT = ''; CRYSTALLIZATION = null;
+  document.getElementById('seed-input').value = '';
+  document.getElementById('hint-input').value = '';
+  updateCrystalPanel(null);
+  renderSpine();
+  stage.innerHTML = `<div class="empty-state">
+      <div class="empty-icon">◈</div>
+      <div class="empty-title">Forge a dimension</div>
+      <div class="empty-label">Drop an intuition above. The engine locates where it sits, throws orthogonal directions it could be reaching toward. You recognize the one that's yours. Then — before the prompt is written — the engine crystallizes what the path actually changed: the new operative stance, each reorientation, what the resulting cognition must refuse.</div>
+    </div>`;
+}
+
+document.getElementById('forgeBtn').addEventListener('click', startForge);
+document.getElementById('pathBackBtn').addEventListener('click', goBack);
+
+// ─── PANEL TOGGLES ───────────────────────────────────────────
+// UI Contract Constraint 01 — overlay only, independent backdrop + toggle per panel.
+// Left = prompt/path library (☰), right = response library (▤). Both closed by default,
+// both slide + hide via their own class + own scrim; never a shared toggle.
+function openLeftPanel() {
+  document.getElementById('pathRail').classList.add('open');
+  document.getElementById('leftScrim').classList.add('open');
+}
+function closeLeftPanel() {
+  document.getElementById('pathRail').classList.remove('open');
+  document.getElementById('leftScrim').classList.remove('open');
+}
+function openResponsePanel() {
+  document.getElementById('responsePanel').classList.add('open');
+  document.getElementById('responseScrim').classList.add('open');
+}
+function closeResponsePanel() {
+  document.getElementById('responsePanel').classList.remove('open');
+  document.getElementById('responseScrim').classList.remove('open');
+}
+
+document.getElementById('railToggleBtn').addEventListener('click', () => {
+  const isOpen = document.getElementById('pathRail').classList.contains('open');
+  isOpen ? closeLeftPanel() : openLeftPanel();
+});
+document.getElementById('leftScrim').addEventListener('click', closeLeftPanel);
+
+document.getElementById('responseToggleBtn').addEventListener('click', () => {
+  const isOpen = document.getElementById('responsePanel').classList.contains('open');
+  isOpen ? closeResponsePanel() : openResponsePanel();
+});
+document.getElementById('responseScrim').addEventListener('click', closeResponsePanel);
+
+// init
+updateWarning();
+loadPromptLibrary();
+loadResponseLibrary().then(() => initFolderConnect());
+renderSpine();
+</script>
+</body>
+</html>

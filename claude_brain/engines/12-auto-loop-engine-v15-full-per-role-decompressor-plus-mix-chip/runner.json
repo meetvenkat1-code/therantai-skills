@@ -1,0 +1,118 @@
+{
+  "engine": "12-auto-loop-engine-v15-full-per-role-decompressor-plus-mix-chip",
+  "version": "1.0.0",
+  "source_file": "engines/incoming_batch/archive/12-auto-loop-engine-v15-full-per-role-decompressor plus mix chip.html",
+  "review_required": false,
+  "model_core": {
+    "contract": "model-config-contract v2",
+    "canonical_config_url": "https://raw.githubusercontent.com/meetvenkat1-code/therantai-config/refs/heads/main/model.json"
+  },
+  "execution": {
+    "topology": "multi-step bespoke auto-loop: architect -> executor(+playbook) -> evaluator -gate-> rearchitect loop with best-score tracking",
+    "roles": [
+      "architect",
+      "executor",
+      "evaluator",
+      "rearchitect"
+    ],
+    "versions": [
+      "original",
+      "reforged",
+      "decompressor"
+    ],
+    "playbooks": [
+      "reframe",
+      "analytical",
+      "generative",
+      "exploratory",
+      "diagnostic",
+      "synthesis",
+      "critical"
+    ],
+    "role_version_selector": {
+      "mechanism": "setActivePromptVersion(role, vKey) + renderPromptLibraryPanel; persisted localStorage alpe_prompt_library_v1 via loadPromptLibrary/savePromptLibrary; defaults active original per role",
+      "ui": "promptLibraryPanel/plibRoleList with per-role version rows, edit-in-place, + New version / Delete version"
+    },
+    "mix_chip": {
+      "recommended_mix": {
+        "architect": "reforged",
+        "executor": "original",
+        "evaluator": "reforged",
+        "rearchitect": "original"
+      },
+      "presets": [
+        "original",
+        "reforged",
+        "decompressor",
+        "recommended"
+      ],
+      "apply": "applyGlobalPreset(presetKey) + resetChips()",
+      "note": "Recommended Starting Mix: architect+evaluator reforged are non-conditional upgrades; executor/rearchitect stay original until log evidence shows a conditional failure"
+    },
+    "steps": [
+      {
+        "id": "architect",
+        "role": "architect",
+        "system_from": "prompt:architect-{active_version} (defaultPromptLibrary line 3442; active defaults to original)",
+        "user_recipe": "User input from main-input + optional hint-input as Success criterion + typeClause from selectedType (auto or data-type override reframe/analytical/generative/exploratory/diagnostic/synthesis/critical); runArchitect (line 3752) on iter 1",
+        "call": "callAI(system, user) non-streaming temp 0.3, strict JSON parse (strip ```json fences); returns reconstructed_intent + cognitive_mode + detected_escape_hatch + dense_prompt (+ version-specific fields)"
+      },
+      {
+        "id": "executor",
+        "role": "executor",
+        "system_from": "prompt:executor-{active_version} with {PLAYBOOK} substitution via getActiveExecutorSystem(cognitive_mode, selectedType) (line 3577): PROMPT_TYPE_PLAYBOOKS[cognitive_mode] || PROMPT_TYPE_PLAYBOOKS[typeHint] || ''; replace token else append",
+        "user_recipe": "architectResult.dense_prompt verbatim",
+        "call": "callAIStream(system, dense_prompt, onChunk) streaming temp 0.7 with markdown render; runExecutorStreaming (line 3762)"
+      },
+      {
+        "id": "evaluator",
+        "role": "evaluator",
+        "system_from": "prompt:evaluator-{active_version} (line 3482)",
+        "user_recipe": "originalInput + hint + cognitive_mode + detected_escape_hatch + dense_prompt + executor response; runEvaluator (line 3772)",
+        "call": "callAI(system, user) non-streaming temp 0.3, strict JSON parse; returns score 1-10 + operation_performed + escape_hatch_used + weaknesses + verdict + revision_guidance (+ version-specific fields)",
+        "gate": "isPass = score >= threshold; threshold from getLoopConfig localStorage alpe_threshold default 7, UI thresholdSlider min 5 max 9; pass -> converged break, fail -> continue if iter < maxIter"
+      },
+      {
+        "id": "rearchitect-loop",
+        "role": "rearchitect",
+        "system_from": "prompt:rearchitect-{active_version} (line 3502)",
+        "user_recipe": "originalInput + hint + previous cognitive_mode + previous dense_prompt + eval score/operation/escape_hatch/weaknesses/revision_guidance; runReArchitect (line 3784) on iter >= 2",
+        "call": "callAI(system, user) non-streaming temp 0.3, strict JSON parse; returns revised dense_prompt (+ reconstruction_audit/overlap_check on alternate versions)",
+        "loop": "for iter 1..maxIter; maxIter from getLoopConfig localStorage alpe_max_iter default 3, UI maxIter number min 1 max 5; track bestScore/bestResponse/bestPrompt/bestMode/bestIter; converged Response score badge else best available; per-iteration library+archive registration"
+      }
+    ],
+    "loop": {
+      "maxIter": {
+        "default": 3,
+        "min": 1,
+        "max": 5,
+        "ui_id": "maxIter",
+        "storage": "localStorage alpe_max_iter",
+        "config_fn": "getLoopConfig (line 1752)"
+      },
+      "threshold": {
+        "default": 7,
+        "min": 5,
+        "max": 9,
+        "ui_id": "thresholdSlider",
+        "storage": "localStorage alpe_threshold",
+        "config_fn": "getLoopConfig (line 1752)"
+      },
+      "inputs": {
+        "main_input": "main-input",
+        "hint_input": "hint-input",
+        "type_selector": "selectedType via .pt-chip data-type auto/reframe/analytical/generative/exploratory/diagnostic/synthesis/critical"
+      }
+    }
+  },
+  "api_routing": {
+    "call_entry": "callModel({provider, system, user, onText})",
+    "mode": "curated chain-walk",
+    "proxy": {
+      "attempt_order": [
+        "/api/chat (if deployed)",
+        "direct provider endpoints (standalone BYOK)"
+      ]
+    }
+  }
+}

@@ -1,0 +1,57 @@
+{
+  "slug": "slot-grammar-script-engine",
+  "title": "Slot-Grammar Script Engine",
+  "cardLabel": "Monologue",
+  "emptyText": "Offer a seed idea below, set the fidelity, and forge.",
+  "placeholder": "Seed idea (Ctrl/Cmd+Enter to forge)",
+  "runLabel": "Forge",
+  "runBusyLabel": "Forging…",
+  "busyText": "Burning…",
+  "description": "Five-slot monologue forge with FIDELITY dial",
+  "triggers": [
+    "slot grammar",
+    "monologue"
+  ],
+  "controls": [
+    {
+      "type": "slider",
+      "key": "FIDELITY",
+      "label": "FIDELITY",
+      "min": 0,
+      "max": 1,
+      "step": 0.1,
+      "default": 0,
+      "bands": [
+        [
+          0.3,
+          "closed-form fiction"
+        ],
+        [
+          0.7,
+          "defensible analogy"
+        ],
+        [
+          1,
+          "grounded, checkable"
+        ]
+      ]
+    },
+    {
+      "type": "chips",
+      "key": "OUTPUT_MODE",
+      "options": [
+        "script",
+        "script+trace"
+      ],
+      "default": "script"
+    }
+  ],
+  "emptyInputReply": null,
+  "tests": [
+    {
+      "input": "why the night sky is dark",
+      "valid": true,
+      "output": "Does the dark between the stars hold a hidden wall, or does it hold nothing at all?\n\nCosmologists of the closed model state, with full confidence, that an infinite sky would blaze in every direction, which is the olbers paradox of the old universe.\n\nIt follows, as an implication, that the darkness is a measure of time, not of emptiness, and the horizon of light resembles a mind that has not yet been reached.\n\nA second witness, the observer, has realized that the sky is dark because the sight of every watcher is entirely bounded by the age of the thing it studies.\n\nYou are the horizon. Nothing else is dark."
+    }
+  ]
+}

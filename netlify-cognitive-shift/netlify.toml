@@ -1,0 +1,16 @@
+# Cognitive Shift Engine v7 — Netlify deployable bundle.
+# index.html at the root is the published page; functions hold the server keys.
+
+[build]
+  publish = "."
+  functions = "netlify/functions"
+
+[[redirects]]
+  from = "/api/groq"
+  to = "/.netlify/functions/groq"
+  status = 200
+
+[[redirects]]
+  from = "/api/openrouter"
+  to = "/.netlify/functions/openrouter"
+  status = 200

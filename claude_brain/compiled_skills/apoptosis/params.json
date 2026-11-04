@@ -1,0 +1,18 @@
+{
+  "skill": "apoptosis",
+  "skill_name": "apoptosis",
+  "description": "Programmed obsolescence-by-evolution. Audits living, beloved, frequently-used skills, memory entries, and standing law for whether they still earn their place as the practice evolves around them. Fires a five-test battery \u2014 supersession, practice transcendence, architectural misfit, density cost, the beloved trap \u2014 and delivers a three-tier verdict via the shared adjudicate kernel, with named re-entry conditions. Never rewrites. Verdict and death-reason only. Scope: full \u2014 skills, memory layer, and standing law. Standing law requires practitioner confirmation before execution; skills and memory entries do not. The third death a skill can die, after moult (drift/disuse) and assay (density failure on birth). Invoke with /apoptosis, \"apoptosis this skill\", \"has this earned its place\", \"is this still alive\", \"run the obsolescence check\", \"does this still belong here\".",
+  "source_file": "skills/apoptosis/SKILL.md",
+  "source_sha": "75e6c35dc01c221a643200c4d793108302cc8da4aa10f6b4c6f332f1f0b64501",
+  "resources": [],
+  "provider_config": {
+    "model_core": "v2"
+  },
+  "inputs": [
+    {
+      "id": "chatInput",
+      "kind": "textarea",
+      "label": "Invoke the skill"
+    }
+  ]
+}

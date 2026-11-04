@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>{{TITLE}}</title>
+<style>
+{{STYLE}}
+</style></head><body>
+<div class="header">
+ <div class="zA"><span class="name">{{TITLE}}</span><span class="badge" id="cfgBadge">Config: Local Fallback</span></div>
+ <div class="zB">
+  <button class="ib" id="btnL" title="Prompt library">☰</button>
+  <div class="sel"><span class="dot" id="providerDot"></span><select id="providerSelect"></select></div>
+  <button class="ib" id="btnR" title="Response library">▤</button>
+  <button class="ib" id="btnG" title="Settings">⚙</button>
+ </div>
+ <div class="zone-c"><i>crafted by</i><br><a href="mailto:meet.venkat1@gmail.com">meet.venkat1@gmail.com</a></div>
+</div>
+<div class="output-area" id="outArea"><div class="canvas">
+ <div class="banner" id="banner"></div>
+ <div class="toolbar"><span class="stat" id="stat"></span>
+  <button class="copy-btn" id="copyAll"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"></rect><path d="M5 15V5a2 2 0 0 1 2-2h10"></path></svg> Copy all</button>
+  <button class="copy-btn" id="expTxt">Export .txt</button></div>
+ <div class="card"><div class="card-header"><span>{{CARD_LABEL}}</span>
+  <button class="copy-btn" id="copyCard"><svg viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"></rect><path d="M5 15V5a2 2 0 0 1 2-2h10"></path></svg> Copy</button></div>
+  <div id="out">{{EMPTY_HTML}}</div></div>
+</div></div>
+<div class="input-bar">
+ <textarea id="seed" placeholder="{{PLACEHOLDER}}"></textarea>
+ <div class="row">
+  {{CONTROLS}}
+  <button id="run">{{RUN_LABEL}}</button>
+ </div>
+</div>
+<div class="bd" id="bdL"></div><div class="bd" id="bdR"></div><div class="bd" id="bdG"></div>
+<div class="panel" id="leftPanel">
+ <h3>Prompt library</h3>
+ <input type="text" id="promptName" value="{{SLUG}}">
+ <textarea id="promptBody" spellcheck="false"></textarea>
+ <div class="btns"><button class="copy-btn" id="pSave">Save prompt</button><button class="copy-btn" id="pReset">Reset to original</button><button class="copy-btn" id="pImp">Import .md</button><button class="copy-btn" id="pExp">Export JSON</button><button class="copy-btn" id="pImpJ">Import JSON</button></div>
+ <div class="mut">{{PARAM_NOTE}}</div>
+ <input type="file" class="fileh" id="fMd" accept=".md,.txt"><input type="file" class="fileh" id="fPJ" accept=".json">
+</div>
+<div class="panel" id="rightPanel">
+ <h3>Response library</h3>
+ <div class="btns"><button class="copy-btn" id="rExp">Export JSON</button><button class="copy-btn" id="rImp">Import JSON</button></div>
+ <div id="rList"></div><input type="file" class="fileh" id="fRJ" accept=".json">
+</div>
+<div class="panel" id="gearDrawer">
+ <h3>Settings</h3><div id="drawerKeyRows"></div>
+ <div class="btns"><button class="copy-btn" id="clearKeys">Clear saved keys</button></div>
+</div>
+<script>
+{{CORE}}{{ENGINE_PRE}}{{HELPERS}}{{ENGINE_POST}}</script></body></html>

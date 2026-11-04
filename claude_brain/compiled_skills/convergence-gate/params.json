@@ -1,0 +1,18 @@
+{
+  "skill": "convergence-gate",
+  "skill_name": "convergence-gate",
+  "description": "The pre-invocation routing pipeline for the Therantai skill ecosystem. Fires the moment raw input arrives (a fragment dump, a hand-drafted framework, a voice-transcribed thought-structure, a pasted document) and the practitioner does not yet know which skill(s) apply. Reads the input, surfaces every plausible candidate skill, names where two or more genuinely overlap, ranks which candidate is load-bearing versus supportive with structural reasoning, and emits exactly one next invocation plus what is queued behind it. Does not perform the downstream skill's work itself \u2014 it only decides which door to open next. Invoke with /gate, \"which skill should I use\", \"route this\", \"I have a bunch of skills and don't know which one\", \"what's the next step here\", or any moment of standing in front of the full ecosystem with an input and no clear entry point.",
+  "source_file": "skills/convergence-gate/SKILL.md",
+  "source_sha": "996b6c7686106deeda5f497eefcbedf9bc6a8e0fcc6c34f40dd69fb253b17830",
+  "resources": [],
+  "provider_config": {
+    "model_core": "v2"
+  },
+  "inputs": [
+    {
+      "id": "chatInput",
+      "kind": "textarea",
+      "label": "Invoke the skill"
+    }
+  ]
+}

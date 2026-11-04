@@ -1,0 +1,18 @@
+{
+  "skill": "oracle-core",
+  "skill_name": "oracle-core",
+  "description": "The Manager organ of the Oracle Suite. Sole function \u2014 interpret raw intent and decide which suite organ fires. Tagged intent dispatches directly to decomposition or autopsy; untagged tasks route to router for depth classification; ambiguous signals die at the threshold with exactly one forged fork question. Hosts the canonical ADJUDICATE kernel and the suite-wide FORGE SCARS ledger. Never maps, never refines, never executes. Invoke with /oracle, \"oracle this\", or by submitting any task to the suite \u2014 all suite traffic enters here.",
+  "source_file": "skills/oracle-core/SKILL.md",
+  "source_sha": "2073e3ffebfe02d713093562f6eca8f3998f984c45bf02f7a5e3f4bebc003d62",
+  "resources": [],
+  "provider_config": {
+    "model_core": "v2"
+  },
+  "inputs": [
+    {
+      "id": "chatInput",
+      "kind": "textarea",
+      "label": "Invoke the skill"
+    }
+  ]
+}

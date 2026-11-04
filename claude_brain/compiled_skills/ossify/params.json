@@ -1,0 +1,18 @@
+{
+  "skill": "ossify",
+  "skill_name": "ossify",
+  "description": "\"Germinates a dense, paste-ready portable spine from a bare theme \u2014 a domain, subject, or register handed over with no fragments and no built artifact yet. The generative inverse of distill: where distill ascends a finished system to its seed, ossify grows a seed outward into a spine. Soft theme in, hard bone out. Unlike spinal-column, which HEARS an identity already carried in loaded fragments, ossify must INVENT one the theme does not contain \u2014 and its entire discipline is the refusal to invent a generic one. Invoke with /ossify or phrases like 'ossify this', 'give me a spine for [theme]', 'forge a spine from this theme', 'portable spine for [domain]', 'I just have a domain, no fragments yet', 'germinate a spine', 'build the bone for [subject]'. Triggers whenever the input is a near-bare conceptual seed and the requested output is a spine, not a full engine build. Does NOT trigger on loaded fragments carrying operational heat \u2014 that is spinal-column's territory.\"",
+  "source_file": "skills/ossify/SKILL.md",
+  "source_sha": "b9f6c3160164ebc4b4e71983852e43283226201918b863f3a9164035078e812c",
+  "resources": [],
+  "provider_config": {
+    "model_core": "v2"
+  },
+  "inputs": [
+    {
+      "id": "chatInput",
+      "kind": "textarea",
+      "label": "Invoke the skill"
+    }
+  ]
+}

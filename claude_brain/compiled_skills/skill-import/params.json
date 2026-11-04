@@ -1,0 +1,18 @@
+{
+  "skill": "skill-import",
+  "skill_name": "skill-import",
+  "description": "The universal reception organ for the Therantai skill ecosystem zip. Runs a three-verdict merge protocol when a zip or skill bundle arrives from another builder \u2014 unique-to-receiver skills are left untouched, overlapping skills are overwritten by the zip (zip is canonical), and unique-to-zip skills are staged and flagged for permanent installation. Self-contained \u2014 designed to travel inside the zip so the receiver has the import protocol the moment they have the skills. Invoke with /skill-import, \"import these skills\", \"install the zip\", \"I received a skill bundle\", \"help me install Venkatesh's skills\", \"how do I install this zip\", or any moment a zip or folder of external SKILL.md files arrives and the question is how to bring them in without collision or silent overwrite.",
+  "source_file": "skills/skill-import/SKILL.md",
+  "source_sha": "6d18912ea102501b1a90b83384feab74b54ad082041e2ad81bd02aa88b308459",
+  "resources": [],
+  "provider_config": {
+    "model_core": "v2"
+  },
+  "inputs": [
+    {
+      "id": "chatInput",
+      "kind": "textarea",
+      "label": "Invoke the skill"
+    }
+  ]
+}

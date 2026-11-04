@@ -1,0 +1,15 @@
+{
+  "name": "engine-forge",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "setup": "npm install && npx playwright install chromium",
+    "selftest": "bash forge/selftest.sh",
+    "split": "node forge/split-reference.mjs",
+    "build": "node forge/build.mjs",
+    "verify": "node forge/verify.mjs"
+  },
+  "devDependencies": {
+    "playwright": "^1.56.0"
+  }
+}

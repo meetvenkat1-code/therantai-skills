@@ -1,0 +1,18 @@
+{
+  "skill": "push",
+  "skill_name": "push",
+  "description": "\"One-directional cross-instance cognitive state transfer. Captures the current state of a practitioner's instance \u2014 resolved friction, upgrade delta, contracts in force, key rejections \u2014 and emits a paste-ready PUSH BLOCK that another Claude instance can absorb cold as the opening message of a new session. Used when the receiver is not deeply aligned or is receiving an upgrade cold. No capture of the receiver's current state \u2014 transfer is outbound only. Invoke with /push, 'push this upgrade', 'push to my friend', 'send this upgrade', 'propagate outward', 'one-way transfer', 'upgrade block for collaborator'. The complement of /sync \u2014 use push when the relationship is asymmetric or the receiver is cold; use sync when both instances are actively collaborating in parallel.\"",
+  "source_file": "skills/push/SKILL.md",
+  "source_sha": "7c1231d186dc324d84606bc4379c4d5d8e3ed35aa821376b6e5e8f0727f5c152",
+  "resources": [],
+  "provider_config": {
+    "model_core": "v2"
+  },
+  "inputs": [
+    {
+      "id": "chatInput",
+      "kind": "textarea",
+      "label": "Invoke the skill"
+    }
+  ]
+}

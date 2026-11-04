@@ -1,0 +1,18 @@
+{
+  "skill": "openrouter-free-path-integration",
+  "skill_name": "openrouter-free-path-integration",
+  "description": "Complete, stable pattern for integrating the OpenRouter free path (`openrouter/free`) into any hybrid HTML engine. Includes automatic routing, manual model selection, conditional UI dropdown pattern (secondary + tertiary), defensive coding practices, recommended free models, and lessons from real implementation friction. Allows upgrading older hybrid engines with robust OpenRouter free tier support.",
+  "source_file": "skills/openrouter-free-path-integration/SKILL.md",
+  "source_sha": "0139c1aa68ed15fd82f416009e2b33c2aaf67273a3ce91981e68a333a211d1a8",
+  "resources": [],
+  "provider_config": {
+    "model_core": "v2"
+  },
+  "inputs": [
+    {
+      "id": "chatInput",
+      "kind": "textarea",
+      "label": "Invoke the skill"
+    }
+  ]
+}

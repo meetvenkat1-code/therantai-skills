@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<!-- COMPILED by tools/compile_skill.py from claude_brain/compiled_skills/skill-import/. Source: skills/skill-import/SKILL.md. DO NOT hand-edit; edit skills/ source and re-ingest. -->
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>skill-import (skill build)</title>
+<style>
+:root{--bg:#0a0a0f;--panel:#12121a;--line:#26263a;--txt:#e8e8f0;--dim:#8a8aa3;--acc:#22c55e}
+body{background:var(--bg);color:var(--txt);font-family:system-ui,sans-serif;margin:0}
+.header{display:flex;justify-content:space-between;align-items:center;padding:.8rem 1.2rem;border-bottom:1px solid var(--line)}
+.badge{font-size:.65rem;border:1px solid var(--line);border-radius:99px;padding:.15rem .6rem;color:var(--dim)}
+.canvas{max-width:800px;margin:0 auto;padding:1.2rem}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:1rem;margin-bottom:1rem}
+.desc{font-size:.8rem;color:var(--dim);margin:.4rem 0 0}
+.bubble{border:1px solid var(--line);border-radius:10px;padding:.7rem 1rem;margin-top:.6rem;white-space:pre-wrap;font-size:.88rem}
+.bubble.user{border-color:var(--acc)}.who{font-size:.65rem;color:var(--dim);letter-spacing:.1em;text-transform:uppercase}
+textarea{width:100%;min-height:70px;background:#0d0d14;color:var(--txt);border:1px solid var(--line);border-radius:8px;padding:.6rem}
+input[type=password]{background:#0d0d14;color:var(--txt);border:1px solid var(--line);border-radius:6px;padding:.4rem .6rem;width:210px}
+select{background:#0d0d14;color:var(--txt);border:1px solid var(--line);border-radius:6px;padding:.35rem}
+button{background:var(--acc);color:#04120a;border:0;border-radius:8px;padding:.55rem 1.1rem;font-weight:700;cursor:pointer;margin-top:.6rem}
+button.plain{background:#1a1a26;color:var(--txt);border:1px solid var(--line);font-weight:400}
+.keyrow{display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;font-size:.72rem;color:var(--dim);margin-top:.6rem}
+</style></head>
+<body>
+<div class="header"><div><b>SKILL-IMPORT</b> <span class="badge">skill build</span> <span class="badge" id="cfgBadge">Config: …</span></div>
+<div><select id="providerSelect"><option value="groq">Groq</option><option value="or-auto">OR · Free Router</option><option value="claude">Claude · Native</option></select></div></div>
+<div class="canvas"><div class="panel"><p class="desc">The universal reception organ for the Therantai skill ecosystem zip. Runs a three-verdict merge protocol when a zip or skill bundle arrives from another builder — unique-to-receiver skills are left untouched, overlapping skills are overwritten by the zip (zip is canonical), and unique-to-zip skills are staged and flagged for permanent installation. Self-contained — designed to travel inside the zip so the receiver has the import protocol the moment they have the skills. Invoke with /skill-import, &quot;import these skills&quot;, &quot;install the zip&quot;, &quot;I received a skill bundle&quot;, &quot;help me install Venkatesh's skills&quot;, &quot;how do I install this zip&quot;, or any moment a zip or folder of external SKILL.md files arrives and the question is how to bring them in without collision or silent overwrite.</p>
+<div class="keyrow">Keys (this browser only): <input type="password" id="key-groq" placeholder="gsk_…"> <input type="password" id="key-openrouter" placeholder="sk-or-…"> <button class="plain" id="saveKeys">Save</button></div></div>
+<div id="stream"></div>
+<div class="panel"><textarea id="chatInput" placeholder="Invoke the skill… (Enter to send, Shift+Enter for newline)"></textarea><br>
+<button id="sendBtn">Send</button> <button class="plain" id="clearBtn">Clear transcript</button></div></div>
+<script>
+/* ---- Model Core v2 (registry runtime, compact) ---- */
+var ENGINE_NAME = "skill-import";
+var CANONICAL_CONFIG_URL = "https://raw.githubusercontent.com/meetvenkat1-code/therantai-config/refs/heads/main/model.json";
+var LOCAL_FALLBACK_CONFIG = {
+ "native_model": "claude-sonnet-4-6",
+ "defaultLanes": [
+  "groq::openai/gpt-oss-120b",
+  "or-auto::openrouter/free"
+ ],
+ "providers": [
+  {
+   "id": "groq",
+   "endpoint": "https://api.groq.com/openai/v1/chat/completions",
+   "keyStorageName": "groq",
+   "modelChain": [
+    "openai/gpt-oss-120b",
+    "openai/gpt-oss-20b"
+   ]
+  },
+  {
+   "id": "or-auto",
+   "endpoint": "https://openrouter.ai/api/v1/chat/completions",
+   "keyStorageName": "openrouter",
+   "modelChain": [
+    "openrouter/free"
+   ]
+  }
+ ]
+};
+var liveModelConfig = LOCAL_FALLBACK_CONFIG;
+function getKey(name){ try { return localStorage.getItem("hek_" + name) || ""; } catch(e){ return ""; } }
+async function fetchModelConfig(){
+  try {
+    var r = await fetch(CANONICAL_CONFIG_URL + "?v=" + Date.now(), {cache:"no-store"});
+    if (r.ok) { var j = await r.json(); if (j && j.providers) { liveModelConfig = j; setBadge("live"); return; } }
+  } catch(e){}
+  setBadge("fallback");
+}
+function setBadge(s){ var b = document.getElementById("cfgBadge"); if (b) { b.textContent = "Config: " + s; b.dataset.state = s; } }
+function providers(){ return liveModelConfig.providers || []; }
+async function readOpenAIStream(resp, onText){
+  var reader = resp.body.getReader(), dec = new TextDecoder(), acc = "";
+  var buf = "";
+  while (true) {
+    var chunk = await reader.read(); if (chunk.done) break;
+    buf += dec.decode(chunk.value, {stream:true});
+    var parts = buf.split("\n\n"); buf = parts.pop();
+    for (var p of parts) {
+      var line = p.trim(); if (!line.startsWith("data:")) continue;
+      var data = line.slice(5).trim(); if (data === "[DONE]") continue;
+      try {
+        var d = JSON.parse(data);
+        var t = (d.choices && d.choices[0] && (d.choices[0].delta?.content || d.choices[0].message?.content)) || "";
+        if (t) { acc += t; if (onText) onText(acc); }
+      } catch(e){}
+    }
+  }
+  return acc;
+}
+/* callModel: ONE entry. Proxy first, then direct chain-walk. No scattered fetch. */
+/* Universal skill injection: registry builds define withSkill(); elsewhere this no-ops. */
+async function callModel(opts){
+  try { if (typeof withSkill === 'function') { opts = Object.assign({}, opts, {system: withSkill(opts.system)}); } } catch(e){}
+  var prov = providers().find(p => p.id === opts.provider) || providers()[0];
+  var errors = [];
+  // 1) platform proxy (Netlify) when reachable
+  try {
+    var pr = await fetch("/api/chat", {method:"POST", headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({system: opts.system, user: opts.user, provider: prov.id})});
+    if (pr.ok) {
+      var pj = await pr.json();
+      if (pj && pj.text) { if (opts.onText) opts.onText(pj.text); return {text: pj.text, served: "proxy"}; }
+    }
+  } catch(e){ errors.push("proxy:" + e.message); }
+  // 2) direct BYOK chain
+  var chain = [prov].concat(providers().filter(p => p.id !== prov.id && !p.native));
+  for (var cand of chain) {
+    if (cand.native) continue; // native branch is platform-only; skip standalone
+    var key = getKey(cand.keyStorageName || cand.id);
+    if (!key) { errors.push(cand.id + ":missing_key"); continue; }
+    try {
+      var headers = {"Content-Type":"application/json", "Authorization":"Bearer " + key};
+      var resp = await fetch(cand.endpoint, {method:"POST", headers,
+        body: JSON.stringify({model: (cand.modelChain && cand.modelChain[0]) || "",
+          messages:[{role:"system",content:opts.system},{role:"user",content:opts.user}], stream:true})});
+      if (!resp.ok) { errors.push(cand.id + ":" + resp.status); continue; }
+      var text = await readOpenAIStream(resp, opts.onText);
+      if (text) return {text, served: cand.id};
+    } catch(e){ errors.push(cand.id + ":" + e.message); }
+  }
+  throw new Error("all_providers_failed (" + errors.join("; ") + "). Set keys in Settings.");
+}
+
+/* ---- Skill behavior (verbatim SKILL.md body) ---- */
+function getSkillText(){ return `# Skill-Import
+
+Closes the transfer loop: sending-side skills (transit-block, graft-out, handoff, intake) exist, but none handled a full zip bundle arriving in front of a receiver with their own living skills and no protocol. Every share was a manual "do I overwrite/merge/keep mine?" negotiation. This runs from the zip itself, no expertise in the sending ecosystem required.
+
+## The hard constraint — state first, every time
+\`/mnt/skills/user/\` is **read-only**. Claude cannot write/copy/install there directly. Claude can: stage incoming skills at \`/home/claude/\` for review, generate a structured install report, run the three-verdict protocol to produce copy-paste-ready commands. The receiver must execute the final copy to \`/mnt/skills/user/\` on their own host machine. Structural fact, not a limitation — surface it at the threshold every time.
+
+## The three-verdict protocol
+**LEAVE** — exists in receiver's ecosystem, not in the zip. Untouched, no review needed. If it isn't in the zip, this protocol doesn't touch it.
+**OVERWRITE** — exists in both. Zip is canonical, whole file replaces installed version — no line-by-line merge (degrades the zip's tested coherence for little gain). Local modifications the receiver wants kept → run \`/fuse-delta\` on that specific skill *after* import, as a deliberate second pass. Never fuse during import.
+**STAGE** — exists in zip only, new to receiver. No installed analog to compare against — can't drop in silently. Stage at \`/home/claude/<skill-name>/\`, surface with a one-line description, confirm before permanent install, then \`/place\` to earn a registry entry. A skill installed without placement is an orphan; enough orphans flattens the ecosystem.
+
+## Execution
+1. State the read-only constraint. 2. Inventory both surfaces (bundle + installed) explicitly, no assuming. 3. Classify every incoming skill LEAVE/OVERWRITE/STAGE, present the full list before touching anything. 4. Receive confirmation or amendment — no file moves before this. 5. Stage OVERWRITE skills at \`/home/claude/\`, generate exact shell commands. 6. Stage STAGE skills, surface name + function + arc-phase from the bundle's README/registry. 7. Generate the installation report — three sections, exact paths, shell commands, fuse-delta flags. 8. Flag (name only, don't run) any OVERWRITE skill the receiver says they've locally modified.
+
+## Relations
+Intake = single-skill reception; skill-import = bundle reception — complementary, not competing. Fuse-delta runs after, never during — skill-import recommends it, never merges inline. Placement-protocol locates every STAGE skill after confirmation — skill-import stages/surfaces, placement locates. Moult \`--check\` recommended (not mandatory) after a large overwrite, to surface any phantom entries the import introduced.
+
+## Not
+Not a merger (fuse-delta). Not single-skill orientation (intake). Not a registry writer (placement-protocol). Not a conflict resolver (fuse-delta, post-import). Owns one decision at scale — which verdict, how to land cleanly — transparent, confirmed before touching files, handed off after.
+
+## Installation note
+Travels inside the zip it governs: unzip, copy \`skill-import/\` to \`/mnt/skills/user/skill-import/\`. One-time; available on \`/skill-import\` for every future bundle.`; }
+var transcript=[];
+function bubble(who,text,cls){ var d=document.createElement('div'); d.className='bubble '+(cls||''); d.innerHTML='<div class="who">'+who+'</div>'; var b=document.createElement('div'); b.textContent=text; d.appendChild(b); document.getElementById('stream').appendChild(d); d.scrollIntoView(false); return b; }
+function buildUser(){ return transcript.slice(-12).map(function(t){ return t.role+': '+t.content; }).join('\n\n'); }
+async function send(){ var inp=document.getElementById('chatInput').value.trim(); if(!inp) return; document.getElementById('chatInput').value='';
+  transcript.push({role:'user',content:inp}); bubble('you',inp,'user');
+  var body=bubble('skill','…');
+  try{ var r=await callModel({provider:document.getElementById('providerSelect').value,system:getSkillText(),user:buildUser(),onText:function(a){body.textContent=a;}});
+    body.textContent=r.text; transcript.push({role:'assistant',content:r.text}); }
+  catch(e){ body.textContent='Error: '+e.message; } }
+document.getElementById('sendBtn').addEventListener('click',send);
+document.getElementById('chatInput').addEventListener('keydown',function(e){ if(e.key==='Enter'&&!e.shiftKey){ e.preventDefault(); send(); } });
+document.getElementById('clearBtn').addEventListener('click',function(){ transcript=[]; document.getElementById('stream').innerHTML=''; });
+document.getElementById('saveKeys').addEventListener('click',function(){ try{ localStorage.setItem('hek_groq',document.getElementById('key-groq').value); localStorage.setItem('hek_openrouter',document.getElementById('key-openrouter').value); }catch(e){} });
+try{ document.getElementById('key-groq').value=localStorage.getItem('hek_groq')||''; document.getElementById('key-openrouter').value=localStorage.getItem('hek_openrouter')||''; }catch(e){}
+fetchModelConfig();
+</script>
+</body></html>

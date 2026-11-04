@@ -1,0 +1,37 @@
+{
+  "slug": "echo-ledger",
+  "title": "Echo Ledger",
+  "cardLabel": "Audit",
+  "emptyText": "Submit a claim below to audit it.",
+  "placeholder": "A claim to audit (Ctrl/Cmd+Enter)",
+  "runLabel": "Audit",
+  "runBusyLabel": "Auditing…",
+  "busyText": "Testing the claim…",
+  "description": "Two-section claim auditor",
+  "triggers": [
+    "audit",
+    "claim"
+  ],
+  "controls": [],
+  "emptyInputReply": "Provide a claim to audit.",
+  "contract": {
+    "sections": [
+      "CLAIM",
+      "CHECK"
+    ],
+    "endsWith": ".",
+    "forbid": [
+      "lists"
+    ],
+    "fixedReplies": [
+      "Provide a claim to audit."
+    ]
+  },
+  "tests": [
+    {
+      "input": "The bridge is safe, it was inspected last year.",
+      "valid": true,
+      "output": "**CLAIM**\n\nThe bridge is safe because it was inspected last year.\n\n**CHECK**\n\nAn inspection a year ago does not establish that the bridge is safe today."
+    }
+  ]
+}

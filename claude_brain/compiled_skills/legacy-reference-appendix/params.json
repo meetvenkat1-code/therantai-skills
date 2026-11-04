@@ -1,0 +1,18 @@
+{
+  "skill": "legacy-reference-appendix",
+  "skill_name": "legacy-reference-appendix",
+  "description": ">",
+  "source_file": "skills/legacy-reference-appendix/SKILL.md",
+  "source_sha": "f50c1c0f53ce551d1509547a7e0a2ec393c15d6bd8dead8dc1f96cff60291817",
+  "resources": [],
+  "provider_config": {
+    "model_core": "v2"
+  },
+  "inputs": [
+    {
+      "id": "chatInput",
+      "kind": "textarea",
+      "label": "Invoke the skill"
+    }
+  ]
+}

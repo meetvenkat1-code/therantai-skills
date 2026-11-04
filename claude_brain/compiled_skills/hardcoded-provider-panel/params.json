@@ -1,0 +1,18 @@
+{
+  "skill": "hardcoded-provider-panel",
+  "skill_name": "hardcoded-provider-panel",
+  "description": ">",
+  "source_file": "skills/hardcoded-provider-panel/SKILL.md",
+  "source_sha": "61fd24751a2ada2f58e7ead07323b681f5b853162da001440f7630dce40110d9",
+  "resources": [],
+  "provider_config": {
+    "model_core": "v2"
+  },
+  "inputs": [
+    {
+      "id": "chatInput",
+      "kind": "textarea",
+      "label": "Invoke the skill"
+    }
+  ]
+}

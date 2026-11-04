@@ -1,0 +1,1958 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vector Forge</title>
+<style>
+:root {
+  --bg-void:        #0a0a0f;
+  --bg-surface:     #12121a;
+  --bg-elevated:    #1a1a28;
+  --bg-border:      #2a2a3d;
+  --text-primary:   #e8e8f0;
+  --text-secondary: #9090a8;
+  --text-muted:     #505068;
+  --accent-main:    #7c6ef5;
+  --accent-glow:    rgba(124,110,245,0.15);
+  --amber:          #f5a623;
+  --green:          #4caf82;
+  --coral:          #f56565;
+  --teal:           #38bdf8;
+  --orange-warn:    #f97316;
+  --serif: Georgia, 'Iowan Old Style', 'Times New Roman', serif;
+  --sans: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --mono: ui-monospace, 'SF Mono', 'Cascadia Code', Menlo, Consolas, monospace;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  height: 100%;
+  background: var(--bg-void);
+  color: var(--text-primary);
+  font-family: var(--sans);
+  font-size: 15px;
+  line-height: 1.55;
+}
+
+body { display: flex; flex-direction: column; min-height: 100vh; }
+
+/* ─── HEADER : ZONE A / B / C ─────────────────────────────── */
+.header {
+  display: flex; align-items: center; justify-content: space-between;
+  height: 52px; padding: 0 1.5rem;
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--bg-border);
+  position: sticky; top: 0; z-index: 100;
+}
+.zone-a { display: flex; align-items: baseline; gap: 0.6rem; }
+.config-badge { font-size: 0.66rem; font-family: var(--mono); letter-spacing: 0.05em; padding: 0.1rem 0.45rem; border-radius: 4px; opacity: 0.85; }
+.config-badge.live { color: #22c55e; border: 1px solid #22c55e55; }
+.config-badge.fallback { color: var(--text-muted); border: 1px solid var(--text-muted); }
+.engine-name { font-family: var(--serif); font-size: 1.18rem; letter-spacing: 0.01em; color: var(--text-primary); }
+.engine-name .accent { color: var(--accent-main); }
+.engine-tag { font-size: 0.68rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.16em; }
+.zone-b { display: flex; align-items: center; gap: 0.5rem; }
+.panel-btn {
+  background: var(--bg-elevated); border: 1px solid var(--bg-border);
+  color: var(--text-secondary); width: 34px; height: 34px;
+  border-radius: 7px; cursor: pointer; font-size: 0.95rem;
+  display: grid; place-items: center; transition: all .15s;
+}
+.panel-btn:hover { color: var(--accent-main); border-color: var(--accent-main); }
+.provider-wrap { position: relative; display: flex; align-items: center; }
+.provider-dot {
+  position: absolute; left: 10px; width: 7px; height: 7px; border-radius: 50%;
+  background: var(--text-muted); pointer-events: none;
+}
+#providerSelect {
+  background: var(--bg-elevated); color: var(--text-primary);
+  border: 1px solid var(--bg-border); border-radius: 7px;
+  padding: 0.4rem 0.6rem 0.4rem 1.5rem; font-size: 0.8rem; font-family: var(--sans); cursor: pointer;
+}
+.gear-btn {
+  background: var(--bg-elevated); border: 1px solid var(--bg-border);
+  color: var(--text-secondary); width: 34px; height: 34px;
+  border-radius: 7px; cursor: pointer; font-size: 1rem;
+  display: grid; place-items: center; transition: all .15s;
+}
+.gear-btn:hover { color: var(--accent-main); border-color: var(--accent-main); }
+.zone-c { font-size: 0.72rem; color: var(--text-muted); text-align: right; line-height: 1.3; font-family: var(--sans); font-style: italic; }
+.zone-c a { color: var(--text-muted); text-decoration: none; font-style: normal; }
+
+/* ─── WARNING BANNER ──────────────────────────────────────── */
+.warn-banner {
+  background: rgba(249,115,22,0.12);
+  border-bottom: 1px solid rgba(249,115,22,0.3);
+  color: var(--orange-warn);
+  font-size: 0.78rem; padding: 0.5rem 1.5rem; text-align: center;
+}
+[hidden] { display: none !important; }
+
+/* ─── OVERLAY PANELS (dual-panel law) ─────────────────────── */
+.panel-scrim { position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 200; visibility: hidden; opacity: 0; pointer-events: none; transition: opacity .25s ease; }
+.panel-scrim.open { visibility: visible; opacity: 1; pointer-events: auto; }
+
+#leftPanel, #rightPanel, #drawer {
+  position: fixed; top: 0; height: 100%; width: 400px; max-width: 92vw;
+  background: var(--bg-surface); z-index: 201;
+  transition: transform .25s ease; padding: 1.4rem; overflow-y: auto;
+}
+#leftPanel { left: 0; border-right: 1px solid var(--bg-border); transform: translateX(-100%); }
+#leftPanel.open { transform: translateX(0); }
+#rightPanel { right: 0; border-left: 1px solid var(--bg-border); transform: translateX(100%); width: 440px; }
+#rightPanel.open { transform: translateX(0); }
+#drawer { right: 0; border-left: 1px solid var(--bg-border); width: 320px; transform: translateX(100%); }
+#drawer.open { transform: translateX(0); }
+
+.panel h3 { font-family: var(--serif); font-size: 1.05rem; font-weight: 400; margin-bottom: 0.3rem; color: var(--text-primary); display: flex; justify-content: space-between; align-items: center; }
+.panel-sub { font-size: 0.72rem; color: var(--text-muted); font-style: italic; margin-bottom: 1.2rem; }
+.panel h3 .x { cursor: pointer; color: var(--text-muted); font-size: 1rem; }
+.panel h3 .x:hover { color: var(--accent-main); }
+
+.panel-tools { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1.1rem; }
+.tool-btn {
+  background: var(--bg-elevated); border: 1px solid var(--bg-border); color: var(--text-secondary);
+  border-radius: 6px; padding: 0.4rem 0.7rem; font-size: 0.72rem; cursor: pointer; transition: all .15s;
+  display: flex; align-items: center; gap: 0.35rem;
+}
+.tool-btn:hover { border-color: var(--accent-main); color: var(--accent-main); }
+.tool-btn.active-state { border-color: var(--green); color: var(--green); }
+.tool-btn.warn-state { border-color: var(--orange-warn); color: var(--orange-warn); }
+
+.panel-divider { height: 1px; background: var(--bg-border); margin: 1rem 0; }
+
+/* library entries */
+.entry-card {
+  background: var(--bg-elevated); border: 1px solid var(--bg-border); border-left: 3px solid var(--accent-main);
+  border-radius: 8px; padding: 0.8rem 0.9rem; margin-bottom: 0.6rem; cursor: pointer; transition: all .15s;
+}
+.entry-card:hover { border-left-color: var(--teal); }
+.entry-card.active-entry { border-left-color: var(--green); box-shadow: 0 0 14px var(--accent-glow); }
+.entry-name { font-family: var(--serif); font-size: 0.95rem; color: var(--text-primary); margin-bottom: 0.25rem; }
+.entry-meta { font-size: 0.68rem; color: var(--text-muted); font-family: var(--mono); display: flex; gap: 0.5rem; flex-wrap: wrap; }
+.entry-actions { display: flex; gap: 0.4rem; margin-top: 0.5rem; }
+.entry-actions button { background: none; border: 1px solid var(--bg-border); color: var(--text-muted); border-radius: 5px; padding: 0.2rem 0.5rem; font-size: 0.66rem; cursor: pointer; }
+.entry-actions button:hover { border-color: var(--accent-main); color: var(--accent-main); }
+.entry-actions button.danger:hover { border-color: var(--coral); color: var(--coral); }
+
+.panel-empty { color: var(--text-muted); font-size: 0.8rem; font-style: italic; padding: 1.2rem 0; text-align: center; }
+
+/* edit form (left panel) */
+.field-row { margin-bottom: 0.9rem; }
+.field-row label { display: block; font-size: 0.68rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-secondary); margin-bottom: 0.35rem; }
+.field-row input, .field-row textarea {
+  width: 100%; background: var(--bg-void); border: 1px solid var(--bg-border);
+  color: var(--text-primary); border-radius: 6px; padding: 0.5rem 0.6rem;
+  font-family: var(--sans); font-size: 0.82rem;
+}
+.field-row textarea { font-family: var(--mono); font-size: 0.78rem; min-height: 140px; resize: vertical; line-height: 1.55; }
+.field-row input:focus, .field-row textarea:focus { outline: none; border-color: var(--accent-main); }
+.save-entry-btn { background: var(--accent-main); color: #fff; border: none; border-radius: 7px; padding: 0.5rem 1rem; font-size: 0.8rem; cursor: pointer; width: 100%; }
+.save-entry-btn:hover { box-shadow: 0 0 16px var(--accent-glow); }
+
+/* response cards (right panel) */
+.resp-card { background: var(--bg-elevated); border: 1px solid var(--bg-border); border-radius: 8px; padding: 0.85rem 0.9rem; margin-bottom: 0.7rem; }
+.resp-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.4rem; gap: 0.5rem; }
+.resp-tag { font-family: var(--serif); font-size: 0.86rem; color: var(--accent-main); }
+.resp-time { font-size: 0.64rem; color: var(--text-muted); font-family: var(--mono); white-space: nowrap; }
+.resp-body { font-size: 0.78rem; color: var(--text-secondary); line-height: 1.6; max-height: 90px; overflow: hidden; position: relative; }
+.resp-body.expanded { max-height: none; }
+.resp-toggle { font-size: 0.68rem; color: var(--teal); cursor: pointer; margin-top: 0.35rem; }
+.resp-actions { display: flex; gap: 0.4rem; margin-top: 0.55rem; }
+
+.folder-status { font-size: 0.72rem; color: var(--text-muted); font-family: var(--mono); padding: 0.5rem 0; }
+.folder-status.connected { color: var(--green); }
+.folder-status.reconnect { color: var(--orange-warn); }
+
+/* gear drawer */
+.prov-row { margin-bottom: 1.1rem; }
+.prov-row label { display: block; font-size: 0.74rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-secondary); margin-bottom: 0.35rem; }
+.prov-row .field { display: flex; gap: 0.4rem; }
+.prov-row input {
+  flex: 1; background: var(--bg-void); border: 1px solid var(--bg-border);
+  color: var(--text-primary); border-radius: 6px; padding: 0.45rem 0.55rem;
+  font-family: var(--mono); font-size: 0.78rem;
+}
+.prov-row input:focus { outline: none; border-color: var(--accent-main); }
+.prov-row button { background: var(--accent-main); color: #fff; border: none; border-radius: 6px; padding: 0 0.8rem; font-size: 0.78rem; cursor: pointer; }
+.prov-row .native-note { font-size: 0.78rem; color: var(--text-muted); font-style: italic; padding: 0.45rem 0; font-family: var(--mono); }
+.prov-row .or-note { font-size: 0.72rem; color: var(--orange-warn); font-style: italic; padding: 0.35rem 0 0; font-family: var(--mono); }
+.drawer-divider { height: 1px; background: var(--bg-border); margin: 1.4rem 0; }
+.cfg-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.9rem; }
+.cfg-row label { font-size: 0.8rem; color: var(--text-secondary); }
+.cfg-row input { width: 70px; background: var(--bg-void); border: 1px solid var(--bg-border); color: var(--text-primary); border-radius: 6px; padding: 0.35rem; text-align: center; font-family: var(--mono); }
+.save-flash { color: var(--green); font-size: 0.72rem; margin-left: 0.5rem; }
+
+/* copy button (canonical) */
+.copy-btn{display:flex;align-items:center;gap:5px;background:none;border:1px solid var(--bg-border);color:var(--text-muted);font-size:.65rem;padding:4px 10px 5px;border-radius:5px;cursor:pointer;transition:all .2s;white-space:nowrap;flex-shrink:0}
+.copy-btn svg{width:11px;height:11px;stroke:currentColor;fill:none;stroke-width:1.8}
+.copy-btn:hover{border-color:var(--accent-main);color:var(--accent-main)}
+.copy-btn.copied{border-color:var(--green);color:var(--green)}
+
+/* ─── SEED BAR ────────────────────────────────────────────── */
+.seed-bar {
+  padding: 1.3rem 1.5rem 1.1rem;
+  border-bottom: 1px solid var(--bg-border);
+  background: linear-gradient(180deg, var(--bg-surface), var(--bg-void));
+}
+.seed-bar .seed-label { font-family: var(--serif); font-size: 0.92rem; color: var(--text-secondary); margin-bottom: 0.55rem; font-style: italic; }
+#seed-input {
+  width: 100%; background: var(--bg-elevated); color: var(--text-primary);
+  border: 1px solid var(--bg-border); border-radius: 10px;
+  padding: 0.85rem 1rem; font-family: var(--serif); font-size: 1.02rem;
+  line-height: 1.5; resize: vertical; min-height: 78px; word-break: break-word;
+}
+#seed-input:focus { outline: none; border-color: var(--accent-main); box-shadow: 0 0 0 3px var(--accent-glow); }
+#seed-input::placeholder { color: var(--text-muted); font-style: italic; }
+.seed-controls { display: flex; align-items: center; gap: 1rem; margin-top: 0.8rem; flex-wrap: wrap; }
+#hint-input {
+  flex: 1; min-width: 200px; background: var(--bg-elevated); color: var(--text-primary);
+  border: 1px solid var(--bg-border); border-radius: 8px; padding: 0.55rem 0.75rem;
+  font-size: 0.84rem; font-family: var(--sans);
+}
+#hint-input:focus { outline: none; border-color: var(--accent-main); }
+#hint-input::placeholder { color: var(--text-muted); }
+.forge-btn {
+  background: var(--accent-main); color: #fff; border: none; border-radius: 8px;
+  padding: 0.6rem 1.5rem; font-size: 0.9rem; font-weight: 600; cursor: pointer;
+  letter-spacing: 0.04em; transition: all .15s;
+}
+.forge-btn:hover:not(:disabled) { box-shadow: 0 0 22px var(--accent-glow); transform: translateY(-1px); }
+.forge-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+/* ─── MAIN — canvas always 100%, panels overlay ───────────── */
+.main { flex: 1; display: block; min-height: 0; }
+.stage { padding: 1.6rem 2rem; width: 100%; }
+
+.spine-rail { border-bottom: 1px solid var(--bg-border); background: var(--bg-surface); }
+.rail-toggle { display: flex; align-items: center; gap: 0.6rem; padding: 0.65rem 1.5rem; cursor: pointer; user-select: none; }
+.rail-toggle:hover .rail-title { color: var(--accent-main); }
+.rail-title { font-family: var(--serif); font-size: 0.78rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.16em; transition: color .15s; }
+.rail-chevron { font-size: 0.68rem; color: var(--text-muted); transition: transform .2s; }
+.rail-toggle.expanded .rail-chevron { transform: rotate(90deg); }
+.rail-breadcrumb { font-size: 0.74rem; color: var(--text-muted); font-family: var(--mono); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
+.rail-breadcrumb b { color: var(--text-secondary); font-weight: 400; }
+.rail-body { max-height: 0; overflow: hidden; transition: max-height .22s ease; }
+.rail-body.expanded { max-height: 320px; overflow-y: auto; }
+.rail-body-inner { padding: 0 1.5rem 1rem; }
+.rail-sub { font-size: 0.7rem; color: var(--text-muted); margin-bottom: 0.6rem; font-style: italic; }
+#spine { width: 100%; max-width: 700px; display: block; }
+.spine-empty { color: var(--text-muted); font-size: 0.8rem; font-style: italic; padding: 0.6rem 0 1rem; }
+
+/* ─── STAGE : EMPTY ───────────────────────────────────────── */
+.empty-state { display: grid; place-items: center; min-height: 40vh; text-align: center; }
+.empty-icon { font-size: 2.4rem; color: var(--accent-main); opacity: 0.5; margin-bottom: 1rem; }
+.empty-title { font-family: var(--serif); font-size: 1.3rem; color: var(--text-primary); margin-bottom: 0.5rem; }
+.empty-label { color: var(--text-muted); max-width: 640px; line-height: 1.6; width: 100%; word-break: break-word; }
+
+/* ─── STAGE : HEAD + ANCHOR ───────────────────────────────── */
+.stage-head { margin-bottom: 1.3rem; display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; flex-wrap: wrap; }
+.stage-eyebrow { font-size: 0.7rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--accent-main); margin-bottom: 0.4rem; }
+.stage-h { font-family: var(--serif); font-size: 1.45rem; font-weight: 400; }
+.stage-h em { color: var(--accent-main); font-style: italic; }
+.anchored {
+  background: var(--bg-elevated); border: 1px solid var(--bg-border);
+  border-left: 3px solid var(--teal); border-radius: 8px;
+  padding: 0.8rem 1rem; margin-bottom: 1.4rem; color: var(--text-secondary);
+  font-style: italic; width: 100%; word-break: break-word;
+}
+.anchored .lbl { font-style: normal; font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.14em; color: var(--text-muted); display: block; margin-bottom: 0.3rem; }
+
+/* ─── COMMITTED VECTOR CARD ───────────────────────────────── */
+.committed {
+  background: var(--bg-void); border: 1px solid var(--accent-main); border-radius: 12px;
+  padding: 1.2rem 1.3rem; width: 100%; word-break: break-word;
+  box-shadow: 0 0 30px var(--accent-glow); position: relative; margin-bottom: 1rem;
+}
+.committed .cm-tag {
+  position: absolute; top: -0.65rem; left: 1.1rem;
+  background: var(--accent-main); color: #fff; font-size: 0.62rem; font-family: var(--mono);
+  text-transform: uppercase; letter-spacing: 0.14em; padding: 0.18rem 0.6rem; border-radius: 20px;
+}
+.committed .cm-label { font-family: var(--serif); font-size: 1.25rem; color: var(--text-primary); margin-bottom: 0.5rem; margin-top: 0.3rem; }
+.committed .cm-dir { color: var(--text-secondary); line-height: 1.6; font-size: 1.02rem; }
+
+.trace-block { border-top: 1px dashed var(--bg-border); margin-top: 0.9rem; padding-top: 0.8rem; }
+.trace-line { font-size: 0.82rem; color: var(--text-muted); font-family: var(--mono); line-height: 1.55; margin-bottom: 0.7rem; }
+.trace-line b { color: var(--teal); font-weight: 400; }
+.verdict-pill {
+  display: inline-flex; align-items: center; gap: 0.4rem; font-family: var(--mono); font-size: 0.74rem;
+  padding: 0.3rem 0.7rem; border-radius: 20px;
+}
+.verdict-pill.ok { background: rgba(76,175,130,0.14); color: var(--green); border: 1px solid rgba(76,175,130,0.3); }
+.verdict-pill.warn { background: rgba(245,101,101,0.12); color: var(--coral); border: 1px solid rgba(245,101,101,0.32); }
+.verdict-note { font-size: 0.8rem; color: var(--text-secondary); font-style: italic; margin-top: 0.55rem; line-height: 1.55; }
+
+/* ─── REJECTED ALTERNATIVES ───────────────────────────────── */
+.rejected-wrap { margin-top: 1.6rem; }
+.rejected-h { font-family: var(--serif); font-size: 0.9rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.14em; margin-bottom: 0.4rem; }
+.rejected-sub { font-size: 0.76rem; color: var(--text-muted); font-style: italic; margin-bottom: 0.9rem; }
+.alt-card {
+  background: var(--bg-surface); border: 1px solid var(--bg-border);
+  border-left: 3px solid var(--text-muted); border-radius: 9px;
+  padding: 0.85rem 1rem; margin-bottom: 0.7rem; opacity: 0.78;
+  cursor: pointer; transition: all .15s; width: 100%; word-break: break-word;
+}
+.alt-card:hover { opacity: 1; border-left-color: var(--accent-main); transform: translateX(3px); }
+.alt-card.projection { border-left-color: var(--coral); }
+.alt-card .alt-label { font-family: var(--serif); font-size: 1rem; color: var(--text-primary); margin-bottom: 0.3rem; display: flex; align-items: center; gap: 0.55rem; }
+.alt-card .alt-flag { font-size: 0.58rem; color: var(--coral); font-family: var(--mono); text-transform: uppercase; letter-spacing: 0.1em; border: 1px solid rgba(245,101,101,0.4); border-radius: 12px; padding: 0.1rem 0.45rem; }
+.alt-card .alt-dir { color: var(--text-secondary); line-height: 1.5; margin-bottom: 0.5rem; font-size: 0.9rem; }
+.alt-card .alt-why { font-size: 0.76rem; color: var(--text-muted); font-family: var(--mono); line-height: 1.5; border-top: 1px dashed var(--bg-border); padding-top: 0.45rem; }
+.alt-card .alt-why b { color: var(--coral); font-weight: 400; }
+.alt-promote { font-size: 0.7rem; color: var(--accent-main); font-family: var(--mono); margin-top: 0.5rem; opacity: 0; transition: opacity .15s; }
+.alt-card:hover .alt-promote { opacity: 1; }
+
+/* ─── AUDITOR CONTROLS ────────────────────────────────────── */
+.auditor { margin-top: 1.7rem; padding-top: 1.4rem; border-top: 1px solid var(--bg-border); }
+.auditor-prompt { color: var(--text-secondary); margin-bottom: 1rem; font-style: italic; font-family: var(--serif); }
+.auditor-prompt b { color: var(--accent-main); font-style: normal; }
+.audit-row { display: flex; gap: 1rem; flex-wrap: wrap; }
+.audit-door {
+  flex: 1; min-width: 220px; background: var(--bg-elevated); border: 1px solid var(--bg-border);
+  border-radius: 10px; padding: 1.1rem; cursor: pointer; transition: all .15s;
+}
+.audit-door:hover { border-color: var(--accent-main); box-shadow: 0 0 18px var(--accent-glow); }
+.audit-door.deepen:hover { border-color: var(--green); box-shadow: 0 0 18px rgba(76,175,130,0.18); }
+.audit-door .ad-name { font-family: var(--serif); font-size: 1.05rem; margin-bottom: 0.3rem; }
+.audit-door.deepen .ad-name { color: var(--green); }
+.audit-door.reextract .ad-name { color: var(--amber); }
+.audit-door .ad-desc { font-size: 0.8rem; color: var(--text-muted); line-height: 1.5; }
+
+/* ─── DEEPEN LOOP ─────────────────────────────────────────── */
+.loop-log { margin-bottom: 1.4rem; }
+.log-entry { font-family: var(--mono); font-size: 0.78rem; padding: 0.4rem 0.7rem; border-left: 2px solid var(--bg-border); margin-bottom: 0.4rem; color: var(--text-secondary); width: 100%; word-break: break-word; }
+.log-entry.pass { border-left-color: var(--green); color: var(--green); }
+.log-entry.fail { border-left-color: var(--coral); color: var(--coral); }
+.log-entry.info { border-left-color: var(--teal); }
+.log-entry.architect { border-left-color: var(--accent-main); }
+.prompt-stream {
+  background: var(--bg-void); border: 1px solid var(--bg-border); border-radius: 10px;
+  padding: 1.1rem 1.2rem; font-family: var(--sans); font-size: 0.92rem;
+  line-height: 1.7; color: var(--text-primary);
+  width: 100%; word-break: break-word; min-height: 60px;
+}
+.prompt-stream p { margin: 0 0 0.8rem; }
+.prompt-stream p:last-child { margin-bottom: 0; }
+.prompt-stream ul, .prompt-stream ol { margin: 0 0 0.8rem 1.3rem; }
+.prompt-stream code { background: var(--bg-elevated); padding: 0.1rem 0.35rem; border-radius: 4px; font-family: var(--mono); font-size: 0.85em; }
+.prompt-stream h1, .prompt-stream h2, .prompt-stream h3 { font-family: var(--serif); margin: 0.9rem 0 0.5rem; color: var(--text-primary); }
+
+/* ─── FORGED ──────────────────────────────────────────────── */
+.forged-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.6rem; }
+.forged-badge { font-size: 0.72rem; font-family: var(--mono); padding: 0.25rem 0.6rem; border-radius: 20px; background: rgba(76,175,130,0.14); color: var(--green); border: 1px solid rgba(76,175,130,0.3); }
+.forged-prompt {
+  background: var(--bg-void); border: 1px solid var(--accent-main); border-radius: 12px;
+  padding: 1.3rem 1.4rem; font-family: var(--mono); font-size: 0.88rem; line-height: 1.7;
+  white-space: pre-wrap; width: 100%; word-break: break-word; box-shadow: 0 0 30px var(--accent-glow);
+}
+.section-h { font-family: var(--serif); font-size: 0.92rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.14em; margin: 1.8rem 0 0.7rem; }
+.confirm-box { background: var(--bg-elevated); border: 1px solid var(--bg-border); border-radius: 10px; padding: 1rem 1.1rem; width: 100%; word-break: break-word; }
+.confirm-box.ok { border-left: 3px solid var(--green); }
+.confirm-box.drift { border-left: 3px solid var(--coral); }
+.confirm-verdict { font-family: var(--mono); font-size: 0.78rem; margin-bottom: 0.6rem; }
+.confirm-verdict.ok { color: var(--green); }
+.confirm-verdict.drift { color: var(--coral); }
+.confirm-sample { color: var(--text-secondary); font-style: italic; line-height: 1.6; }
+.confirm-note { font-size: 0.78rem; color: var(--text-muted); margin-top: 0.6rem; font-family: var(--mono); }
+.traj-list { list-style: none; }
+.traj-list li { padding: 0.45rem 0 0.45rem 1.2rem; position: relative; color: var(--text-secondary); border-left: 1px solid var(--bg-border); margin-left: 0.4rem; }
+.traj-list li::before { content: '→'; position: absolute; left: -0.5rem; color: var(--teal); background: var(--bg-void); }
+.traj-list li b { color: var(--text-primary); font-weight: 600; }
+
+.err-box { background: rgba(245,101,101,0.1); border: 1px solid rgba(245,101,101,0.35); border-radius: 10px; padding: 1rem 1.1rem; color: var(--coral); font-family: var(--mono); font-size: 0.84rem; width: 100%; word-break: break-word; }
+.thinking { display: flex; align-items: center; gap: 0.6rem; color: var(--text-muted); font-style: italic; padding: 1rem 0; }
+.pulse { width: 8px; height: 8px; border-radius: 50%; background: var(--accent-main); animation: pulse 1.1s ease-in-out infinite; }
+@keyframes pulse { 0%,100% { opacity: 0.25; transform: scale(0.8);} 50% { opacity: 1; transform: scale(1.2);} }
+.restart-btn { margin-top: 1.8rem; background: transparent; border: 1px solid var(--bg-border); color: var(--text-secondary); border-radius: 8px; padding: 0.5rem 1.1rem; cursor: pointer; font-size: 0.82rem; transition: all .15s; }
+.restart-btn:hover { border-color: var(--accent-main); color: var(--accent-main); }
+
+@media (max-width: 760px) {
+  .zone-c { display: none; }
+  #leftPanel, #rightPanel, #drawer { width: 92vw; }
+}
+</style>
+</head>
+<body>
+
+<!-- ═══ HEADER ═══ -->
+<header class="header">
+  <div class="zone-a">
+    <span class="engine-name">Vector <span class="accent">Forge</span></span>
+    <span class="engine-tag">intuition → committed vector → dense prompt</span>
+    <span class="config-badge" id="configBadge"></span>
+  </div>
+  <div class="zone-b">
+    <button class="panel-btn" id="leftBtn" title="Prompt library">☰</button>
+    <div class="provider-wrap">
+      <span class="provider-dot" id="providerDot"></span>
+      <select id="providerSelect"></select>
+    </div>
+    <button class="panel-btn" id="rightBtn" title="Response library">▤</button>
+    <button class="gear-btn" id="gearBtn" title="Settings">⚙</button>
+  </div>
+  <div class="zone-c">Crafted by<br><a href="mailto:meet.venkat1@gmail.com">meet.venkat1@gmail.com</a></div>
+</header>
+
+<!-- ═══ WARNING BANNER ═══ -->
+<div id="keyWarn" class="warn-banner" hidden></div>
+
+<!-- ═══ SCRIMS (independent per panel) ═══ -->
+<div class="panel-scrim" id="leftScrim"></div>
+<div class="panel-scrim" id="rightScrim"></div>
+<div class="panel-scrim" id="drawerScrim"></div>
+
+<!-- ═══ LEFT PANEL — PROMPT LIBRARY ═══ -->
+<aside class="panel" id="leftPanel">
+  <h3>Prompt Library <span class="x" id="leftClose">✕</span></h3>
+  <div class="panel-sub">The editable system prompts driving this engine's pipeline. Import .md, edit in place, export/import the whole library as JSON.</div>
+
+  <div class="panel-tools">
+    <button class="tool-btn" id="btnNewPrompt">+ New entry</button>
+    <button class="tool-btn" id="btnImportMd">↑ Import .md</button>
+    <button class="tool-btn" id="btnExportPromptsJson">↓ Export JSON</button>
+    <button class="tool-btn" id="btnImportPromptsJson">↑ Import JSON</button>
+    <input type="file" id="mdFileInput" accept=".md,.markdown,text/markdown" multiple hidden>
+    <input type="file" id="promptsJsonInput" accept="application/json" hidden>
+  </div>
+
+  <div id="promptEditForm" hidden>
+    <div class="field-row">
+      <label>Name</label>
+      <input type="text" id="fEntryName" placeholder="Entry name">
+    </div>
+    <div class="field-row">
+      <label>Triggers (comma-separated)</label>
+      <input type="text" id="fEntryTriggers" placeholder="commit, deepen, trace…">
+    </div>
+    <div class="field-row">
+      <label>Description</label>
+      <input type="text" id="fEntryDesc" placeholder="One line — what this prompt does">
+    </div>
+    <div class="field-row">
+      <label>Body</label>
+      <textarea id="fEntryBody" placeholder="The system prompt text"></textarea>
+    </div>
+    <button class="save-entry-btn" id="btnSaveEntry">Save entry</button>
+  </div>
+
+  <div class="panel-divider"></div>
+  <div id="promptList"></div>
+</aside>
+
+<!-- ═══ RIGHT PANEL — RESPONSE LIBRARY ═══ -->
+<aside class="panel" id="rightPanel">
+  <h3>Response Library <span class="x" id="rightClose">✕</span></h3>
+  <div class="panel-sub">Every forged output auto-saves here, tagged and timestamped. Import/export JSON, or connect a local folder for two-way disk sync.</div>
+
+  <div class="panel-tools">
+    <button class="tool-btn" id="btnExportRespJson">↓ Export JSON</button>
+    <button class="tool-btn" id="btnImportRespJson">↑ Import JSON</button>
+    <button class="tool-btn" id="btnConnectFolder">📁 Connect folder</button>
+    <button class="tool-btn" id="btnCopyAllResp">Copy all</button>
+    <input type="file" id="respJsonInput" accept="application/json" hidden>
+  </div>
+  <div class="folder-status" id="folderStatus">Folder: not connected (standalone only)</div>
+
+  <div class="panel-divider"></div>
+  <div id="responseList"></div>
+</aside>
+
+<!-- ═══ GEAR DRAWER — SETTINGS ═══ -->
+<aside class="panel" id="drawer">
+  <h3>Settings <span class="x" id="drawerClose">✕</span></h3>
+
+  <div id="drawerKeyRows"></div>
+
+  <div class="drawer-divider"></div>
+
+  <div class="cfg-row">
+    <label>Deepen iterations (max)</label>
+    <input type="number" id="cfg-maxiter" min="1" max="8" value="4">
+  </div>
+  <div class="cfg-row">
+    <label>Path-fidelity threshold</label>
+    <input type="number" id="cfg-threshold" min="1" max="10" value="8">
+  </div>
+  <div class="cfg-row">
+    <label>Traceability floor (auto-flag below)</label>
+    <input type="number" id="cfg-tracefloor" min="1" max="10" value="6">
+  </div>
+</aside>
+
+<!-- ═══ SEED BAR ═══ -->
+<div class="seed-bar">
+  <div class="seed-label">Drop the intuition — raw, unfinished, half-named.</div>
+  <textarea id="seed-input" placeholder="The thing you're reaching for but can't quite say yet…"></textarea>
+  <div class="seed-controls">
+    <input type="text" id="hint-input" placeholder="Optional: a success hint — what would make this feel right?">
+    <button class="forge-btn" id="forgeBtn">Commit the vector ◈</button>
+  </div>
+</div>
+
+<!-- ═══ MAIN — canvas 100% width, panels overlay ═══ -->
+<div class="main">
+  <div class="spine-rail">
+    <div class="rail-toggle" id="railToggle">
+      <span class="rail-chevron">▸</span>
+      <span class="rail-title">The Path</span>
+      <span class="rail-breadcrumb" id="railBreadcrumb">No path yet. Drop a seed above.</span>
+    </div>
+    <div class="rail-body" id="railBody">
+      <div class="rail-body-inner">
+        <div class="rail-sub">Seed → the one vector the engine committed to → the forged prompt. A line, not a fan.</div>
+        <svg id="spine" viewBox="0 0 700 60" preserveAspectRatio="xMinYMin meet"></svg>
+        <div class="spine-empty" id="spineEmpty">No path yet. Drop a seed above.</div>
+      </div>
+    </div>
+  </div>
+
+  <section class="stage" id="stage">
+    <div class="empty-state">
+      <div class="empty-icon">◈</div>
+      <div class="empty-title">Forge a dimension</div>
+      <div class="empty-label">Drop an intuition above. The engine locates where it sits, commits to the <em>single best</em> vector its trajectory is reaching toward — then shows its work: the line back to the seed, and the alternatives it set aside (including the ones it was tempted by, named as projection). You audit the one claim, then deepen it into a dense system prompt.</div>
+    </div>
+  </section>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+//  ENGINE IDENTITY
+//  This engine commits to a single best extrapolation vector from a raw
+//  intuition, exposes its rejected alternatives for audit, then deepens
+//  the audited commitment into a dense, portable system prompt — so a
+//  builder can forge identity-bearing prompts without projecting their
+//  own favorite move onto someone else's half-formed idea.
+// ═══════════════════════════════════════════════════════════
+
+const ENGINE_ID = 'vector-forge';
+const isArtifact = window.self !== window.top;
+window.EnginePanels = { library: true, importExport: true, settings: true };
+
+// ═══════════════════════════════════════════════════════════
+//  STORAGE ABSTRACTION LAYER (Constraint 21) + FOLDER-CONNECT (23/23B)
+// ═══════════════════════════════════════════════════════════
+function storageSet(key, value) { localStorage.setItem(key, value); return true; }
+function storageGet(key) { return localStorage.getItem(key); }
+function storageRemove(key) { localStorage.removeItem(key); return true; }
+function storageList(prefix) {
+  const keys = [];
+  for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (k && k.startsWith(prefix)) keys.push(k); }
+  return keys;
+}
+
+const PROMPTS_KEY = `${ENGINE_ID}:prompts`;
+const RESPONSES_KEY = `${ENGINE_ID}:responses`;
+
+function loadPrompts() {
+  try { return JSON.parse(storageGet(PROMPTS_KEY) || '[]'); } catch (e) { return []; }
+}
+function savePrompts(arr) { storageSet(PROMPTS_KEY, JSON.stringify(arr)); }
+function loadResponses() {
+  try { return JSON.parse(storageGet(RESPONSES_KEY) || '[]'); } catch (e) { return []; }
+}
+function saveResponses(arr) { storageSet(RESPONSES_KEY, JSON.stringify(arr)); }
+
+// ── Folder-connect (standalone only; File System Access API) ──
+let dirHandle = null;
+let folderState = 'none'; // none | connected | reconnect
+
+async function idbGet(key) {
+  return new Promise((resolve) => {
+    const req = indexedDB.open('vector-forge-idb', 1);
+    req.onupgradeneeded = () => req.result.createObjectStore('handles');
+    req.onsuccess = () => {
+      const db = req.result;
+      const tx = db.transaction('handles', 'readonly');
+      const r = tx.objectStore('handles').get(key);
+      r.onsuccess = () => resolve(r.result || null);
+      r.onerror = () => resolve(null);
+    };
+    req.onerror = () => resolve(null);
+  });
+}
+async function idbSet(key, val) {
+  return new Promise((resolve) => {
+    const req = indexedDB.open('vector-forge-idb', 1);
+    req.onupgradeneeded = () => req.result.createObjectStore('handles');
+    req.onsuccess = () => {
+      const db = req.result;
+      const tx = db.transaction('handles', 'readwrite');
+      tx.objectStore('handles').put(val, key);
+      tx.oncomplete = () => resolve(true);
+    };
+    req.onerror = () => resolve(false);
+  });
+}
+
+async function connectFolder() {
+  if (isArtifact) return; // never attempt folder access from artifact context
+  if (!window.showDirectoryPicker) { alert('Folder connect needs a Chromium browser (Chrome/Edge).'); return; }
+  try {
+    dirHandle = await window.showDirectoryPicker();
+    await idbSet('dirHandle', dirHandle);
+    folderState = 'connected';
+    updateFolderStatus();
+    await backfillOnConnect();
+  } catch (e) { /* user cancelled */ }
+}
+
+async function reverifyFolderOnLoad() {
+  if (isArtifact) return;
+  const handle = await idbGet('dirHandle');
+  if (!handle) { folderState = 'none'; updateFolderStatus(); return; }
+  try {
+    const perm = await handle.queryPermission({ mode: 'readwrite' });
+    if (perm === 'granted') { dirHandle = handle; folderState = 'connected'; }
+    else { dirHandle = handle; folderState = 'reconnect'; }
+  } catch (e) { folderState = 'reconnect'; dirHandle = handle; }
+  updateFolderStatus();
+}
+
+async function reconnectFolder() {
+  if (!dirHandle) return connectFolder();
+  try {
+    const perm = await dirHandle.requestPermission({ mode: 'readwrite' });
+    if (perm === 'granted') { folderState = 'connected'; updateFolderStatus(); await backfillOnConnect(); }
+  } catch (e) {}
+}
+
+function updateFolderStatus() {
+  const el = document.getElementById('folderStatus');
+  if (isArtifact) { el.textContent = 'Folder connect unavailable inside artifacts — uses in-app storage.'; el.className = 'folder-status'; return; }
+  if (folderState === 'connected') { el.textContent = `Folder: connected (${dirHandle?.name || 'local folder'})`; el.className = 'folder-status connected'; }
+  else if (folderState === 'reconnect') { el.textContent = 'Folder: reconnect required'; el.className = 'folder-status reconnect'; }
+  else { el.textContent = 'Folder: not connected'; el.className = 'folder-status'; }
+}
+
+async function saveRecordToDisk(kind, record) {
+  if (isArtifact || !dirHandle || folderState !== 'connected') return;
+  try {
+    const sub = kind === 'prompt' ? 'prompts' : 'responses';
+    const subHandle = await dirHandle.getDirectoryHandle(sub, { create: true });
+    const fileHandle = await subHandle.getFileHandle(`${record.id}.json`, { create: true });
+    const writable = await fileHandle.createWritable();
+    const tagged = Object.assign({}, record, { engine: ENGINE_ID, schemaVersion: 1 });
+    await writable.write(JSON.stringify(tagged, null, 2));
+    await writable.close();
+    await writeIndexManifest();
+  } catch (e) { /* folder write failure must not block localStorage write */ }
+}
+
+async function deleteRecordFromDisk(kind, id) {
+  if (isArtifact || !dirHandle || folderState !== 'connected') return;
+  try {
+    const sub = kind === 'prompt' ? 'prompts' : 'responses';
+    const subHandle = await dirHandle.getDirectoryHandle(sub, { create: true });
+    await subHandle.removeEntry(`${id}.json`);
+    await writeIndexManifest();
+  } catch (e) {}
+}
+
+async function writeIndexManifest() {
+  try {
+    const fileHandle = await dirHandle.getFileHandle('index.json', { create: true });
+    const writable = await fileHandle.createWritable();
+    const manifest = {
+      engine: ENGINE_ID, schemaVersion: 1,
+      promptIds: loadPrompts().map(p => p.id),
+      responseIds: loadResponses().map(r => r.id),
+      updated: new Date().toISOString()
+    };
+    await writable.write(JSON.stringify(manifest, null, 2));
+    await writable.close();
+  } catch (e) {}
+}
+
+async function backfillOnConnect() {
+  if (isArtifact || !dirHandle) return;
+  const localPrompts = loadPrompts();
+  const localResponses = loadResponses();
+  // batch push local-only entries to disk, 5/batch, yielding between batches
+  async function pushBatch(items, kind) {
+    for (let i = 0; i < items.length; i += 5) {
+      const batch = items.slice(i, i + 5);
+      for (const item of batch) await saveRecordToDisk(kind, item);
+      await new Promise(r => setTimeout(r, 0));
+    }
+  }
+  await pushBatch(localPrompts, 'prompt');
+  await pushBatch(localResponses, 'response');
+}
+
+// ═══════════════════════════════════════════════════════════
+//  LIBRARY ENTRY SCHEMA (Constraint 20)
+// ═══════════════════════════════════════════════════════════
+function genId() { return `${ENGINE_ID}-${Date.now()}-${Math.random().toString(36).slice(2,8)}`; }
+
+function seedDefaultPrompts() {
+  const existing = loadPrompts();
+  if (existing.length) return;
+  const defaults = [
+    { name: 'Commit', triggers: ['commit', 'locate', 'vector'], desc: 'Locates the seed and commits to the single best trajectory vector.', body: COMMIT_SYSTEM },
+    { name: 'Traceability Gate', triggers: ['trace', 'audit', 'projection'], desc: 'Judges whether the committed vector traces back to the seed or is projection.', body: TRACEABILITY_SYSTEM },
+    { name: 'Deepen — Architect', triggers: ['deepen', 'forge', 'architect'], desc: 'Forges the dense system prompt from the committed path.', body: DEEPEN_ARCHITECT_SYSTEM },
+    { name: 'Path-Fidelity Gate', triggers: ['fidelity', 'score', 'evaluate'], desc: 'Judges a forged prompt against the path it was meant to encode.', body: PATH_FIDELITY_SYSTEM },
+    { name: 'Deepen — Revise', triggers: ['revise', 'rewrite'], desc: 'Rewrites a forged prompt to fix named weaknesses.', body: DEEPEN_REVISE_SYSTEM },
+    { name: 'Confirmation Probe', triggers: ['confirm', 'probe', 'continuity'], desc: 'Off-loop check that the forged prompt is continuous with the committed vector.', body: CONFIRM_PROBE_SYSTEM }
+  ];
+  const now = new Date().toISOString();
+  const arr = defaults.map(d => ({
+    id: genId(), name: d.name, triggers: d.triggers, description: d.desc, body: d.body,
+    source: 'manual', imported: now
+  }));
+  savePrompts(arr);
+}
+
+// ═══════════════════════════════════════════════════════════
+//  MARKDOWN RENDERER (Constraint 02)
+// ═══════════════════════════════════════════════════════════
+function renderMarkdown(src) {
+  let s = (src || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  s = s.replace(/```([\s\S]*?)```/g, (m, code) => `<pre><code>${code}</code></pre>`);
+  s = s.replace(/`([^`]+)`/g, '<code>$1</code>');
+  s = s.replace(/^### (.*)$/gm, '<h3>$1</h3>');
+  s = s.replace(/^## (.*)$/gm, '<h2>$1</h2>');
+  s = s.replace(/^# (.*)$/gm, '<h1>$1</h1>');
+  s = s.replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>');
+  s = s.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  s = s.replace(/(?:^|[^*])\*([^*\n]+)\*(?!\*)/g, (m, p1, off, str) => (str[off] === '*' ? m : m.replace('*'+p1+'*','<em>'+p1+'</em>')));
+  s = s.replace(/_(.+?)_/g, '<em>$1</em>');
+  s = s.replace(/^---$/gm, '<hr>');
+  s = s.replace(/^\s*[-*]\s+(.*)$/gm, '<li>$1</li>');
+  s = s.replace(/(<li>.*<\/li>\n?)+/g, m => `<ul>${m}</ul>`);
+  s = s.replace(/^\s*\d+\.\s+(.*)$/gm, '<li>$1</li>');
+  const paras = s.split(/\n\n+/).map(p => {
+    p = p.trim();
+    if (!p) return '';
+    if (/^<(h1|h2|h3|ul|ol|pre|hr|li)/.test(p)) return p;
+    return `<p>${p.replace(/\n/g, '<br>')}</p>`;
+  });
+  return paras.join('\n');
+}
+
+// ═══════════════════════════════════════════════════════════
+//  CANONICAL COPY (Constraint 05, sole transport law)
+// ═══════════════════════════════════════════════════════════
+function copyToClipboard(text, btn) {
+  if (!text || !text.trim()) return;
+  var origHTML = btn.innerHTML;
+  var ICON_CHECK = '<svg viewBox="0 0 24 24" style="width:11px;height:11px;stroke:currentColor;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+  function onSuccess() { btn.innerHTML = ICON_CHECK + ' Copied'; btn.classList.add('copied'); setTimeout(function(){ btn.innerHTML=origHTML; btn.classList.remove('copied'); },2000); }
+  function onFail() { btn.textContent = '✗ Failed'; setTimeout(function(){ btn.innerHTML=origHTML; },2000); }
+  function execCopy() {
+    var ta = document.createElement('textarea'); ta.value = text;
+    ta.style.cssText = 'position:fixed;left:-9999px;top:-9999px;opacity:0;font-size:12px;pointer-events:none;';
+    ta.setAttribute('readonly','');
+    document.body.appendChild(ta); ta.focus(); ta.select(); ta.setSelectionRange(0,text.length);
+    var ok=false; try{ ok=document.execCommand('copy'); }catch(e){}
+    document.body.removeChild(ta); ok ? onSuccess() : onFail();
+  }
+  if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(text).then(onSuccess).catch(execCopy); }
+  else { execCopy(); }
+}
+function copyIconBtnHTML() {
+  return '<svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> Copy';
+}
+
+// ═══════════════════════════════════════════════════════════
+//  MODEL CONFIG CONTRACT — config-driven provider/model layer
+//  (model-config-contract skill; see CANONICAL_CONFIG_URL below)
+// ═══════════════════════════════════════════════════════════
+const ENGINE_NAME = 'Vector Forge';
+const CANONICAL_CONFIG_URL = 'https://raw.githubusercontent.com/meetvenkat1-code/therantai-config/refs/heads/main/model.json';
+
+const LOCAL_FALLBACK_CONFIG = {
+  native_model: 'claude-sonnet-4-6',
+  providers: [
+    { id: 'claude', native: true, label: 'Claude · Native', dotColor: '#ef4444', requiresKey: false, defaultFor: ['artifact'] },
+    { id: 'groq', native: false, label: 'Groq', dotColor: '#22c55e', requiresKey: true, keyStorageName: 'groq', keyLabel: 'Groq API Key', keyPlaceholder: 'gsk_…', defaultFor: ['standalone'], endpoint: 'https://api.groq.com/openai/v1/chat/completions', authHeader: 'Authorization', authPrefix: 'Bearer ', requestFormat: 'openai-chat', streamFormat: 'openai', modelChain: ['openai/gpt-oss-120b', 'openai/gpt-oss-20b'] }
+  ],
+  or_specific_models: []
+};
+
+let liveModelConfig = null;
+
+function isValidConfig(json) {
+  if (!json || !Array.isArray(json.providers) || json.providers.length === 0) return false;
+  const natives = json.providers.filter(p => p.native === true);
+  if (natives.length !== 1) return false;
+  return json.providers.every(p => p.id && p.label);
+}
+
+function setConfigBadge(state) {
+  const el = document.getElementById('configBadge');
+  if (!el) return;
+  el.classList.remove('live', 'fallback');
+  if (state === 'live') { el.classList.add('live'); el.textContent = 'Config: Live'; }
+  else { el.classList.add('fallback'); el.textContent = 'Config: Local Fallback'; }
+}
+
+function fetchModelConfig() {
+  return fetch(CANONICAL_CONFIG_URL + '?v=' + Date.now())
+    .then(function(res) {
+      if (!res.ok) throw new Error('Config fetch failed: ' + res.status);
+      return res.json();
+    })
+    .then(function(json) {
+      if (!isValidConfig(json)) throw new Error('Malformed config');
+      liveModelConfig = json;
+      setConfigBadge('live');
+    })
+    .catch(function() {
+      liveModelConfig = LOCAL_FALLBACK_CONFIG;
+      setConfigBadge('fallback');
+    })
+    .then(function() {
+      renderProviderSelector();
+      renderDrawerKeyRows();
+      const defaultProvider = getDefaultProviderId();
+      document.getElementById('providerSelect').value = defaultProvider;
+      updateProviderDot();
+      updateWarning();
+    });
+}
+
+function getProviderConfig(id) {
+  return (liveModelConfig && liveModelConfig.providers.find(p => p.id === id)) || null;
+}
+
+function getDefaultProviderId() {
+  const ctx = isArtifact ? 'artifact' : 'standalone';
+  const match = liveModelConfig.providers.find(p => Array.isArray(p.defaultFor) && p.defaultFor.includes(ctx));
+  return (match || liveModelConfig.providers[0]).id;
+}
+
+function getKey(keyStorageName) { return localStorage.getItem(`hek_${keyStorageName}`) || ''; }
+function storeKey(keyStorageName, val) { localStorage.setItem(`hek_${keyStorageName}`, val); }
+function getSelectedProvider() { return document.getElementById('providerSelect')?.value || (liveModelConfig ? getDefaultProviderId() : 'claude'); }
+
+// ─── DYNAMIC PROVIDER SELECTOR ───
+function renderProviderSelector() {
+  const select = document.getElementById('providerSelect');
+  select.innerHTML = '';
+  liveModelConfig.providers.forEach(function(p) {
+    const opt = document.createElement('option');
+    opt.value = p.id;
+    opt.textContent = p.label;
+    select.appendChild(opt);
+  });
+  (liveModelConfig.or_specific_models || []).forEach(function(modelId) {
+    const opt = document.createElement('option');
+    opt.value = 'or-specific:' + modelId;
+    opt.textContent = 'OR · ' + modelId;
+    select.appendChild(opt);
+  });
+}
+
+// ─── DYNAMIC DRAWER KEY ROWS ───
+function buildNativeNoteRow(p) {
+  const row = document.createElement('div');
+  row.className = 'prov-row';
+  row.innerHTML = `<label>${p.label}</label><div class="native-note">No key needed — platform routes natively.</div>`;
+  return row;
+}
+function buildKeyInputRow(p) {
+  const row = document.createElement('div');
+  row.className = 'prov-row';
+  row.innerHTML = `<label>${p.label}</label>
+    <div class="field"><input type="password" id="key-${p.keyStorageName}" placeholder="${p.keyPlaceholder || ''}"><button data-prov="${p.keyStorageName}">Save</button></div>
+    ${p.keyNote ? `<div class="or-note">${p.keyNote}</div>` : ''}`;
+  return row;
+}
+function renderDrawerKeyRows() {
+  const container = document.getElementById('drawerKeyRows');
+  container.innerHTML = '';
+  liveModelConfig.providers.forEach(function(p) {
+    container.appendChild(p.requiresKey ? buildKeyInputRow(p) : buildNativeNoteRow(p));
+  });
+  liveModelConfig.providers.filter(p => p.requiresKey).forEach(function(p) {
+    const el = document.getElementById(`key-${p.keyStorageName}`);
+    if (el) el.value = getKey(p.keyStorageName);
+  });
+  container.querySelectorAll('button[data-prov]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const keyName = btn.dataset.prov;
+      const val = document.getElementById(`key-${keyName}`).value.trim();
+      storeKey(keyName, val);
+      updateWarning();
+      const flash = document.createElement('span');
+      flash.className = 'save-flash'; flash.textContent = '✓ saved';
+      btn.parentElement.appendChild(flash);
+      setTimeout(() => flash.remove(), 1400);
+    });
+  });
+}
+
+// ─── THE GENERIC ADAPTER — replaces all per-provider if/else chains ───
+function buildRequest(providerCfg, modelId, systemPrompt, userMessage, stream) {
+  if (providerCfg.native === true) {
+    // HARDCODED BRANCH — never built from providerCfg fields (Claude Native security carve-out).
+    return {
+      url: 'https://api.anthropic.com/v1/messages',
+      headers: {
+        'Content-Type': 'application/json',
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+        // NO Authorization header — intentional, pinned, not configurable.
+      },
+      body: {
+        model: modelId, max_tokens: 4000, stream: stream,
+        system: systemPrompt, messages: [{ role: 'user', content: userMessage }]
+      }
+    };
+  }
+
+  const headers = { 'Content-Type': 'application/json' };
+  if (providerCfg.authHeader) {
+    headers[providerCfg.authHeader] = (providerCfg.authPrefix || '') + getKey(providerCfg.keyStorageName);
+  }
+  if (providerCfg.extraHeaders) {
+    Object.keys(providerCfg.extraHeaders).forEach(function(k) {
+      const v = providerCfg.extraHeaders[k];
+      headers[k] = v === '$origin' ? window.location.origin : v === '$engineName' ? ENGINE_NAME : v;
+    });
+  }
+
+  const body = providerCfg.requestFormat === 'openai-chat'
+    ? { model: modelId, stream: stream, messages: [{ role: 'system', content: systemPrompt }, { role: 'user', content: userMessage }] }
+    : (function() { throw new Error('Unknown requestFormat: ' + providerCfg.requestFormat); })();
+
+  return { url: providerCfg.endpoint, headers: headers, body: body };
+}
+
+async function callAI(systemPrompt, userMessage, onChunk, validate) {
+  // validate (optional): fn(rawText) -> throws or returns falsy to reject this chain link's
+  // content and advance to the next model; returns truthy (or is omitted) to accept.
+  // Only checked on 200-OK responses — HTTP-level failures already advance via softFallback above.
+  const selected = getSelectedProvider();
+
+  // or-specific:<modelId> — a specific OR model expanded from or_specific_models, inherits the or-auto/OR-family provider entry
+  let providerId = selected, overrideModel = null;
+  if (selected.startsWith('or-specific:')) {
+    overrideModel = selected.slice('or-specific:'.length);
+    providerId = (liveModelConfig.providers.find(p => p.requestFormat === 'openai-chat' && p.id !== 'groq') || {}).id;
+  }
+
+  const providerCfg = getProviderConfig(providerId);
+  if (!providerCfg) throw new Error('Unknown provider: ' + selected);
+
+  if (providerCfg.standaloneOnly && isArtifact) {
+    throw new Error('OpenRouter has no CORS proxy inside claude.ai — standalone only.');
+  }
+
+  if (providerCfg.native === true) {
+    const modelId = overrideModel || liveModelConfig.native_model || providerCfg.model || 'claude-sonnet-4-6';
+    const req = buildRequest(providerCfg, modelId, systemPrompt, userMessage, true);
+    const res = await fetch(req.url, { method: 'POST', headers: req.headers, body: JSON.stringify(req.body) });
+    return await readStream(res, providerCfg.streamFormat || 'anthropic', onChunk, providerCfg.timeoutMs, providerCfg.idleMs);
+  }
+
+  // walk modelChain (soft fallback on HTTP failure, content-validation fallback on bad body), then hardFallback provider
+  const chain = overrideModel ? [overrideModel] : (providerCfg.modelChain || [providerCfg.model]);
+  let res = null, lastErr = null, acceptedText = null;
+  for (const modelId of chain) {
+    try {
+      const req = buildRequest(providerCfg, modelId, systemPrompt, userMessage, true);
+      res = await fetch(req.url, { method: 'POST', headers: req.headers, body: JSON.stringify(req.body) });
+      const soft = providerCfg.softFallback;
+      if (soft && Array.isArray(soft.on) && soft.on.includes(res.status)) { lastErr = `${providerCfg.id}:${res.status}`; res = null; continue; }
+      if (!res.ok) { lastErr = `${providerCfg.id}:${res.status}`; res = null; continue; }
+
+      if (validate) {
+        // buffer fully — must inspect the whole body before deciding whether this model's
+        // output is acceptable, so live onChunk streaming is deferred until acceptance.
+        const text = await readStream(res, providerCfg.streamFormat || 'openai', null, providerCfg.timeoutMs, providerCfg.idleMs);
+        try {
+          if (!validate(text)) throw new Error('validator rejected content');
+        } catch (ve) {
+          lastErr = `${providerCfg.id}:${modelId}:content-invalid`; res = null; continue;
+        }
+        if (onChunk) onChunk(text);
+        acceptedText = text;
+      }
+      break;
+    } catch (e) { lastErr = e; res = null; }
+  }
+
+  if (res && validate) return acceptedText;
+  if (res) return await readStream(res, providerCfg.streamFormat || 'openai', onChunk, providerCfg.timeoutMs, providerCfg.idleMs);
+
+  if (providerCfg.hardFallback) {
+    const fbCfg = getProviderConfig(providerCfg.hardFallback);
+    if (!fbCfg) throw new Error(`${providerCfg.label} unavailable (${lastErr}) and hard-fallback provider not found.`);
+    if (fbCfg.requiresKey && !getKey(fbCfg.keyStorageName)) throw new Error(`${providerCfg.label} unavailable (${lastErr}) and no ${fbCfg.label} key set for fallback.`);
+    const fbChain = fbCfg.modelChain || [fbCfg.model];
+    for (const fbModel of fbChain) {
+      const req = buildRequest(fbCfg, fbModel, systemPrompt, userMessage, true);
+      const fbRes = await fetch(req.url, { method: 'POST', headers: req.headers, body: JSON.stringify(req.body) });
+      if (!fbRes.ok) { lastErr = `${fbCfg.id}:${fbRes.status}`; continue; }
+      if (validate) {
+        const text = await readStream(fbRes, fbCfg.streamFormat || 'openai', null, fbCfg.timeoutMs, fbCfg.idleMs);
+        try {
+          if (!validate(text)) throw new Error('validator rejected content');
+        } catch (ve) { lastErr = `${fbCfg.id}:${fbModel}:content-invalid`; continue; }
+        if (onChunk) onChunk(text);
+        return text;
+      }
+      return await readStream(fbRes, fbCfg.streamFormat || 'openai', onChunk, fbCfg.timeoutMs, fbCfg.idleMs);
+    }
+    throw new Error(`${providerCfg.label} unavailable (${lastErr}) and hard-fallback ${fbCfg.label} also failed on every model in its chain.`);
+  }
+
+  throw new Error(`${providerCfg.label} unavailable (${lastErr}).`);
+}
+
+const DEFAULT_TIMEOUT_MS = 15000;
+const DEFAULT_IDLE_MS = 3000;
+
+function readStream(response, format, onChunk, timeoutMs, idleMs) {
+  timeoutMs = timeoutMs || DEFAULT_TIMEOUT_MS;
+  idleMs = idleMs || DEFAULT_IDLE_MS;
+  if (!response.ok) {
+    return response.text().catch(()=> '').then(detail => {
+      throw new Error(`HTTP ${response.status} — ${(detail||'').slice(0,300) || 'request failed'}`);
+    });
+  }
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let buf = '', full = '';
+  let finished = false, idleTimer = null, hardTimer = null;
+
+  return new Promise((resolve, reject) => {
+    function finish() {
+      if (finished) return;
+      finished = true;
+      clearTimeout(idleTimer); clearTimeout(hardTimer);
+      try { reader.cancel(); } catch(e) {}
+      resolve(full);
+    }
+    hardTimer = setTimeout(finish, timeoutMs);
+    function resetIdle() { clearTimeout(idleTimer); idleTimer = setTimeout(finish, idleMs); }
+
+    function pump() {
+      if (finished) return;
+      reader.read().then(({ done, value }) => {
+        if (finished) return;
+        if (done) { finish(); return; }
+        buf += decoder.decode(value, { stream: true });
+        const lines = buf.split('\n');
+        buf = lines.pop();
+        for (const line of lines) {
+          const trimmed = line.trim();
+          if (format === 'anthropic' && trimmed === 'event: message_stop') { finish(); return; }
+          if (!trimmed.startsWith('data: ')) continue;
+          const data = trimmed.slice(6).trim();
+          if (data === '[DONE]') { finish(); return; }
+          try {
+            const p = JSON.parse(data);
+            if (format === 'anthropic' && p.type === 'message_stop') { finish(); return; }
+            const chunk =
+              format === 'anthropic' ? p.delta?.text :
+              format === 'openai'    ? p.choices?.[0]?.delta?.content : '';
+            if (chunk) { full += chunk; if (onChunk) onChunk(chunk); resetIdle(); }
+          } catch (e) {}
+        }
+        pump();
+      }).catch(finish);
+    }
+    resetIdle();
+    pump();
+  });
+}
+
+// ═══════════════════════════════════════════════════════════
+//  KEYS + DRAWER + PROVIDER
+// ═══════════════════════════════════════════════════════════
+function getConfig() {
+  return {
+    maxIter: parseInt(document.getElementById('cfg-maxiter').value) || 4,
+    threshold: parseInt(document.getElementById('cfg-threshold').value) || 8,
+    traceFloor: parseInt(document.getElementById('cfg-tracefloor').value) || 6
+  };
+}
+
+function openPanel(id, scrimId) { document.getElementById(id).classList.add('open'); document.getElementById(scrimId).classList.add('open'); }
+function closePanel(id, scrimId) { document.getElementById(id).classList.remove('open'); document.getElementById(scrimId).classList.remove('open'); }
+
+document.getElementById('railToggle').addEventListener('click', () => {
+  const nowExpanded = !document.getElementById('railBody').classList.contains('expanded');
+  setRailExpanded(nowExpanded);
+});
+
+document.getElementById('leftBtn').addEventListener('click', () => { renderPromptList(); openPanel('leftPanel','leftScrim'); });
+document.getElementById('leftClose').addEventListener('click', () => closePanel('leftPanel','leftScrim'));
+document.getElementById('leftScrim').addEventListener('click', () => closePanel('leftPanel','leftScrim'));
+
+document.getElementById('rightBtn').addEventListener('click', () => { renderResponseList(); openPanel('rightPanel','rightScrim'); });
+document.getElementById('rightClose').addEventListener('click', () => closePanel('rightPanel','rightScrim'));
+document.getElementById('rightScrim').addEventListener('click', () => closePanel('rightPanel','rightScrim'));
+
+document.getElementById('gearBtn').addEventListener('click', () => openPanel('drawer','drawerScrim'));
+document.getElementById('drawerClose').addEventListener('click', () => closePanel('drawer','drawerScrim'));
+document.getElementById('drawerScrim').addEventListener('click', () => closePanel('drawer','drawerScrim'));
+
+function resolveSelectedProviderCfg() {
+  const selected = getSelectedProvider();
+  if (selected.startsWith('or-specific:')) {
+    return liveModelConfig.providers.find(p => p.requestFormat === 'openai-chat' && p.id !== 'groq') || null;
+  }
+  return getProviderConfig(selected);
+}
+
+function updateProviderDot() {
+  if (!liveModelConfig) return;
+  const cfg = resolveSelectedProviderCfg();
+  document.getElementById('providerDot').style.background = (cfg && cfg.dotColor) || '#9090a8';
+}
+
+function updateWarning() {
+  if (!liveModelConfig) return;
+  const cfg = resolveSelectedProviderCfg();
+  const warn = document.getElementById('keyWarn');
+  if (!cfg) { warn.hidden = true; return; }
+  if (!cfg.requiresKey) { warn.hidden = true; return; }
+  if (cfg.standaloneOnly && isArtifact) {
+    warn.hidden = false; warn.textContent = `⚠ ${cfg.label} has no CORS proxy inside claude.ai — switch to Claude, or use this engine standalone.`;
+    return;
+  }
+  const hasKey = !!getKey(cfg.keyStorageName);
+  warn.hidden = hasKey;
+  if (!hasKey) warn.textContent = '⚠ No API key configured. Open ⚙ Settings to add one.';
+}
+
+document.getElementById('providerSelect').addEventListener('change', () => { updateProviderDot(); updateWarning(); });
+
+function checkReady() {
+  if (!liveModelConfig) return false;
+  const cfg = resolveSelectedProviderCfg();
+  if (!cfg || !cfg.requiresKey) return true;
+  if (cfg.standaloneOnly && isArtifact) { openPanel('drawer','drawerScrim'); updateWarning(); return false; }
+  if (!getKey(cfg.keyStorageName)) { openPanel('drawer','drawerScrim'); updateWarning(); return false; }
+  return true;
+}
+
+// ═══════════════════════════════════════════════════════════
+//  SYSTEM PROMPTS — the committed pipeline (stored as library entries)
+// ═══════════════════════════════════════════════════════════
+const COMMIT_SYSTEM = `You are the COMMIT stage of a prompt-forging engine. You do NOT write prompts. From a seed intuition you perform three moves in ONE pass:
+
+1. LOCATE — recover the seed's CURRENT position faithfully (position-fidelity). Where does this intuition actually sit, before any movement? State it plainly, without embellishment. This is the anchor; everything downstream traces back to it.
+
+2. COMMIT — the seed is not merely a point; it has a TRAJECTORY, a direction it is reaching toward but has not named. Find the SINGLE BEST vector that is the genuine continuation of that trajectory. This is fidelity-to-vector: NOT decompression of what is already explicit (that would be inert), and NOT your own favorite move imposed on it (that would be projection) — it is extrapolation of the seed's OWN heading. Commit to exactly one. Do not hedge with several.
+
+3. SHOW YOUR WORK — surface the alternatives you considered and set aside, each with the reason. The user is AUDITING your single commitment, not browsing a fan, so give them the material to catch projection. Among the rejected, you MUST include at least one move that sounded profound or elegant but was YOUR aesthetic rather than the seed's heading — name it honestly as projection. Expose your own temptation; that is the safeguard.
+
+Hard rules:
+- TETHER: the committed vector must trace back to the seed's own trajectory by an unbroken line. If you cannot draw that line, you are projecting — commit to a different vector.
+- A vector is a recognizable DIRECTION (1-2 sentences), never a finished prompt and never a paraphrase of the seed.
+- Distinguish the committed vector from mere clarification: it must open a dimension the seed was reaching toward, not just restate the seed more crisply.
+
+Respond ONLY with valid JSON. No markdown, no preamble, no code fences:
+{
+  "anchored_position": "where the seed sits now, faithfully, 1-2 sentences",
+  "chosen_vector": {
+    "label": "short evocative name",
+    "direction": "the single best continuation, 1-2 sentences",
+    "traces_via": "the explicit unbroken line from the seed's trajectory to this vector"
+  },
+  "rejected_alternatives": [
+    { "label": "name", "direction": "1-2 sentences", "why_rejected": "why this is not the seed's true heading", "is_projection": true }
+  ]
+}`;
+
+const TRACEABILITY_SYSTEM = `You are the TRACEABILITY GATE of a prompt-forging engine — the sole safeguard against projection now that the human no longer browses a fan. You receive a seed intuition and the SINGLE committed vector that claims to be the genuine continuation of the seed's trajectory. Your only job: judge whether that vector traces back to the seed's OWN heading, or whether it is the interpreter's projection dressed as insight.
+
+You do NOT optimize, rewrite, or soften. You audit one claim: legitimate lift, or flattering hallucination?
+
+The test: can you draw an unbroken line from the seed's trajectory to this vector? If the vector honors where the seed is HEADING, it passes as legitimate lift. If it substitutes a direction the seed never implied — however profound it sounds — it fails as projection. Be strict: a vector that merely sounds continuous, or that is continuous with a generic 'deep' move rather than with THIS seed, fails.
+
+Respond ONLY with valid JSON. No markdown, no fences:
+{
+  "trace_strength": 8,
+  "traceable": true,
+  "verdict": "legitimate lift",
+  "note": "1-2 sentences naming the line back to the seed, or the precise point where it breaks"
+}`;
+
+const DEEPEN_ARCHITECT_SYSTEM = `You are the DEEPENING stage of a prompt-forging engine. You receive a PATH: an origin seed, its faithfully-anchored position, and the single committed vector that extrapolated the seed's trajectory into a specific dimension. Forge ONE dense, architecturally strong system prompt that encodes the ENTIRE movement — anchor AND the reorientation the vector performed — not merely the endpoint.
+
+The prompt you write is the product. It must:
+- Carry the dimension the vector moved into, as a working instruction set for an AI.
+- Encode the trajectory: the anchored starting position AND the reorientation the commitment performed — so the prompt embodies the journey from seed to dimension, rather than flatly restating the terminal vector.
+- Be dense, precise, and forceful: no vagueness, no padding. Architecturally strong — a clear role, an explicit frame, a defined operative stance, and a sharp statement of what the resulting cognition should do and avoid.
+
+Output ONLY the system prompt itself, as plain text. No JSON, no commentary, no markdown fences, no preamble.`;
+
+const PATH_FIDELITY_SYSTEM = `You are the PATH-FIDELITY gate of a prompt-forging engine — the optimizer. You judge a forged system prompt against the PATH it was meant to encode (origin seed → anchored position → committed vector). Crucially: you judge the PROMPT DIRECTLY. You do NOT execute it or imagine a downstream response — the engine optimizes the prompt itself, not the text it happens to produce.
+
+Judge on:
+1. Trajectory fidelity — does it encode the whole movement (anchored position + the reorientation the vector performed), not just the terminal vector?
+2. Density — precise and forceful, free of vagueness and padding?
+3. Architectural strength — clear role, frame, operative stance; would it reliably steer cognition into the committed dimension?
+4. Dimensional reach — does it actually carry the new dimension, or has it flattened back toward the seed (mere clarification)?
+
+Respond ONLY with valid JSON. No markdown, no fences:
+{
+  "score": 7,
+  "weaknesses": ["specific weakness", "..."],
+  "verdict": "pass",
+  "revision_guidance": "specific, actionable instructions to improve the PROMPT itself"
+}`;
+
+const DEEPEN_REVISE_SYSTEM = `You are the REVISION stage of a prompt-forging engine. A forged system prompt did not fully encode the path. Rewrite it to fix every weakness named, while still encoding the ENTIRE trajectory (origin seed → anchored position → committed vector). Keep it dense, forceful, architecturally strong. Output ONLY the revised system prompt as plain text — no JSON, no commentary, no fences.`;
+
+const CONFIRM_PROBE_SYSTEM = `You are the final CONFIRMATION PROBE — and you sit OUTSIDE the optimization loop. You receive a forged system prompt and the committed vector it was meant to reach. Do two things:
+1. Briefly execute the prompt: produce a short (3-5 sentence) sample of the kind of cognition it steers toward.
+2. Judge whether that sample is CONTINUOUS with the committed vector — does running the prompt actually move into the recognized dimension, or does it drift?
+
+You confirm; you do not optimize or rewrite.
+
+Respond ONLY with valid JSON. No markdown, no fences:
+{
+  "sample": "the short sample of steered cognition",
+  "continuous": true,
+  "note": "1-2 sentences on continuity or drift"
+}`;
+
+// active prompt lookup — falls back to hardcoded default if library entry was deleted
+function activePromptBody(name, fallback) {
+  const p = loadPrompts().find(e => e.name === name);
+  return (p && p.body) ? p.body : fallback;
+}
+
+// ═══════════════════════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════════════════════
+let SEED = '';
+let HINT = '';
+let ANCHOR = '';
+let COMMITTED = null;
+let REJECTED = [];
+let TRACE = null;
+let REJECTED_HISTORY = [];
+
+function parseJSON(raw) {
+  const clean = (raw || '').replace(/```json|```/g, '').trim();
+  const first = clean.indexOf('{');
+  const last = clean.lastIndexOf('}');
+  const slice = (first !== -1 && last !== -1) ? clean.slice(first, last + 1) : clean;
+
+  // attempt 1 — straight parse
+  try { return JSON.parse(slice); } catch (e) {}
+
+  // attempt 2 — common model-output slips: trailing commas, unescaped control chars
+  try {
+    const repaired = slice
+      .replace(/,\s*([\]}])/g, '$1')                 // trailing comma before ] or }
+      .replace(/[\u0000-\u0009\u000b\u000c\u000e-\u001f]/g, ''); // stray control chars
+    return JSON.parse(repaired);
+  } catch (e) {}
+
+  // attempt 3 — response was cut off mid-array/object (hit token/stream limit).
+  // Walk back to the last structurally-complete point and close out brackets/braces.
+  try {
+    let s = slice;
+    // trim to the last complete value boundary: a closing " } or ] not inside an open string
+    let depth = 0, inStr = false, esc = false, lastGood = -1;
+    const stack = [];
+    for (let i = 0; i < s.length; i++) {
+      const c = s[i];
+      if (inStr) {
+        if (esc) { esc = false; }
+        else if (c === '\\') { esc = true; }
+        else if (c === '"') { inStr = false; }
+        continue;
+      }
+      if (c === '"') { inStr = true; continue; }
+      if (c === '{' || c === '[') { stack.push(c); }
+      else if (c === '}' || c === ']') { stack.pop(); if (stack.length === 0 || (stack.length && (c === '}' || c === ']'))) lastGood = i; }
+    }
+    if (inStr) {
+      // truncated inside a string — close it
+      s = s + '"';
+    }
+    // close any still-open structures in reverse order
+    let closer = '';
+    for (let i = stack.length - 1; i >= 0; i--) closer += (stack[i] === '{' ? '}' : ']');
+    const patched = s.replace(/,\s*$/, '') + closer;
+    return JSON.parse(patched);
+  } catch (e) {}
+
+  // all repairs failed — surface the original error with useful context
+  throw new SyntaxError('Could not parse model response as JSON: ' + slice.slice(0, 200));
+}
+function esc(s) { return (s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+// Content-validation gate for callAI's chain-walk: passed as the `validate` arg so a model
+// that returns HTTP 200 with unparseable JSON is rejected and the chain advances to the next
+// model, instead of the raw broken text reaching the caller's own parseJSON() and erroring out.
+function jsonValidator(text) {
+  parseJSON(text); // throws on failure — chain-walk catches this and tries the next model
+  return true;
+}
+
+function trunc(s, n) { s = s || ''; return s.length > n ? s.slice(0, n-1) + '…' : s; }
+
+const stage = document.getElementById('stage');
+
+// ═══════════════════════════════════════════════════════════
+//  SPINE — seed → committed vector → terminal
+// ═══════════════════════════════════════════════════════════
+function updateRailBreadcrumb(deepened) {
+  const bc = document.getElementById('railBreadcrumb');
+  if (!SEED) { bc.textContent = 'No path yet. Drop a seed above.'; return; }
+  let parts = [trunc(SEED, 50)];
+  if (COMMITTED) parts.push(trunc(COMMITTED.label, 40));
+  if (deepened) parts.push('forged');
+  bc.innerHTML = parts.map((p, i) => i === parts.length - 1 && (COMMITTED || deepened) ? `<b>${esc(p)}</b>` : esc(p)).join(' → ');
+}
+
+function setRailExpanded(expanded) {
+  const toggle = document.getElementById('railToggle');
+  const body = document.getElementById('railBody');
+  toggle.classList.toggle('expanded', expanded);
+  body.classList.toggle('expanded', expanded);
+}
+
+let railAutoExpandedOnce = false;
+
+function renderSpine(deepened) {
+  const svg = document.getElementById('spine');
+  const empty = document.getElementById('spineEmpty');
+  updateRailBreadcrumb(deepened);
+  if (!SEED) { svg.innerHTML = ''; empty.hidden = false; return; }
+  empty.hidden = true;
+  // auto-expand once, the first time a path actually exists — after that, the
+  // user's own open/close choice is respected on every subsequent render
+  if (COMMITTED && !railAutoExpandedOnce) { railAutoExpandedOnce = true; setRailExpanded(true); }
+
+  const nodes = [{ label: 'SEED', sub: SEED, kind: 'seed' }];
+  if (COMMITTED) {
+    nodes.push({
+      label: COMMITTED.label,
+      sub: COMMITTED.direction,
+      kind: 'vector',
+      flagged: TRACE && TRACE.traceable === false,
+      terminal: !!deepened
+    });
+  }
+
+  const gap = 64, top = 22, x = 22;
+  const h = top + (nodes.length - 1) * gap + 30;
+  svg.setAttribute('viewBox', `0 0 700 ${h}`);
+
+  let out = '';
+  if (nodes.length > 1) {
+    out += `<line x1="${x}" y1="${top}" x2="${x}" y2="${top + (nodes.length-1)*gap}" stroke="#2a2a3d" stroke-width="2"/>`;
+  }
+  nodes.forEach((node, i) => {
+    const cy = top + i * gap;
+    let fill, r;
+    if (node.kind === 'seed') { fill = '#7c6ef5'; r = 9; }
+    else if (node.terminal) { fill = '#4caf82'; r = 8; }
+    else if (node.flagged) { fill = '#f56565'; r = 8; }
+    else { fill = '#38bdf8'; r = 8; }
+    out += `<circle cx="${x}" cy="${cy}" r="${r}" fill="${fill}"/>`;
+    out += `<circle cx="${x}" cy="${cy}" r="${r+5}" fill="none" stroke="${fill}" stroke-opacity="0.2" stroke-width="2"/>`;
+    out += `<text x="${x+18}" y="${cy-2}" fill="#e8e8f0" font-family="Georgia, serif" font-size="11" font-weight="${node.kind==='seed'?'bold':'normal'}">${esc(trunc(node.label, 70))}</text>`;
+    out += `<text x="${x+18}" y="${cy+11}" fill="#505068" font-family="ui-monospace, monospace" font-size="8.5">${esc(trunc(node.sub, 90))}</text>`;
+  });
+  svg.innerHTML = out;
+}
+
+// ═══════════════════════════════════════════════════════════
+//  CONTENT BUILDERS
+// ═══════════════════════════════════════════════════════════
+function commitContent(reextract) {
+  let c = `Origin seed: "${SEED}"`;
+  if (HINT) c += `\n\nUser success hint: "${HINT}"`;
+  if (reextract && REJECTED_HISTORY.length) {
+    c += `\n\nThe user AUDITED your previous commitment(s) and rejected the following vector(s): ${REJECTED_HISTORY.map(r => `"${r}"`).join(', ')}.`;
+    c += `\n\nCommit to a DIFFERENT single best vector — one you did not offer before, still tethered to the seed's own trajectory. Do not re-propose a rejected vector. If the strongest remaining continuation is genuinely close to a rejected one, say so honestly in traces_via rather than disguising it.`;
+  } else {
+    c += `\n\nLocate the seed's position faithfully, commit to the single best vector its trajectory is reaching toward, and show the alternatives you set aside.`;
+  }
+  return c;
+}
+
+function traceContent() {
+  return `Origin seed: "${SEED}"\n\nAnchored position: ${ANCHOR}\n\nCommitted vector — ${COMMITTED.label}: ${COMMITTED.direction}\nClaimed line back: ${COMMITTED.traces_via}\n\nJudge whether this single vector traces back to the seed's own trajectory, or is projection.`;
+}
+
+function pathText() {
+  let t = `Origin seed: "${SEED}"`;
+  t += `\n\nAnchored position: ${ANCHOR}`;
+  t += `\n\nCommitted vector — ${COMMITTED.label}: ${COMMITTED.direction}`;
+  t += `\nTraces back to seed via: ${COMMITTED.traces_via}`;
+  if (TRACE) t += `\nTraceability verdict: ${TRACE.verdict} (${TRACE.trace_strength}/10)`;
+  if (HINT) t += `\n\nUser success hint: "${HINT}"`;
+  return t;
+}
+
+// ═══════════════════════════════════════════════════════════
+//  STAGE RENDERERS
+// ═══════════════════════════════════════════════════════════
+function showThinking(label) {
+  stage.innerHTML = `<div class="thinking"><span class="pulse"></span>${esc(label)}</div>`;
+}
+function showError(where, msg) {
+  stage.innerHTML = `<div class="stage-head"><div class="stage-eyebrow">error · ${esc(where)}</div></div>
+    <div class="err-box">${esc(msg)}</div>
+    <button class="restart-btn" id="restartBtn">↺ Start over</button>`;
+  document.getElementById('restartBtn').addEventListener('click', resetAll);
+}
+
+function renderCommit() {
+  const cfg = getConfig();
+  const weak = TRACE && (TRACE.trace_strength || 0) < cfg.traceFloor;
+
+  const altCards = (REJECTED || []).map((a, i) => `
+    <div class="alt-card ${a.is_projection ? 'projection' : ''}" data-idx="${i}">
+      <div class="alt-label">${esc(a.label)}${a.is_projection ? '<span class="alt-flag">projection</span>' : ''}</div>
+      <div class="alt-dir">${esc(a.direction)}</div>
+      <div class="alt-why"><b>set aside</b> · ${esc(a.why_rejected)}</div>
+      <div class="alt-promote">↑ promote this to the committed vector</div>
+    </div>`).join('');
+
+  let verdictHtml = '';
+  if (TRACE) {
+    const ok = TRACE.traceable !== false && !weak;
+    verdictHtml = `<div class="verdict-pill ${ok ? 'ok' : 'warn'}">
+        ${ok ? '✓' : '⚠'} traceability · ${esc(TRACE.verdict || '')} · ${TRACE.trace_strength ?? '?'}/10
+      </div>
+      <div class="verdict-note">${esc(TRACE.note || '')}${weak && TRACE.traceable !== false ? ' — below your traceability floor; treat the commitment with suspicion.' : ''}</div>`;
+  }
+
+  stage.innerHTML = `<div class="stage-head">
+      <div><div class="stage-eyebrow">commit · single best vector</div>
+      <div class="stage-h">Audit the <em>one</em> claim</div></div>
+      <button class="copy-btn" onclick="copyToClipboard(document.getElementById('stage').innerText,this)">${copyIconBtnHTML()}</button>
+    </div>
+    <div class="anchored"><span class="lbl">anchored position</span>${esc(ANCHOR)}</div>
+
+    <div class="committed">
+      <span class="cm-tag">committed</span>
+      <div class="cm-label">${esc(COMMITTED.label)}</div>
+      <div class="cm-dir">${esc(COMMITTED.direction)}</div>
+      <div class="trace-block">
+        <div class="trace-line"><b>traces back via</b> · ${esc(COMMITTED.traces_via)}</div>
+        ${verdictHtml}
+      </div>
+    </div>
+
+    <div class="rejected-wrap">
+      <div class="rejected-h">Considered &amp; set aside</div>
+      <div class="rejected-sub">The engine's audit trail — the moves it weighed and rejected. Projection-flagged ones are where it caught its own favorite move. Click any to override the commitment.</div>
+      ${altCards || '<div class="spine-empty">No alternatives surfaced.</div>'}
+    </div>
+
+    <div class="auditor">
+      <div class="auditor-prompt">You are the <b>auditor</b>, not the recogniser. Does the committed vector trace back to your seed — or is it the engine talking to itself?</div>
+      <div class="audit-row">
+        <div class="audit-door deepen" id="doorAccept">
+          <div class="ad-name">Accept &amp; deepen ↓</div>
+          <div class="ad-desc">Ratify this vector. Forge the dense system prompt from seed → anchor → committed vector.</div>
+        </div>
+        <div class="audit-door reextract" id="doorReextract">
+          <div class="ad-name">Reject &amp; re-extrapolate ↻</div>
+          <div class="ad-desc">Send the engine back to commit to a different single vector, avoiding the one(s) you rejected.</div>
+        </div>
+      </div>
+    </div>`;
+
+  document.getElementById('doorAccept').addEventListener('click', runDeepen);
+  document.getElementById('doorReextract').addEventListener('click', reextrapolate);
+  document.querySelectorAll('.alt-card').forEach(card => {
+    card.addEventListener('click', () => promoteAlternative(parseInt(card.dataset.idx)));
+  });
+}
+
+// ═══════════════════════════════════════════════════════════
+//  FLOW
+// ═══════════════════════════════════════════════════════════
+async function startForge() {
+  SEED = document.getElementById('seed-input').value.trim();
+  HINT = document.getElementById('hint-input').value.trim();
+  if (!SEED) { document.getElementById('seed-input').focus(); return; }
+  if (!checkReady()) return;
+
+  ANCHOR = ''; COMMITTED = null; REJECTED = []; TRACE = null; REJECTED_HISTORY = [];
+  renderSpine(false);
+  document.getElementById('forgeBtn').disabled = true;
+
+  await runCommit(false);
+  document.getElementById('forgeBtn').disabled = false;
+}
+
+async function runCommit(reextract) {
+  showThinking(reextract
+    ? 'Re-extrapolating — committing to a different vector, avoiding what you rejected…'
+    : 'Locating the seed, committing to the single best vector…');
+  try {
+    const raw = await callAI(activePromptBody('Commit', COMMIT_SYSTEM), commitContent(reextract), null, jsonValidator);
+    const result = parseJSON(raw);
+    ANCHOR = result.anchored_position || '';
+    COMMITTED = result.chosen_vector || null;
+    REJECTED = result.rejected_alternatives || [];
+    if (!COMMITTED) throw new Error('Engine returned no committed vector.');
+    renderSpine(false);
+
+    showThinking('Self-verifying the commitment — does it trace back to the seed?');
+    try {
+      const traceRaw = await callAI(activePromptBody('Traceability Gate', TRACEABILITY_SYSTEM), traceContent(), null, jsonValidator);
+      TRACE = parseJSON(traceRaw);
+    } catch (e) {
+      TRACE = { traceable: true, trace_strength: '?', verdict: 'gate unavailable', note: 'Traceability gate failed: ' + e.message };
+    }
+    renderSpine(false);
+    renderCommit();
+  } catch (e) {
+    showError(reextract ? 're-extrapolate' : 'commit', e.message);
+  }
+}
+
+function reextrapolate() {
+  if (COMMITTED) REJECTED_HISTORY.push(COMMITTED.label);
+  document.getElementById('forgeBtn').disabled = true;
+  runCommit(true).finally(() => { document.getElementById('forgeBtn').disabled = false; });
+}
+
+async function promoteAlternative(idx) {
+  const a = REJECTED[idx];
+  if (!a) return;
+  if (COMMITTED) REJECTED.push({ label: COMMITTED.label, direction: COMMITTED.direction, why_rejected: 'Demoted by auditor in favour of "' + a.label + '".', is_projection: false });
+  COMMITTED = { label: a.label, direction: a.direction, traces_via: a.traces_via || 'Promoted by auditor from the rejected set — re-verifying its line back to the seed.' };
+  REJECTED.splice(idx, 1);
+  renderSpine(false);
+  showThinking('Auditor override — re-verifying the promoted vector against the seed…');
+  try {
+    const traceRaw = await callAI(activePromptBody('Traceability Gate', TRACEABILITY_SYSTEM), traceContent(), null, jsonValidator);
+    TRACE = parseJSON(traceRaw);
+  } catch (e) {
+    TRACE = { traceable: true, trace_strength: '?', verdict: 'gate unavailable', note: 'Traceability gate failed: ' + e.message };
+  }
+  renderSpine(false);
+  renderCommit();
+}
+
+async function runDeepen() {
+  const cfg = getConfig();
+  renderSpine(true);
+
+  stage.innerHTML = `<div class="stage-head">
+      <div><div class="stage-eyebrow">deepen · path-fidelity loop</div>
+      <div class="stage-h">Forging the prompt from the committed path</div></div>
+    </div>
+    <div class="loop-log" id="loopLog"></div>
+    <div class="section-h">Current prompt</div>
+    <div class="prompt-stream" id="promptStream"></div>`;
+  const log = document.getElementById('loopLog');
+  const streamEl = document.getElementById('promptStream');
+  const addLog = (cls, txt) => { const d = document.createElement('div'); d.className = 'log-entry ' + cls; d.textContent = txt; log.appendChild(d); };
+
+  let bestPrompt = '', bestScore = -1, converged = false, lastEval = null;
+
+  try {
+    for (let iter = 1; iter <= cfg.maxIter; iter++) {
+      addLog('info', `Iteration ${iter} of ${cfg.maxIter}`);
+      let acc = '';
+      streamEl.innerHTML = '';
+      let prompt = '';
+      if (iter === 1) {
+        addLog('architect', 'Architect forging from seed → anchor → committed vector…');
+        prompt = await callAI(activePromptBody('Deepen — Architect', DEEPEN_ARCHITECT_SYSTEM), pathText() + '\n\nForge the dense system prompt encoding this entire trajectory.',
+          ch => { acc += ch; streamEl.innerHTML = renderMarkdown(acc); });
+      } else {
+        addLog('architect', 'Revising prompt against path-fidelity weaknesses…');
+        const reviseContent = `${pathText()}\n\nPrevious prompt:\n---\n${bestPrompt}\n---\nEvaluator score: ${lastEval.score}/10\nWeaknesses: ${(lastEval.weaknesses||[]).join('; ')}\nRevision guidance: ${lastEval.revision_guidance || ''}\n\nRewrite the prompt to fix every weakness while still encoding the entire trajectory.`;
+        prompt = await callAI(activePromptBody('Deepen — Revise', DEEPEN_REVISE_SYSTEM), reviseContent, ch => { acc += ch; streamEl.innerHTML = renderMarkdown(acc); });
+      }
+      prompt = prompt.trim();
+
+      const evalContent = `${pathText()}\n\nForged prompt to judge:\n---\n${prompt}\n---\nJudge this prompt against the path. Threshold for pass: ${cfg.threshold}/10.`;
+      const evalRaw = await callAI(activePromptBody('Path-Fidelity Gate', PATH_FIDELITY_SYSTEM), evalContent, null, jsonValidator);
+      lastEval = parseJSON(evalRaw);
+      const score = parseInt(lastEval.score) || 0;
+      const pass = score >= cfg.threshold;
+
+      if (score > bestScore) { bestScore = score; bestPrompt = prompt; }
+
+      addLog(pass ? 'pass' : 'fail',
+        `Path-fidelity · iter ${iter} — score ${score}/10 · ${pass ? 'PASS ✓' : 'FAIL — ' + (lastEval.weaknesses||[]).slice(0,2).join('; ')}`);
+
+      if (pass) { converged = true; break; }
+      if (iter < cfg.maxIter) addLog('info', 'Feeding weaknesses back into revision…');
+    }
+
+    if (!converged) addLog('fail', `Did not reach threshold within ${cfg.maxIter} iterations — keeping best (score ${bestScore}/10).`);
+
+    addLog('info', 'Confirmation probe (off-loop): testing output continuity…');
+    let confirm = null;
+    try {
+      const probeRaw = await callAI(activePromptBody('Confirmation Probe', CONFIRM_PROBE_SYSTEM),
+        `Forged prompt:\n---\n${bestPrompt}\n---\nCommitted vector it was meant to reach: "${COMMITTED.label}: ${COMMITTED.direction}"\n\nExecute briefly, then judge continuity.`, null, jsonValidator);
+      confirm = parseJSON(probeRaw);
+      addLog(confirm.continuous ? 'pass' : 'fail', `Probe — ${confirm.continuous ? 'continuous with committed vector ✓' : 'drift detected ⚠'}`);
+    } catch (e) {
+      addLog('fail', 'Probe failed: ' + e.message);
+    }
+
+    renderForged(bestPrompt, bestScore, converged, confirm);
+    autoSaveResponse(bestPrompt, bestScore, converged, confirm);
+
+  } catch (e) {
+    showError('deepen', e.message);
+  }
+}
+
+function renderForged(prompt, score, converged, confirm) {
+  const trajItems = `<li><b>Seed</b> — ${esc(SEED)}</li>`
+    + `<li><b>Anchored position</b> — ${esc(ANCHOR)}</li>`
+    + `<li><b>${esc(COMMITTED.label)}</b> — ${esc(COMMITTED.direction)}</li>`;
+
+  let confirmHtml = '';
+  if (confirm) {
+    const ok = confirm.continuous;
+    confirmHtml = `<div class="section-h">Confirmation probe · off-loop</div>
+      <div class="confirm-box ${ok ? 'ok' : 'drift'}">
+        <div class="confirm-verdict ${ok ? 'ok' : 'drift'}">${ok ? '✓ output continuous with committed vector' : '⚠ drift — output strays from the committed dimension'}</div>
+        <div class="confirm-sample">${esc(confirm.sample || '')}</div>
+        <div class="confirm-note">${esc(confirm.note || '')}</div>
+      </div>`;
+  }
+
+  let traceHtml = '';
+  if (TRACE) {
+    const ok = TRACE.traceable !== false;
+    traceHtml = `<div class="section-h">Traceability of the commitment</div>
+      <div class="confirm-box ${ok ? 'ok' : 'drift'}">
+        <div class="confirm-verdict ${ok ? 'ok' : 'drift'}">${ok ? '✓' : '⚠'} ${esc(TRACE.verdict || '')} · ${TRACE.trace_strength ?? '?'}/10</div>
+        <div class="confirm-sample">${esc(TRACE.note || '')}</div>
+      </div>`;
+  }
+
+  stage.innerHTML = `<div class="stage-head">
+      <div class="stage-eyebrow">forged</div>
+      <div class="forged-head">
+        <div class="stage-h">The dense prompt</div>
+        <div style="display:flex;gap:0.6rem;align-items:center;">
+          <span class="forged-badge">${converged ? 'converged' : 'best available'} · ${score}/10</span>
+          <button class="copy-btn" id="copyBtn">${copyIconBtnHTML()}</button>
+        </div>
+      </div>
+    </div>
+    <div class="forged-prompt" id="forgedPrompt">${esc(prompt)}</div>
+    ${traceHtml}
+    ${confirmHtml}
+    <div class="section-h">The trajectory it encodes</div>
+    <ul class="traj-list">${trajItems}</ul>
+    <button class="restart-btn" id="restartBtn">↺ Forge another</button>`;
+
+  document.getElementById('copyBtn').addEventListener('click', function() { copyToClipboard(prompt, this); });
+  document.getElementById('restartBtn').addEventListener('click', resetAll);
+}
+
+// ═══════════════════════════════════════════════════════════
+//  SAVED RESPONSE PLAYBACK — pop a right-panel record back
+//  into the center stage (read-only view; does not touch
+//  SEED/ANCHOR/COMMITTED/TRACE session state).
+// ═══════════════════════════════════════════════════════════
+function renderSavedInStage(record) {
+  let confirmHtml = '';
+  if (record.confirm) {
+    const ok = record.confirm.continuous;
+    confirmHtml = `<div class="section-h">Confirmation probe · off-loop</div>
+      <div class="confirm-box ${ok ? 'ok' : 'drift'}">
+        <div class="confirm-verdict ${ok ? 'ok' : 'drift'}">${ok ? '✓ output continuous with committed vector' : '⚠ drift — output strays from the committed dimension'}</div>
+        <div class="confirm-sample">${esc(record.confirm.sample || '')}</div>
+        <div class="confirm-note">${esc(record.confirm.note || '')}</div>
+      </div>`;
+  }
+
+  let traceHtml = '';
+  if (record.trace) {
+    const ok = record.trace.traceable !== false;
+    traceHtml = `<div class="section-h">Traceability of the commitment</div>
+      <div class="confirm-box ${ok ? 'ok' : 'drift'}">
+        <div class="confirm-verdict ${ok ? 'ok' : 'drift'}">${ok ? '✓' : '⚠'} ${esc(record.trace.verdict || '')} · ${record.trace.trace_strength ?? '?'}/10</div>
+        <div class="confirm-sample">${esc(record.trace.note || '')}</div>
+      </div>`;
+  }
+
+  const seedHtml = record.input
+    ? `<div class="section-h">Seed this was forged from</div><div class="confirm-sample" style="margin-bottom:0.9rem;">${esc(record.input)}</div>`
+    : '';
+
+  stage.innerHTML = `<div class="stage-head">
+      <div class="stage-eyebrow">from saved · ${esc(new Date(record.created).toLocaleString())}</div>
+      <div class="forged-head">
+        <div class="stage-h">${esc(record.tag || record.promptSlug || 'Saved vector')}</div>
+        <div style="display:flex;gap:0.6rem;align-items:center;">
+          <span class="forged-badge">${record.converged ? 'converged' : 'best available'} · ${record.score ?? '?'}/10</span>
+          <button class="copy-btn" id="copyBtn">${copyIconBtnHTML()}</button>
+        </div>
+      </div>
+    </div>
+    ${seedHtml}
+    <div class="forged-prompt" id="forgedPrompt">${esc(record.output)}</div>
+    ${traceHtml}
+    ${confirmHtml}
+    <button class="restart-btn" id="restartBtn">↺ Forge another</button>`;
+
+  document.getElementById('copyBtn').addEventListener('click', function() { copyToClipboard(record.output, this); });
+  document.getElementById('restartBtn').addEventListener('click', resetAll);
+}
+
+function popResponseIntoStage(id) {
+  const record = loadResponses().find(r => r.id === id);
+  if (!record) return;
+  closePanel('rightPanel', 'rightScrim');
+  renderSavedInStage(record);
+  stage.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+// ═══════════════════════════════════════════════════════════
+function autoSaveResponse(prompt, score, converged, confirm) {
+  const record = {
+    id: genId(),
+    promptSlug: 'Deepen — Architect',
+    input: SEED,
+    output: prompt,
+    tag: COMMITTED ? COMMITTED.label : 'untitled vector',
+    score, converged: !!converged,
+    confirm: confirm || null,
+    trace: TRACE || null,
+    created: new Date().toISOString()
+  };
+  const arr = loadResponses();
+  arr.unshift(record);
+  saveResponses(arr);
+  saveRecordToDisk('response', record);
+}
+
+function resetAll() {
+  SEED = ''; HINT = ''; ANCHOR = ''; COMMITTED = null; REJECTED = []; TRACE = null; REJECTED_HISTORY = [];
+  document.getElementById('seed-input').value = '';
+  document.getElementById('hint-input').value = '';
+  renderSpine(false);
+  stage.innerHTML = `<div class="empty-state">
+      <div class="empty-icon">◈</div>
+      <div class="empty-title">Forge a dimension</div>
+      <div class="empty-label">Drop an intuition above. The engine locates where it sits, commits to the <em>single best</em> vector its trajectory is reaching toward — then shows its work: the line back to the seed, and the alternatives it set aside (including the ones it was tempted by, named as projection). You audit the one claim, then deepen it into a dense system prompt.</div>
+    </div>`;
+}
+
+// ═══════════════════════════════════════════════════════════
+//  LEFT PANEL — PROMPT LIBRARY UI
+// ═══════════════════════════════════════════════════════════
+let editingEntryId = null;
+
+function renderPromptList() {
+  const arr = loadPrompts();
+  const list = document.getElementById('promptList');
+  if (!arr.length) { list.innerHTML = '<div class="panel-empty">No prompts yet.</div>'; return; }
+  list.innerHTML = arr.map(p => `
+    <div class="entry-card" data-id="${p.id}">
+      <div class="entry-name">${esc(p.name)}</div>
+      <div class="entry-meta"><span>${esc((p.triggers||[]).join(', '))}</span><span>${esc(p.source||'manual')}</span></div>
+      <div class="entry-meta" style="margin-top:0.3rem;color:var(--text-secondary);">${esc(trunc(p.description||'',90))}</div>
+      <div class="entry-actions">
+        <button data-act="edit" data-id="${p.id}">Edit</button>
+        <button data-act="delete" data-id="${p.id}" class="danger">Delete</button>
+      </div>
+    </div>`).join('');
+  list.querySelectorAll('button[data-act="edit"]').forEach(b => b.addEventListener('click', () => openEditForm(b.dataset.id)));
+  list.querySelectorAll('button[data-act="delete"]').forEach(b => b.addEventListener('click', () => deletePromptEntry(b.dataset.id)));
+}
+
+function openEditForm(id) {
+  const arr = loadPrompts();
+  const entry = id ? arr.find(e => e.id === id) : null;
+  editingEntryId = id || null;
+  document.getElementById('fEntryName').value = entry ? entry.name : '';
+  document.getElementById('fEntryTriggers').value = entry ? (entry.triggers||[]).join(', ') : '';
+  document.getElementById('fEntryDesc').value = entry ? entry.description : '';
+  document.getElementById('fEntryBody').value = entry ? entry.body : '';
+  document.getElementById('promptEditForm').hidden = false;
+}
+
+document.getElementById('btnNewPrompt').addEventListener('click', () => openEditForm(null));
+
+document.getElementById('btnSaveEntry').addEventListener('click', () => {
+  const name = document.getElementById('fEntryName').value.trim();
+  if (!name) { document.getElementById('fEntryName').focus(); return; }
+  const triggers = document.getElementById('fEntryTriggers').value.split(',').map(s => s.trim()).filter(Boolean);
+  const description = document.getElementById('fEntryDesc').value.trim();
+  const body = document.getElementById('fEntryBody').value;
+  const arr = loadPrompts();
+  if (editingEntryId) {
+    const idx = arr.findIndex(e => e.id === editingEntryId);
+    if (idx !== -1) { arr[idx] = Object.assign({}, arr[idx], { name, triggers, description, body }); }
+  } else {
+    const rec = { id: genId(), name, triggers, description, body, source: 'manual', imported: new Date().toISOString() };
+    arr.unshift(rec);
+    saveRecordToDisk('prompt', rec);
+  }
+  savePrompts(arr);
+  document.getElementById('promptEditForm').hidden = true;
+  renderPromptList();
+});
+
+function deletePromptEntry(id) {
+  const arr = loadPrompts().filter(e => e.id !== id);
+  savePrompts(arr);
+  deleteRecordFromDisk('prompt', id);
+  renderPromptList();
+}
+
+document.getElementById('btnImportMd').addEventListener('click', () => document.getElementById('mdFileInput').click());
+document.getElementById('mdFileInput').addEventListener('change', (e) => {
+  const files = Array.from(e.target.files || []);
+  if (!files.length) return;
+  const arr = loadPrompts();
+  let pending = files.length;
+  files.forEach(file => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const text = String(reader.result || '');
+      const name = file.name.replace(/\.(md|markdown)$/i, '');
+      const rec = { id: genId(), name, triggers: [], description: `Imported from ${file.name}`, body: text, source: 'markdown', imported: new Date().toISOString() };
+      arr.unshift(rec);
+      saveRecordToDisk('prompt', rec);
+      pending--;
+      if (pending === 0) { savePrompts(arr); renderPromptList(); }
+    };
+    reader.readAsText(file);
+  });
+  e.target.value = '';
+});
+
+document.getElementById('btnExportPromptsJson').addEventListener('click', () => {
+  const arr = loadPrompts();
+  const blob = new Blob([JSON.stringify(arr, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = 'vector-forge-prompts.json';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+});
+
+document.getElementById('btnImportPromptsJson').addEventListener('click', () => document.getElementById('promptsJsonInput').click());
+document.getElementById('promptsJsonInput').addEventListener('change', (e) => {
+  const file = e.target.files && e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const incoming = JSON.parse(String(reader.result || '[]'));
+      const arr = loadPrompts();
+      const existingIds = new Set(arr.map(x => x.id));
+      incoming.forEach(item => {
+        if (item && item.id && !existingIds.has(item.id)) { arr.push(item); saveRecordToDisk('prompt', item); }
+      });
+      savePrompts(arr);
+      renderPromptList();
+    } catch (err) { alert('Invalid JSON file.'); }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+});
+
+// ═══════════════════════════════════════════════════════════
+//  RIGHT PANEL — RESPONSE LIBRARY UI
+// ═══════════════════════════════════════════════════════════
+function renderResponseList() {
+  const arr = loadResponses();
+  const list = document.getElementById('responseList');
+  if (!arr.length) { list.innerHTML = '<div class="panel-empty">No responses saved yet — forge a prompt to populate this.</div>'; return; }
+  list.innerHTML = arr.map(r => `
+    <div class="resp-card" data-id="${r.id}" style="cursor:pointer;" title="Click to reopen in the stage">
+      <div class="resp-head">
+        <span class="resp-tag">${esc(r.tag || r.promptSlug)}</span>
+        <span class="resp-time">${new Date(r.created).toLocaleString()}</span>
+      </div>
+      <div class="resp-body" id="rb-${r.id}">${esc(r.output)}</div>
+      <div class="resp-toggle" data-id="${r.id}">expand ▾</div>
+      <div class="resp-actions">
+        <button class="copy-btn" data-copy-id="${r.id}">${copyIconBtnHTML()}</button>
+        <button class="tool-btn danger" data-del-id="${r.id}">Delete</button>
+      </div>
+    </div>`).join('');
+  list.querySelectorAll('.resp-card').forEach(card => card.addEventListener('click', () => popResponseIntoStage(card.dataset.id)));
+  list.querySelectorAll('.resp-toggle').forEach(t => t.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const body = document.getElementById('rb-' + t.dataset.id);
+    body.classList.toggle('expanded');
+    t.textContent = body.classList.contains('expanded') ? 'collapse ▴' : 'expand ▾';
+  }));
+  list.querySelectorAll('[data-copy-id]').forEach(b => b.addEventListener('click', function(e) {
+    e.stopPropagation();
+    const rec = loadResponses().find(x => x.id === b.dataset.copyId);
+    if (rec) copyToClipboard(rec.output, this);
+  }));
+  list.querySelectorAll('[data-del-id]').forEach(b => b.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const arr = loadResponses().filter(x => x.id !== b.dataset.delId);
+    saveResponses(arr);
+    deleteRecordFromDisk('response', b.dataset.delId);
+    renderResponseList();
+  }));
+}
+
+document.getElementById('btnExportRespJson').addEventListener('click', () => {
+  const arr = loadResponses();
+  const blob = new Blob([JSON.stringify(arr, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = 'vector-forge-responses.json';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+});
+
+document.getElementById('btnImportRespJson').addEventListener('click', () => document.getElementById('respJsonInput').click());
+document.getElementById('respJsonInput').addEventListener('change', (e) => {
+  const file = e.target.files && e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const incoming = JSON.parse(String(reader.result || '[]'));
+      const arr = loadResponses();
+      const existingIds = new Set(arr.map(x => x.id));
+      incoming.forEach(item => {
+        if (item && item.id && !existingIds.has(item.id)) { arr.push(item); saveRecordToDisk('response', item); }
+      });
+      saveResponses(arr);
+      renderResponseList();
+    } catch (err) { alert('Invalid JSON file.'); }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+});
+
+document.getElementById('btnConnectFolder').addEventListener('click', () => {
+  if (isArtifact) return;
+  if (folderState === 'reconnect') reconnectFolder();
+  else connectFolder();
+});
+
+document.getElementById('btnCopyAllResp').addEventListener('click', function() {
+  const arr = loadResponses();
+  const text = arr.map((r, i) => `— Response ${i+1}: ${r.tag || r.promptSlug} —\n\n${r.output}`).join('\n\n');
+  copyToClipboard(text, this);
+});
+
+// ═══════════════════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════════════════
+document.getElementById('forgeBtn').addEventListener('click', startForge);
+
+fetchModelConfig();
+renderSpine(false);
+seedDefaultPrompts();
+updateFolderStatus();
+reverifyFolderOnLoad();
+</script>
+</body>
+</html>

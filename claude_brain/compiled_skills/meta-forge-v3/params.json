@@ -1,0 +1,18 @@
+{
+  "skill": "meta-forge-v3",
+  "skill_name": "meta-forge-v3",
+  "description": "Forges paste-ready system prompts from any input. Discriminates input type, breeds mutually-exclusive variants (--variant N), heals deployed spines from field-failure signatures, discriminates wounds from domain-drift, and accumulates forge-scars from its own prediction misses. Invoke to forge, radiate, patch, or weather a system prompt.",
+  "source_file": "skills/meta-forge-v3/SKILL.md",
+  "source_sha": "6720d2b0b1e54eb8e619cbfbd87c19347ed42bb0e690a6444236bb390bb0a28a",
+  "resources": [],
+  "provider_config": {
+    "model_core": "v2"
+  },
+  "inputs": [
+    {
+      "id": "chatInput",
+      "kind": "textarea",
+      "label": "Invoke the skill"
+    }
+  ]
+}

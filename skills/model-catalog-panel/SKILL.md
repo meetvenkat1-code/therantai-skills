@@ -1,29 +1,21 @@
 ---
 name: model-catalog-panel
 description: >
-  Optional model-picker layer for Hybrid HTML Engines, built on the Model Core (model-
-  config-contract v2). Lanes mode: pin models as exact parallel lanes, one input through
-  many models side by side. Panel mode: each panel, stage or role owns one model, chosen
-  from the config defaults plus a per-panel Recent history, with a reassign popover per
-  panel. Both modes consume the Core API (config, keys, hardened callModel) and never re-
-  implement it. Defaults are the config's defaultLanes; everything else arrives through a
-  live /models catalog (tiers, search, /regex/; tags, Synth Picks and price sort as opt-in
-  modules). Exactly one control chooses the model. Invoke with /catalog lanes or /catalog
-  panel (/catalog fanout aliases lanes), or say "add live model catalog", "pin models as
-  lanes", "per-panel model picker". A bare /catalog asks one gate question. Skip for
-  engines that only need the default models.
+  Optional model-picker layer for Hybrid HTML Engines, built on the Model Core (model-config-contract v2.1). One axis decides the mode: Lanes vary the model, Panel varies the role. Lanes: pin models as exact parallel lanes, one input through many models. Panel, Full: each panel, stage or role owns one model (per-panel Recent history, reassign popover). Panel, Master: one Master model serves every role, with a Master control in the header, full-width cards stacked vertically and a read-only Served by badge per card. Dual-Run offers both, Master canonical. All modes consume the Core API (config, keys, callModel, callModelPatient, RunScope, runBatch) and never re-implement it. Invoke with /catalog lanes, /catalog panel, /catalog panel master or /catalog panel full, or say "add live model catalog", "pin models as lanes", "per-panel model picker", "one model for every stage". A bare /catalog asks one gate question. Implicit triggers (routed here by hybrid-engine-contract step 4b, no slash command needed): "compare models", "side by side", "multi-stage", "pipeline", "lenses", "per stage". Skip for engines that only need the default models.
 ---
 
-# Model Catalog Panel v3.2
+# Model Catalog Panel v4.0.1
 
 `model-config-contract` (the **Model Core**) answers "which providers exist, what are the default models, where do keys live, and how is a call made". This skill is the **optional layer above it**: it answers "which models does each provider offer *right now*, and how does the user put them to work". How they put them to work is the **mode**. An engine that only needs the default models (Groq `gpt-oss-120b` and the OpenRouter free router) does not invoke this skill at all.
 
 ```
-Invocation : /catalog lanes | /catalog panel | /catalog fanout (alias of lanes) | "invoke model catalog panel"
-Requires   : /hybrid-engine + /ui-contract + /model-config (Model Core v2)
-Priority   : model-config-contract owns provider identity, config, keys and the call layer.
+Invocation : /catalog lanes | /catalog panel | /catalog panel master | /catalog panel full | /catalog fanout (alias of lanes) | "invoke model catalog panel"
+Routing    : hybrid-engine-contract build step 4b (MODEL SURFACE — ROUTER) decides whether this skill is read at all (only on Lanes or Panel). The Mode Gate below decides the mode and sub-mode; the router never does.
+Requires   : /hybrid-engine + /ui-contract + /model-config (Model Core v2.1 or later: callModelPatient, RunScope, runBatch, defaultMaster, keyFieldId)
+Priority   : model-config-contract owns provider identity, config, keys, the call layer and the run primitives.
              This file owns only the picker surface and the lane / panel state.
              (v2.0 said this file wins for standalone engines; that clause is retired, because those rules now live in the core.)
+             Master Panel Mode (B9): the matching ui-contract patch (07, 18B, 25) was applied in ui-contract on 2026-10-22; B9 keeps the text as the reference, and an older ui-contract copy without it falls under B9's scoped override.
 ```
 
 ## SKILL METADATA
@@ -33,17 +25,39 @@ Kept in the body rather than the front matter, so the upload validator sees only
 ```yaml
 scope: add-on
 invokable: true
-triggers: ["/catalog", "/catalog lanes", "/catalog fanout", "/catalog panel", "invoke model catalog panel", "add live model catalog", "pin models as lanes", "fan-out lanes", "per-panel model picker", "each stage has its own model"]
-requires: [hybrid-engine-contract, ui-contract, model-config-contract]
+triggers: ["/catalog", "/catalog lanes", "/catalog fanout", "/catalog panel", "/catalog panel master", "/catalog panel full", "/catalog master", "invoke model catalog panel", "add live model catalog", "pin models as lanes", "fan-out lanes", "per-panel model picker", "each stage has its own model", "master panel", "one model for every stage", "dual-run", "compare models", "side by side", "multi-stage", "pipeline", "lenses", "per stage"]
+requires: [hybrid-engine-contract, ui-contract, "model-config-contract >= 2.1"]
 phase: Build
-version: "3.2.1"
+version: "4.0.1"
 reference_builds:
   - "osho-refraction-standalone.html (Lanes, single path, left system-prompt panel, right drawer with Corpus)"
-  - "sequential-pipeline.html (Panel)"
-  - "capsule-relay-loop-engine-v2.html (Panel, after retrofit onto the Model Core)"
+  - "sequential-pipeline.html (Full Panel)"
+  - "capsule-relay-loop-engine-v2.html (Full Panel, after retrofit onto the Model Core)"
   - "prompt-generator-engine-v2.html (Lanes, matrix variant: 3 presets x lanes, curated Run kept)"
-lineage: "Triangulator live-fetch gear drawer -> Capsule Tree v7 (v1.0) -> Sequential Pipeline (v2.0, standalone-first, two modes) -> Osho Refraction Engine (v3.0, selection layer on the Model Core, single-path Lanes) -> Prompt Generation Engine (v3.1, matrix variant, reference code from a tested retrofit) -> v3.2 (catalog GET hardening: minimal headers, instant tab switch, in-flight guard; Panel plumbing completed)"
+  - "mvre-instructions-field (Dual-Run Panel, Master canonical; retrofit pending, see the Core's retrofit table)"
+lineage: "Triangulator live-fetch gear drawer -> Capsule Tree v7 (v1.0) -> Sequential Pipeline (v2.0, standalone-first, two modes) -> Osho Refraction Engine (v3.0, selection layer on the Model Core, single-path Lanes) -> Prompt Generation Engine (v3.1, matrix variant, reference code from a tested retrofit) -> v3.2 (catalog GET hardening: minimal headers, instant tab switch, in-flight guard; Panel plumbing completed) -> v4.0 (axis-of-variation Mode Gate, Master Panel Mode and Dual-Run, run primitives taken from Core 2.1) -> v4.0.1 (implicit triggers, panel glossary, Master tie-break, router hand-off from hybrid-engine-contract step 4b)"
 ```
+
+## WHAT CHANGED IN v4.0.1 (router hand-off; no code changed)
+
+A companion edit to `hybrid-engine-contract` (build step 4b, MODEL SURFACE — ROUTER) and `ui-contract` 25 moved the coarse "is a picker needed at all" decision out of this file. Prose only; the Model Core, the Lanes blocks (A1 to A5) and the Panel blocks (B1 to B9) are untouched.
+
+1. **Implicit triggers** ("compare models", "side by side", "multi-stage", "pipeline", "lenses", "per stage") added to the description and the `triggers:` metadata, so a brief that never says "catalog" still reaches this skill when the router says Lanes or Panel.
+2. **Glossary** under the Mode Gate separating overlay panels, `EnginePanels` flags and role cards, so "panel" is never read as Panel mode by accident.
+3. **Tie-break is Master Panel.** The "none / no" row of the sub-mode table (formerly Dual-Run) now resolves to Master Panel Mode; Dual-Run is only for a constrained role on a one-model deployment, or a brief that asks for both run types. An unsettled Steps 2 and 3 no longer triggers a question; only an unsettled Step 1 does.
+
+## WHAT CHANGED IN v4.0 (from the MVRE Instructions Field engine audit)
+
+The audit found a Panel engine whose roles all needed to run on one model, but which the v3 gate had classified as Full Panel because every panel "had a model dropdown". The workaround was "Panel 1 controls everything": three panels carried dropdowns that did nothing. v4.0 fixes the classification, adds the missing mode, and moves the run plumbing into the Core.
+
+1. **Requires Core 2.1.** `callModelPatient`, `newRunScope` / `beginRun` / `stopRun` and `runBatch` come from the Core. This skill's own `streamChat` (B5 in v3.x) is deleted; nothing here carries a 429 countdown, an abort handler or a batch loop of its own.
+2. **The Mode Gate is rebuilt around one axis.** Lanes vary the model; Panel varies the role. The v3 surface phrases ("every panel has a model dropdown") are retired because they read the screen, not the structure.
+3. **Master Panel Mode** (B7 to B9) is a new canonical sub-mode of Panel, beside Full Panel Mode (B1 to B6). One Master model serves every role. A three-step detection procedure (what varies, cross-role constraint test, deployment test) chooses between them.
+4. **Dual-Run**: an engine that offers both run types from one set of role cards, Master canonical (B7).
+5. **Strict Master layout** (B9): the Master model dropdown (`#providerSelect`) returns to header Zone B beside `Run Master` and the Dual-Run toggle; roles render as full-width cards stacked vertically; each card carries a read-only `Served by: <Master Model>` badge; per-card model controls are banned in a Master run. The "Panel 1 controls everything" workaround is retired.
+6. **Key rows use `keyFieldId(p.id)`** (Core 2.1) in both the Lanes and the Panel key code, so an error for `or-auto` highlights `keyInput_openrouter`.
+7. **Boot calls `coreSelfCheck()`** (Section 1a), so a drifted or paraphrased Core is reported at load.
+8. **Stop**: A3 states the Stop rule for Lanes (a `RunScope`, never a nullable controller).
 
 ## WHAT CHANGED IN v3 (the delta from v2.0)
 
@@ -52,7 +66,7 @@ lineage: "Triangulator live-fetch gear drawer -> Capsule Tree v7 (v1.0) -> Seque
 3. **Defaults are `defaultLanes()`** (two entries today), not the whole `modelChain`. Chain entries beyond the defaults, such as Groq's `gpt-oss-20b`, serve as the core's fallback, and reach a user only through the catalog.
 4. **Extras are opt-in modules.** Content tags, Synth Picks and price sort are off unless the brief asks for them.
 5. **Lane keys are `providerId::modelId`.** v2 used `provider|model` and `pin|provider|model`; migrate them at boot.
-6. **Panel mode's 429 countdown wraps the core's `callModel`** using the `status` and `retryAfter` it puts on errors. There is no second stream reader.
+6. **Panel mode's 429 countdown wraps the core's `callModel`** using the `status` and `retryAfter` it puts on errors. There is no second stream reader. *(v4.0: the wrapper itself now lives in the Core as `callModelPatient`.)*
 7. **Alias resolution is the core's `resolveModelId`** over `model_aliases` in `model.json`.
 
 ## WHAT CHANGED IN v3.1 (from retrofitting the Prompt Generation Engine)
@@ -77,33 +91,74 @@ An outside review reported that the catalog fetch can fail in the browser on Ope
 
 ## THE LAYER RULE
 
-This skill consumes the Core API. It must not re-implement a config loader, key store, request builder, stream reader or call layer. If the engine needs behaviour the core lacks, the fix is a core change (model-config-contract), never a local copy.
+This skill consumes the Core API. It must not re-implement a config loader, key store, request builder, stream reader, call layer, abort handler, 429 countdown or batch scheduler. If the engine needs behaviour the core lacks, the fix is a core change (model-config-contract), never a local copy.
 
 ---
 
 ## MODE GATE (run before anything else)
 
-The skill cannot see the engine. It reads the invocation and the build brief. Decide the mode from these signals, and never guess.
+The skill cannot see the engine. It reads the invocation and the build brief. The mode is decided by **what varies between the calls the engine makes**, never by what the screen looks like. Never guess.
 
-| The brief says | Mode |
+> **Lanes vary the model. Panel varies the role.**
+
+**Glossary (three things that all get called "panel"; never mix them):**
+- **Overlay panels**: the left prompt library (`☰`) and right response library (`▤`) of ui-contract 01. UI chrome, unrelated to Panel mode.
+- **`EnginePanels` flags**: `window.EnginePanels = { library, importExport, settings }` (ui-contract 22). They switch the overlay panels on or off, unrelated to Panel mode.
+- **Role cards**: the per-role output cards of Panel mode (a stage, agent or lens each). Only these are governed by Mode B.
+
+### Step 1. What varies? (the axis)
+
+| Between the engine's calls, the thing that changes is | Mode |
 |---|---|
-| one input runs through many models side by side; compare models; lanes; fan-out; triangulate; results as parallel columns per model | **A. Lanes** |
-| each panel / stage / role / agent owns its own model; pipeline; sequential roles; per-panel model; every panel has a model dropdown | **B. Panel** |
-| the engine only needs one answer from the default models | **No picker.** Stay on the Model Core; build nothing from this skill. |
-| none of these clearly, or more than one | Ask exactly one question: "Does one input run through many models at once (lanes), does each panel own its own model (panel), or do you just want the default models (no picker)?" Build nothing until answered. |
+| **the model**: the same input and the same instructions go through many models and the results are read side by side (compare models, lanes, fan-out, triangulate) | **A. Lanes** |
+| **the role**: each call has its own job, system prompt or stage (pipeline, sequential roles, agents, lenses), and which model serves it is a separate question | **B. Panel** (go on to Steps 2 and 3) |
+| both: a second axis of work (lenses, prompts, personas) crossed with models | **A. Lanes, matrix variant** (A3d) |
+| neither: the engine only needs one answer from the default models | **No picker.** Stay on the Model Core; build nothing from this skill. |
+
+"Every panel has a model dropdown" is not an axis. It is one possible answer to Step 2, and when nothing forces it, it is the wrong one.
+
+### Step 2. Cross-role constraint test (Panel only)
+
+Walk the roles one at a time and ask: **does this role have a requirement that the other roles' model could fail?** A much longer context window, strict JSON or schema discipline, a price or latency ceiling, reasoning depth the others do not need, a rate limit the other roles would exhaust. Only a requirement that survives the brief counts; "different models might be interesting" is not a constraint.
+
+- At least one role has one: Full Panel Mode is a candidate.
+- No role has one: Master Panel Mode is a candidate.
+
+### Step 3. Deployment test (Panel only)
+
+Ask: **will the engine's output be judged, compared or deployed as one unit against a single model**, so that a result built from mixed models could not be attributed to any one of them?
+
+- Yes (one model): Master is a candidate.
+- No (not tied to one model): Full is a candidate.
+
+### Reading the two answers
+
+| Step 2: constrained role? | Step 3: tied to one model? | Sub-mode |
+|---|---|---|
+| none | yes | **Master Panel Mode** |
+| some | no | **Full Panel Mode** |
+| some | yes | **Dual-Run**, Master canonical; the constrained role is named in the build plan, and Full is the escape |
+| none | no | **Master Panel Mode** (tie-break). Dual-Run only when the brief asks for both run types or per-role models |
+
+Mixed signals (a constrained role and a one-model deployment) are what Dual-Run is for. **Tie-break: when the brief is an unclear multi-stage brief and the answers do not settle it, the sub-mode is Master Panel, never Dual-Run.** State the sub-mode and the answers to Steps 1 to 3 in the build plan, one line each.
+
+If the brief does not settle **Step 1** (which surface: lanes, panel, or no picker) and the answer cannot be inferred, ask exactly one question, and build nothing until it is answered: "Does one input run through many models at once (lanes), do all the roles run on one model you choose (master panel), does each role own its own model (full panel), or do you just want the default models (no picker)?" A bare `/catalog` with no brief asks this question. When Step 1 is settled as Panel but **Steps 2 and 3** are not, do not ask: apply the tie-break above (Master Panel Mode) and state that assumption in the build plan.
 
 An engine that genuinely needs both surfaces builds Sections 1 to 3 (the shared layer) once and mounts Mode A for its lane run and Mode B for its per-role runs. This is rare; state it in the build plan when it happens.
 
-| | Mode A: Lanes | Mode B: Panel |
-|---|---|---|
-| Picking a model means | tick a lane (pin = exact extra lane) | fill that panel's slot |
-| Persisted selection | `lanes[]` + `customLanes[]` + `lanesTouched` | `models[]` (one per panel) + `history[][]` (Recent, 5 per panel) + `caps[]` |
-| Defaults | `defaultLanes()` listed; only the first ticked until the user touches the list | `defaultLanes()` as the "from config" group; empty slots normalize to the first |
-| Concurrency | all lanes in parallel, 220 ms stagger, max 12 | the engine decides (the pipeline reference runs panels strictly in order) |
-| Failover | never across lanes (strict mode) | none; a failed panel stops and is re-run by the user |
-| Rate limit (429) | the core retries once (1800 ms), then the lane errors | visible countdown, honors the provider's own wait, up to 3 retries |
-| Picker surface | header lane button + gear drawer: Lanes, Model catalog, Keys, engine settings | popover on every panel + drawer catalog with 1..N / all buttons |
-| Call | `callModel({ provider, model, ... })` per lane | `streamChat` wrapper over strict `callModel` (B5) |
+| | Mode A: Lanes | Mode B, Full Panel | Mode B, Master Panel |
+|---|---|---|---|
+| Axis | the model varies | the role varies; one model per role | the role varies; one model for every role |
+| Picking a model means | tick a lane (pin = exact extra lane) | fill that panel's slot | set the Master |
+| Persisted selection | `lanes[]` + `customLanes[]` + `lanesTouched` | `models[]` (one per panel) + `history[][]` (Recent, 5 per panel) + `caps[]` | `master` + `masterHistory[]` (Recent, 5) + `caps[]`; Dual-Run adds `runMode` |
+| Defaults | `defaultLanes()` listed; only the first ticked until the user touches the list | `defaultLanes()` as the "from config" group; empty slots normalize to the first | `defaultMaster()` (the first default lane when the config has none); never "whatever Panel 1 has" |
+| Concurrency | all lanes in parallel, 220 ms stagger, max 12 | the engine decides (the pipeline reference runs panels strictly in order) | roles in order through `runBatch` (sequential, halt on error); one provider, so parallel would serialise anyway |
+| Failover | never across lanes (strict mode) | none; a failed panel stops and is re-run by the user | none; a failed role halts the run and the user re-runs |
+| Rate limit (429) | the core retries once (1800 ms), then the lane errors | `callModelPatient`: visible countdown, honors the provider's own wait, up to 3 retries | same |
+| Stop | `beginRun()` / `stopRun()` (A3 note) | `beginRun()` / `stopRun()` through `runBatch` | same |
+| Picker surface | header lane button + gear drawer: Lanes, Model catalog, Keys, engine settings | popover on every panel + drawer catalog with 1..N / all buttons | header Master control (`#providerSelect`) + drawer catalog with a Master button; no model control on any card |
+| Layout | one column per lane (`auto-fit` grid) | the engine's own panels | full-width cards stacked vertically (B9) |
+| Call | `callModel({ provider, model, ... })` per lane | `callModelPatient({ provider, model, ... })` per panel | same, one model for every role |
 
 ---
 
@@ -112,38 +167,40 @@ An engine that genuinely needs both surfaces builds Sections 1 to 3 (the shared 
 These rules exist because the engines are run standalone, from a file or a host, not inside claude.ai artifacts. Most are now enforced by the Model Core; they are listed so the picker never contradicts them.
 
 1. **Native entries are skipped, never routed.** The shared `model.json` carries one `native: true` entry (Claude). `usableProviders()` leaves it out of a standalone engine, so it appears in no dropdown, lane roster, default, key row or catalog button, and no Anthropic-native request branch is built in the picker.
-2. **Defaults are the config's `defaultLanes()`.** Today that is Groq `gpt-oss-120b` and the OpenRouter free router. Nothing in the HTML names a provider or a model. The default ticked or selected model is the first entry.
+2. **Defaults are the config's `defaultLanes()`.** Today that is Groq `gpt-oss-120b` and the OpenRouter free router. Nothing in the HTML names a provider or a model. The default ticked or selected model is the first entry. A Master control defaults to `defaultMaster()`, which falls back to that first entry.
 3. **Config fetch, validation, fallback and the badge belong to the core** (`fetchModelConfig`, `isValidConfig`, `LOCAL_FALLBACK_CONFIG`). The engine renders from the floor first, then upgrades. Header badge: `Config: Live` (success) or `Config: Local Fallback`.
 4. **Keys** go through the core's `getKey(name)` / `setKey(name, value)` at `hek_{keyStorageName}`, entered in rows rendered from `providers[]` (`keyLabel`, `keyPlaceholder`, `keyNote`). Engines that stored keys under their own names declare `LEGACY_KEY_SLOTS`. A key goes only to its own provider's endpoints.
 5. **`standaloneOnly` is enforced by `callModel`** (it refuses inside claude.ai); the picker shows the provider's `keyNote`.
 6. **Trimming and defaults are `model.json` edits, not HTML edits.** A model the account cannot call (404) is removed from the chain in the repo; the default pair is `defaultLanes`; retired slugs are `model_aliases`. Do not hard-code exclusions in the engine.
 7. **Id renames migrate once.** If an engine previously stored `openrouter::` ids, rewrite them to the config id (`or-auto::`) at boot; convert v2 lane keys (`provider|model`, `pin|provider|model`) to `providerId::modelId`; move any `state.keys` into `hek_*`.
-8. **Single path.** Exactly one control chooses the model. A pre-existing block of provider / endpoint / model fields, or a provider dropdown beside the picker, is deleted in the retrofit, never left alongside it: two paths disagree, and the stale one fails with a model id the catalog never offered. The one exception is the matrix variant (A3d): an engine with a second axis of work keeps its curated Run and provider selector, and the lanes drive only the separate `Fan out (n)` button; the two never share a model field.
+8. **Single path.** Exactly one control chooses the model per run mode: the lane button (Lanes), the per-panel chip (Full Panel), the Master control (Master Panel). A pre-existing block of provider / endpoint / model fields, or a provider dropdown beside the picker, is deleted in the retrofit, never left alongside it: two paths disagree, and the stale one fails with a model id the catalog never offered. The one exception is the matrix variant (A3d): an engine with a second axis of work keeps its curated Run and provider selector, and the lanes drive only the separate `Fan out (n)` button; the two never share a model field.
 
 ### 1a. Glue: Model Core to picker (the only config code a picker engine owns)
 
 ```javascript
 /* ───────── Glue: Model Core -> picker ───────── */
 const CAT_KEY = "myengine.v1:catalog";                       // dedicated cache key, one per engine
-const PROVIDERS = {}; let DEFAULT_MODELS = [], configSource = "fallback", uiReady = false;
+const PROVIDERS = {}; let DEFAULT_MODELS = [], DEFAULT_MASTER = "", configSource = "fallback", uiReady = false;
 const keyOf = cfg => getKey(cfg.keyStorageName || cfg.id);    // the core's getKey takes the storage name
 const isDefault = v => DEFAULT_MODELS.some(d => d[0] === v);
 function applyConfigToPicker(src) {
   configSource = src; Object.keys(PROVIDERS).forEach(k => delete PROVIDERS[k]);
   usableProviders().filter(p => !p.native).forEach(p => { PROVIDERS[p.id] = { id: p.id, label: p.label, url: p.endpoint, cfg: p }; });
   DEFAULT_MODELS = defaultLanes().map(k => { const s = splitKey(k); return [k, PROVIDERS[s.provider].label + " · " + s.model, s.provider]; });
+  DEFAULT_MASTER = defaultMaster();                           // Master Panel only: the config's defaultMaster, else the first default lane
   if (uiReady) renderConfigUI();
 }
 const defaultModel = () => DEFAULT_MODELS.length ? DEFAULT_MODELS[0][0] : "";
 /* boot: the core already holds the floor, so the first paint works with no network; then the live file swaps in */
 applyConfigToPicker("fallback");
+const coreCheck = coreSelfCheck(); if (!coreCheck.ok) console.warn("Model Core drift: missing " + coreCheck.missing.join(", "));   // v4.0: a paraphrased or truncated Core is reported at load
 /* ... build the UI, set uiReady = true, renderConfigUI() ... */
 fetchModelConfig(src => applyConfigToPicker(src));
 ```
 
 `DEFAULT_MODELS` entries are `[providerId::model, label, providerId]`. `applyConfigToPicker` re-renders only after first paint (`uiReady`), so the floor applies instantly and the live config swaps in without a flash of nothing.
 
-**Engine plumbing (both modes).** The Lanes blocks (A1 to A5) and the Panel blocks (B2 to B6) assume these helpers; Panel mode additionally needs the names listed under B1. If the engine already has its own `$`, state object or toast, reuse it; otherwise paste this. The engine's markup needs `<div id="toast"></div>` (fixed, centred, `opacity:0`, `.show{opacity:1}`).
+**Engine plumbing (all modes).** The Lanes blocks (A1 to A5) and the Panel blocks (B2 to B8) assume these helpers; Panel mode additionally needs the names listed under B1. If the engine already has its own `$`, state object or toast, reuse it; otherwise paste this. The engine's markup needs `<div id="toast"></div>` (fixed, centred, `opacity:0`, `.show{opacity:1}`).
 
 ```javascript
 /* ───────── Engine plumbing the Lanes blocks assume ───────── */
@@ -196,7 +253,7 @@ The reference code in B3 includes all three modules. Omit the tabs, chips and fu
 
 ## 3. CALL LAYER: OWNED BY THE MODEL CORE
 
-This skill has no call layer of its own. Every model call goes through the core's `callModel`, in **strict mode** (`callModel({ provider, model, ... })`: exactly the chosen model, never a substitute). The hardening catalog models need is already in it:
+This skill has no call layer of its own. Every model call goes through the core's `callModel`, in **strict mode** (`callModel({ provider, model, ... })`: exactly the chosen model, never a substitute), or through `callModelPatient`, which is `callModel` plus the visible 429 countdown a sequential engine needs. The hardening catalog models need is already in it:
 
 | Rule | Where it lives |
 |---|---|
@@ -206,15 +263,24 @@ This skill has no call layer of its own. Every model call goes through the core'
 | Served tag: the `model` on stream chunks is reported to `onText(acc, served)`; show `served: X` when it differs from the requested slug (how `openrouter/free` reveals its routing) | `callModel` + the lane / panel header |
 | Reasoning liveness: reasoning deltas count as alive for idle timing | `readStream` |
 | Empty reply is an error, with a specific hint when `finish_reason` is `length` | `callModel` |
-| Output cap: optional `maxTokens` per call (Mode B's `caps[]`) | `callModel` option |
-| 429: one retry after 1800 ms, then an error carrying `status` and `retryAfter` | `callModel`; Mode B adds a countdown on top (B5) |
-| Abort | `callModel` option `signal` |
+| Output cap: optional `maxTokens` per call (the panel modes' `caps[]`) | `callModel` option |
+| 429: one retry after 1800 ms, then an error carrying `status` and `retryAfter` | `callModel`; the panel modes add the visible countdown through `callModelPatient` (B5) |
+| Abort | `callModel` option `signal`; a run's signal comes from a Core `RunScope` (`beginRun()`), never from a nullable global |
+| Batch of calls (roles in order, lanes, a Master run) | `runBatch` |
 
 ---
 
-## MODE B. PANEL (per-panel model, reference: sequential-pipeline.html)
+## MODE B. PANEL (the role varies; reference: sequential-pipeline.html)
 
-### B1. What each panel holds
+A Panel engine runs roles: stages, agents, lenses, each with its own system prompt. The Mode Gate (Steps 2 and 3) picks the sub-mode (with Master Panel Mode as the default fallback):
+
+- **Full Panel Mode** (B1 to B6): every panel owns its model, chosen from the config defaults plus a per-panel Recent history, with a reassign popover per panel.
+- **Master Panel Mode** (B7 to B9): one Master model serves every role. There is no per-panel model; the cards show which model served them.
+- **Dual-Run** (B7): one engine offering both, Master canonical.
+
+B4 (token cap) and B5 (rate-limit patience) apply to every Panel sub-mode. B1 to B3 and B6 are Full Panel Mode; in a Master-only engine they are not pasted, except the B3 catalog picker (see B8).
+
+### B1. What each panel holds (Full Panel Mode)
 
 - `models[i]`: the panel's selected model as `providerId::slug`. Empty or unknown ids are normalized to the config default at boot and whenever the config changes (`normaliseModels`).
 - `history[i]`: that panel's Recent list, most recent first, no duplicates, `HISTORY_CAP = 5`. Config defaults are never added to history. Existing selections seed the lists on first run.
@@ -230,7 +296,7 @@ function normaliseModels() {                                            // empty
 }
 ```
 
-### B2. The dropdown (no Custom entry)
+### B2. The dropdown (no Custom entry; Full Panel Mode)
 
 Groups, in order: one **"{Provider} · from config"** group per provider holding that provider's `defaultLanes()` entries (the floor, two models today); **"Recent on this panel"**; **"More"** containing only "Clear recent list" (shown only when history exists). A chain entry that is not a default (for example Groq's `gpt-oss-20b`) is the core's fallback, not a dropdown row. Anything the catalog can offer arrives through the popover, so there is deliberately no free-text "Custom…" option. Assigning from the catalog also records into history; picking from Recent moves it to the front.
 
@@ -249,12 +315,13 @@ function buildSelect(i) {
 }
 ```
 
-### B3. Pickers (one reusable component, two mounts)
+### B3. Pickers (one reusable component, two mounts; Full Panel Mode)
 
 *The reference code below includes every optional module of Section 2 (tags, Synth Picks, price sort); drop the ones the brief did not ask for.* `makePicker(root, { title, cap, onRow })` renders: title `{title} · {Provider} live (n)`, provider buttons (Fetch / count / refetch), tabs **Full list** and **★ Synth Picks**, search, tier chips, tag chips, the price-sort chip, then rows. The mount decides what a row does:
 
 - **Per-panel popover** (`Live models ▾` button in each panel header): opens on that panel's current provider, auto-fetches per the Section 2 rule, row click assigns that panel and closes the popover; the current model's row carries an accent bar. One popover open at a time; outside click closes it; clicks inside the popover must `stopPropagation` so chip re-renders do not close it.
 - **Drawer picker**: rows carry `1..N` buttons to assign one panel and `all` to assign every panel.
+- **Master mount** (Master Panel Mode, B8): the drawer rows carry one `Master` button that sets the Master model. There is no per-panel assignment and no popover.
 
 ```javascript
 /* ───────── Live model catalog + reusable picker (drawer + one popover per stage) ───────── */
@@ -397,56 +464,41 @@ function togglePop(i) {
 document.addEventListener("click", () => ui.forEach(x => x.pop.classList.remove("open")));
 ```
 
-### B4. Token cap (one number, two jobs)
+### B4. Token cap (one number, two jobs; every Panel sub-mode)
 
-Each panel header has a `max tok` field (number, step 256, 0 = no cap, persisted). Defaults scale with the role: generous enough that reasoning models do not spend the whole cap thinking (reference: 2048 / 1536 / 2048 / 2048 for four stages). It does both of these:
+Each panel header (in Master Panel Mode, each role card header) has a `max tok` field (number, step 256, 0 = no cap, persisted). Defaults scale with the role: generous enough that reasoning models do not spend the whole cap thinking (reference: 2048 / 1536 / 2048 / 2048 for four stages). It does both of these:
 
 1. Sent as `max_tokens` (a hard ceiling that cannot be exceeded).
 2. Appends a soft target to the system prompt at run time, `Length: stay within roughly {round(cap * 0.5)} words so the answer finishes inside its {cap}-token budget`, so the model finishes naturally inside the cap instead of being cut mid-sentence.
 
 If the core's result has `cut: true` (`finish_reason` was `length`), flag the panel "cut at token cap" (warning color) and still pass the text on; the user raises the number and re-runs. Where outputs chain into later calls, capping the earliest panels has the most leverage because everything downstream inherits their size.
 
-### B5. Rate-limit patience (a wrapper over the core's strict `callModel`)
+### B5. Rate-limit patience (the Core's `callModelPatient`; every Panel sub-mode)
 
-There is no second stream reader. `streamChat` is a thin wrapper over `callModel` in strict mode that adds what a sequential pipeline needs: a visible 429 countdown that honours the provider's own wait, abort support, and the `onDelta` / `onStatus` / `onServed` / `onFinish` callbacks the panel UI already uses. The core retries a 429 once itself; if the call still fails it throws an error carrying `status` and `retryAfter` (seconds, from the `retry-after` header or Groq's "try again in 26.6s" text). The wrapper counts down and calls again, up to 3 times; a wait over 90 seconds is treated as a daily cap and surfaced as an error. Rate limits on Groq are per model per minute and requests grow as context grows, so spreading panels across different models also helps. Call sites that used to pass `messages: [{role:"system"...},{role:"user"...}]` now pass `system` and `user` strings.
+This skill no longer carries a wrapper. `callModelPatient(o)` in the Core (2.1) is `callModel` plus the visible 429 countdown a sequential engine needs: it calls `onStatus(text)` with `Rate limit · retry in Ns` each second and then `Streaming`, honours the provider's own wait (`retryAfter`, seconds, from the `retry-after` header or Groq's "try again in 26.6s" text), retries up to three countdown cycles (`rateLimitTries`), treats a wait over 90 seconds as a daily cap and throws, and throws `AbortError` if the signal aborts during the countdown. `callModel` still retries a 429 once itself first. Rate limits on Groq are per model per minute and requests grow as context grows, so in Full Panel Mode spreading panels across different models also helps; a Master run cannot spread, so the countdown is its only remedy.
 
-```javascript
-/* ───────── Panel streaming wrapper over the Model Core ───────── */
-async function streamChat({ model, system, user, signal, onDelta, onStatus, onServed, maxTokens, onFinish }) {
-  const s = splitKey(model);
-  for (let attempt = 0; ; attempt++) {
-    try {
-      const r = await callModel({ provider: s.provider, model: s.model, system, user, signal,
-        maxTokens: maxTokens > 0 ? maxTokens : undefined,
-        onText: (acc, served) => { onDelta(acc); if (served && served !== s.model && onServed) onServed(served); } });
-      if (onFinish) onFinish(r.cut ? "length" : "stop");
-      return r.text;
-    } catch (e) {
-      if (e.status === 429 && attempt < 3) {
-        const w = e.retryAfter || 8;
-        if (w > 90) throw new Error(`HTTP 429 — the provider asks for a ${Math.round(w)}s wait (likely a daily cap). ${e.message}`);
-        for (let sec = Math.ceil(w) + 1; sec > 0; sec--) {
-          onStatus(`Rate limit · retry in ${sec}s`); await sleep(1000);
-          if (signal && signal.aborted) { const a = new Error("Aborted"); a.name = "AbortError"; throw a; }
-        }
-        onStatus("Streaming"); continue;
-      }
-      throw e;
-    }
-  }
-}
-```
+The v3.x `streamChat` is deleted. Call sites migrate as follows, and B8 shows the call inside the scheduler:
 
-### B6. Layout (hybrid-engine context)
+| v3.x `streamChat({ ... })` | v4.0 `callModelPatient({ ... })` |
+|---|---|
+| `model: "providerId::slug"` | `provider` and `model`, from `splitKey(key)` |
+| `system`, `user`, `signal`, `maxTokens` | the same names (`maxTokens: cap > 0 ? cap : undefined`) |
+| `onDelta(acc)` | `onText(acc, served)` |
+| `onServed(served)` | the second argument of `onText`; show it only when it differs from the slug |
+| `onStatus(text)` | `onStatus(text)` |
+| `onFinish("length" or "stop")` | `cut` on the resolved value (`true` means `length`) |
+| `signal` from a nullable controller | `signal` from a `RunScope` (`beginRun()`), never from a global that Stop sets to `null` |
 
-Right gear drawer: Model catalog (drawer picker), then Keys (rows from config; Save writes each row with `setKey(p.keyStorageName || p.id, value)`), then any engine-specific settings as one more titled section. Left drawer: the editable system prompts, one per role, saved as you type, with a note that the cap appends a length line at run time. Header: `Config: Live / Local Fallback` badge and a gear button; no model control in the header (per-panel chips own the model). Keys UI reference:
+### B6. Layout (hybrid-engine context; Full Panel Mode)
+
+Right gear drawer: Model catalog (drawer picker), then Keys (rows from config; Save writes each row with `setKey(p.keyStorageName || p.id, value)`), then any engine-specific settings as one more titled section. Left drawer: the editable system prompts, one per role, saved as you type, with a note that the cap appends a length line at run time. Header: `Config: Live / Local Fallback` badge and a gear button; no model control in the header in Full Panel Mode (per-panel chips own the model; Master Panel Mode puts the Master control there, B9). Keys UI reference:
 
 ```javascript
 function renderKeyRows() {
   const box = $("#keyRows"); box.innerHTML = "";
   Object.values(PROVIDERS).forEach(P => { const p = P.cfg;
     if (!p.requiresKey) { box.appendChild(h("div", "cat-status", p.label + " — no key needed")); return; }
-    const inp = h("input"); inp.type = "password"; inp.autocomplete = "off"; inp.placeholder = p.keyPlaceholder || ""; inp.dataset.pid = p.id; inp.value = keyOf(p);
+    const inp = h("input"); inp.type = "password"; inp.autocomplete = "off"; inp.placeholder = p.keyPlaceholder || ""; inp.dataset.pid = p.id; inp.id = keyFieldId(p.id); inp.value = keyOf(p);   // v4.0: the Core's one id convention
     box.append(h("div", "lbl", p.keyLabel || p.label + " API key"), inp); if (p.keyNote) box.appendChild(h("div", "cat-status", p.keyNote)); });
 }
 function renderBadge() { const b = $("#cfgBadge"); b.textContent = configSource === "live" ? "Config: Live" : configSource === "fallback" ? "Config: Local Fallback" : "Config: loading…";
@@ -454,11 +506,192 @@ function renderBadge() { const b = $("#cfgBadge"); b.textContent = configSource 
 function renderConfigUI() { normaliseModels(); save(); rebuildSelects(); refreshPickers(); renderKeyRows(); renderBadge(); }
 ```
 
----
+### B7. The Panel sub-modes: Full, Master, Dual-Run
+
+**Master Panel Mode.** One Master model serves every role in a run. The Master is chosen in one place (the header control), is shown on every card as a read-only badge, and is snapshotted when the run starts. Roles still differ in system prompt, token cap and input; only the model is shared. It is a canonical sub-mode of Panel, equal in standing to Full Panel Mode, and the Mode Gate (Steps 2 and 3) decides between them.
+
+**Dual-Run.** One engine, two run types over the same role cards: a **Master run** (`state.master` serves every role) and a **Full run** (`state.models[i]` serves role `i`). `state.runMode` is `"master"` or `"full"` and **Master is canonical**: a fresh engine opens in Master, and a missing or unknown saved value normalises to `"master"`. The Dual-Run toggle in header Zone B switches it. Rules:
+
+1. **A run belongs to one mode.** A Master run reads only `state.master`; a Full run reads only `state.models[]`. No run mixes them.
+2. **The Master is never derived from a panel.** "Panel 1 controls everything" is retired. `models[]` is not seeded from the Master either; each normalises from the config on its own (`normaliseMaster` and `normaliseModels`).
+3. **Per-card model controls exist only in Full mode.** In a Dual-Run engine they stay in the DOM inside one `.panel-model-ctl` wrapper per card and are hidden in Master mode with the visibility pattern of ui-contract 08 (`visibility:hidden; pointer-events:none; position:absolute`), never `display:none`. In a Master-only engine they are not built at all, and neither is the toggle: a control with one state is dead markup (ui-contract 22).
+4. **The toggle is locked while a run streams.** The Run button's label follows the mode: `Run Master` or `Run Panels`.
+5. **Everything else is shared** across the two run types: role system prompts, `caps[]`, outputs, per-card and universal copy, export, the key rows and the catalog.
+6. **One scheduler** serves both (`runRoles`, B8).
+
+```javascript
+/* State by sub-mode. STAGES and ui are the engine's own, as in B1; persist everything through save(). */
+state = { master: "", masterHistory: [], runMode: "master", caps: [],       // Master Panel Mode (and Dual-Run)
+          models: [], history: [[], /* ... */] };                            // Full Panel Mode (and Dual-Run) only
+```
+
+### B8. Master Panel Mode: the Master control, the catalog mount, the run
+
+Paste, in order: the Section 1a glue and plumbing; the B3 catalog block **up to and including `makePicker`** (omit `assign`, the `1..N` drawer mount and `togglePop`, which are Full Panel code); the `labelOf` line from B2 (the one B2 line a Master engine needs; a Dual-Run engine already has it); then the blocks below.
+
+```javascript
+/* ───────── Master Panel: state and the Master control ───────── */
+const MASTER_CAP = 5;                                           // Recent list length, same as HISTORY_CAP
+const masterOptions = () => {                                    // config entries: defaultLanes(), plus defaultMaster() when it is not already one of them
+  const rows = DEFAULT_MODELS.slice();
+  if (DEFAULT_MASTER && !isDefault(DEFAULT_MASTER)) { const s = splitKey(DEFAULT_MASTER); rows.push([DEFAULT_MASTER, PROVIDERS[s.provider].label + " · " + s.model, s.provider]); }
+  return rows;
+};
+const isMasterDefault = v => masterOptions().some(d => d[0] === v);
+const masterProviderId = () => splitKey(state.master).provider;  // #providerSelect holds providerId::slug in Master mode: never read it as a bare provider id
+function normaliseMaster() {                                     // empty or unknown falls back to the config's defaultMaster; call at boot and whenever the config changes
+  const ok = state.master && state.master.indexOf("::") > 0 && PROVIDERS[splitKey(state.master).provider];
+  state.master = ok ? state.master : (DEFAULT_MASTER || defaultModel());
+  if (state.runMode !== "full") state.runMode = "master";        // Master canonical
+}
+function pushMasterHistory(val) { if (!val || isMasterDefault(val)) return; state.masterHistory = [val].concat(state.masterHistory.filter(x => x !== val)).slice(0, MASTER_CAP); }
+function updateMasterDot() { const p = PROVIDERS[masterProviderId()]; $("providerDot").style.background = (p && p.cfg.dotColor) || "#9090a8"; }   // ui-contract 18B: the dot lives inside the control that chooses the model
+function buildMasterSelect() {
+  const sel = $("providerSelect"), cur = state.master, opts = masterOptions(), grp = l => { const g = document.createElement("optgroup"); g.label = l; sel.appendChild(g); return g; };
+  sel.innerHTML = "";
+  Object.values(PROVIDERS).forEach(p => { const items = opts.filter(d => d[2] === p.id); if (!items.length) return;
+    const g = grp(p.label + " · from config"); items.forEach(([v]) => g.appendChild(new Option(v.split("::").slice(1).join("::"), v))); });
+  const rec = state.masterHistory.filter(v => PROVIDERS[v.split("::")[0]] && !isMasterDefault(v)); if (cur && !isMasterDefault(cur) && !rec.includes(cur)) rec.unshift(cur);
+  if (rec.length) { const g2 = grp("Recent (Master)"); rec.forEach(v => g2.appendChild(new Option(labelOf(v), v))); }
+  if (state.masterHistory.length) { const g3 = grp("More"); g3.appendChild(new Option("Clear recent list", "__clear")); }
+  sel.value = cur; updateMasterDot();
+}
+function setMaster(val) {
+  if (!val || val.indexOf("::") < 1 || !PROVIDERS[splitKey(val).provider]) return;
+  state.master = val; pushMasterHistory(val); save(); buildMasterSelect(); refreshBadges(); refreshPickers();
+  toast("Master → " + labelOf(val));
+}
+$("providerSelect").addEventListener("change", e => { if (e.target.value === "__clear") { state.masterHistory = []; save(); buildMasterSelect(); } else setMaster(e.target.value); });
+
+/* Master mount of the B3 picker: one Master button per catalog row. No per-role assignment, no popover. */
+makePicker($("#drawerPicker"), { title: "Catalog", cap: 150, onRow(meta, m, pid) {
+  const val = pid + "::" + m.id, b = h("button", "sb" + (state.master === val ? " on" : ""), "Master");
+  b.title = "Use " + labelOf(val) + " for every role"; b.onclick = () => setMaster(val); meta.appendChild(b);
+} });
+
+/* The renderConfigUI hook for a Master engine (a Dual-Run engine also calls normaliseModels() and rebuildSelects()) */
+function renderConfigUI() { normaliseMaster(); save(); buildMasterSelect(); refreshBadges(); refreshPickers(); renderKeyRows(); renderBadge(); }   // renderKeyRows and renderBadge: B6
+```
+
+```javascript
+/* ───────── Master / Full run: one scheduler, Core 2.1 primitives only ───────── */
+let running = false;
+async function runRoles(modelFor) {                              // modelFor(i) -> "providerId::slug". Master: () => state.master. Full: i => state.models[i]
+  if (running) return;
+  const scope = beginRun(), snap = STAGES.map((_, i) => modelFor(i));   // beginRun() replaces the engine-wide scope and never nulls it; the snapshot is what the badges will say
+  setRunning(true);
+  try {                                                           // finally guarantees the Run button re-enables even if a card callback throws
+  resetCards(snap);
+  const tasks = STAGES.map((st, i) => { const s = splitKey(snap[i]); return { id: st.name, provider: s.provider, run: sc => runRole(i, s, sc) }; });
+  const out = await runBatch(tasks, { scope, schedule: "sequential", onError: "halt",
+    onTaskStart: (t, i) => setRoleStatus(i, "Streaming"), onTaskEnd: (t, i, r) => finishRole(i, r, splitKey(snap[i])) });
+  out.results.forEach((r, i) => { if (r.status === "skipped") setRoleStatus(i, "Skipped (an earlier role failed)"); else if (r.status === "aborted") setRoleStatus(i, "Stopped"); });
+  return out;
+  } finally { setRunning(false); }
+}
+async function runRole(i, s, sc) {
+  const r = await callModelPatient({ provider: s.provider, model: s.model, system: roleSystem(i), user: roleUser(i), signal: sc.signal,
+    maxTokens: state.caps[i] > 0 ? state.caps[i] : undefined,    // B4
+    onStatus: t => setRoleStatus(i, t),                          // B5: the countdown text
+    onText: (acc, served) => { paintRole(i, acc); if (served && served !== s.model) markServed(i, served); } });
+  if (r.cut) flagCut(i);
+  return r.text;
+}
+function finishRole(i, r, s) {
+  if (r.status === "done") { setRoleStatus(i, ui[i].card.classList.contains("cut") ? "Cut at token cap" : "Done"); return; }
+  if (r.status === "aborted") { setRoleStatus(i, "Stopped"); return; }
+  const e = r.error || {}; setRoleStatus(i, "Error"); paintRole(i, String(e.message || e));
+  if (e.status === 401 || e.status === 403) { const el = $(keyFieldId(s.provider)); if (el) el.classList.add("need-key"); }   // keyFieldId: an error for or-auto highlights keyInput_openrouter
+}
+function setRunning(on) { running = on; $("runBtn").disabled = on; $("stopBtn").classList.toggle("is-on", on); const t = $("runModeToggle"); if (t) t.classList.toggle("locked", on); }
+$("stopBtn").addEventListener("click", stopRun);                 // aborts the current RunScope; nothing is nulled, so a running batch can never throw a TypeError
+$("runBtn").addEventListener("click", () => runRoles(state.runMode === "full" ? i => state.models[i] : () => state.master));   // Master-only engine: runRoles(() => state.master)
+```
+
+The engine supplies: `roleSystem(i)` (the role's system prompt, plus the B4 length line), `roleUser(i)` (the input for role `i`, built from the user's input and the earlier roles' `ui[k].text`), and the card functions of B9 (`resetCards`, `refreshBadges`, `setRoleStatus`, `paintRole`, `markServed`, `flagCut`).
+
+- **Schedule.** Roles chain, so `schedule: "sequential"`. In a Master run every task has the same `provider`, so `schedule: "parallel"` would collapse to sequential anyway under the Core's one-task-per-provider rule; an engine whose roles are independent gains nothing from it here.
+- **Failure.** `onError: "halt"`: a failed role stops the run, later roles show `Skipped`, and the user re-runs. There is no failover to another model; the badge must stay true.
+- **Stop.** `stopRun()` aborts the scope `beginRun()` returned. `runBatch` marks unstarted roles `aborted` and returns normally.
+- **Snapshot.** The badge shows the model the run used. Changing the Master after a run does not rewrite the badges of finished cards; it applies to the next run (and to cards that have not run yet).
+
+### B9. Master Panel layout (strict) and the ui-contract patch
+
+This layout is not a suggestion. A Master engine that renders it any other way is a Full Panel engine with the controls removed.
+
+**1. The global dock (top, header Zone B).** Left to right: `☰`, the **Master control**, `Run Master`, `Stop`, the **Dual-Run toggle** (Dual-Run engines only), `▤`, `⚙`. The Master control is a `<select id="providerSelect">` with the provider dot inside its wrapper (ui-contract 18B), and its value is a `providerId::modelSlug` key (B8). The "Panel 1 controls everything" workaround is retired: no panel's model ever stands in for the Master. In Full mode of a Dual-Run engine the Master control is muted (`opacity:.45; pointer-events:none`) rather than hidden, so the dock does not jump.
+
+```html
+<!-- Header Zone B (ui-contract 07), Master Panel Mode -->
+<button id="leftToggle" class="icon-btn" aria-label="Prompt library">☰</button>
+<div class="model-ctl"><span id="providerDot" class="provider-dot"></span><select id="providerSelect" aria-label="Master model"></select></div>
+<button id="runBtn" class="run-btn">Run Master</button>
+<button id="stopBtn" class="stop-btn">Stop</button>
+<div id="runModeToggle" class="seg" role="group" aria-label="Run mode"><button data-mode="master" class="on">Master</button><button data-mode="full">Full</button></div>   <!-- Dual-Run engines only -->
+<button id="rightToggle" class="icon-btn" aria-label="Response library">▤</button>
+<button id="gearBtn" class="icon-btn" aria-label="Settings">⚙</button>
+```
+
+**2. The card stack (middle).** The roles render as **full-width cards stacked vertically**: one column, one card per row, top to bottom in role order. The stack sits inside the sandwich layout's scrolling output area (ui-contract 18A) at the 80 to 90 percent window width of ui-contract 03, with no `max-width`; each card is `width:100%` of the stack. Side-by-side columns, multi-column grids, `auto-fit` / `minmax` tracks, wrapping rows and horizontal lanes are banned in a Master run, on desktop and on phones alike.
+
+**3. The card.** Every card carries exactly these, top to bottom: a header row with the **Role Name** (and its index), the **`Served by: <Master Model>` badge**, the status text and the per-card Copy button; then the **parsed output area** (markdown through the ui-contract 02 renderer, `width:100%`, no max-height, spanning the full width of the card). The badge is a read-only `<span>`: never a `<select>`, `<button>`, `<input>` or popover, and `pointer-events:none`. It reads `Served by: Provider · slug` and appends ` → X` when the stream's served model differs (how `openrouter/free` reveals its routing). **Individual model dropdowns, chips and popovers on cards are strictly banned in a Master run.**
+
+```css
+/* Master Panel layout (B9). Variables are the ui-contract set. */
+#roleStack { display: flex; flex-direction: column; gap: 12px; width: 100%; }
+.role-card { width: 100%; box-sizing: border-box; display: flex; flex-direction: column; border: 1px solid var(--bg-border); border-radius: 8px; }
+.role-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 8px 12px; }
+.role-name { font-weight: 600; }
+.role-status { margin-left: auto; font-size: .72rem; color: var(--text-muted); }
+.served-badge { font-size: .68rem; padding: 2px 8px; border: 1px solid var(--bg-border); border-radius: 999px; color: var(--text-muted); pointer-events: none; user-select: text; }
+.role-card.cut .role-status { color: var(--warn, #f59e0b); }
+.role-body { width: 100%; box-sizing: border-box; padding: 12px; word-break: break-word; }
+.stop-btn { visibility: hidden; pointer-events: none; }                    /* ui-contract 08: never display:none on a wired control */
+.stop-btn.is-on { visibility: visible; pointer-events: all; }
+.seg.locked { opacity: .45; pointer-events: none; }
+[data-runmode="full"] .model-ctl { opacity: .45; pointer-events: none; }
+[data-runmode="master"] .panel-model-ctl { visibility: hidden; pointer-events: none; position: absolute; }   /* Dual-Run only: Full-mode controls, hidden in Master */
+[data-runmode="full"] .served-badge { visibility: hidden; pointer-events: none; position: absolute; }
+```
+
+```javascript
+/* ───────── Master Panel cards and the Dual-Run toggle ───────── */
+function buildRoleCards() {
+  const stack = $("roleStack"); stack.innerHTML = "";
+  STAGES.forEach((st, i) => {
+    const card = h("section", "role-card"), head = h("div", "role-head"), name = h("span", "role-name", String(i + 1).padStart(2, "0") + " · " + st.name),
+      badge = h("span", "served-badge"), status = h("span", "role-status", "Idle"), copy = h("button", "copy-btn", "Copy"), body = h("div", "role-body");
+    copy.onclick = () => copyToClipboard(body.innerText, copy);   // ui-contract 05: the one canonical copy
+    head.append(name, badge, status, copy); card.append(head, body); stack.appendChild(card);
+    ui[i] = Object.assign(ui[i] || {}, { card, badge, status, body, text: "", served: "", model: "" });   // Dual-Run: also append the B2 select, its Live models button and popover inside one div.panel-model-ctl in head
+  });
+  refreshBadges();
+}
+const badgeText = i => "Served by: " + labelOf(ui[i].model || state.master) + (ui[i].served ? " → " + ui[i].served : "");
+function refreshBadges() { ui.forEach((u, i) => { if (u.badge) u.badge.textContent = badgeText(i); }); }
+function resetCards(snap) { ui.forEach((u, i) => { u.model = snap[i]; u.served = ""; u.text = ""; u.body.innerHTML = ""; u.status.textContent = "Queued"; u.card.classList.remove("cut"); }); refreshBadges(); }
+const setRoleStatus = (i, t) => { ui[i].status.textContent = t; };
+const paintRole = (i, text) => { ui[i].text = text; ui[i].body.innerHTML = renderMarkdown(text); };   // ui-contract 02: incremental render, never textContent
+const markServed = (i, served) => { ui[i].served = served; refreshBadges(); };
+const flagCut = i => { ui[i].card.classList.add("cut"); ui[i].status.textContent = "Cut at token cap"; };
+function setRunMode(m) {                                           // Dual-Run engines only
+  if (running) return;
+  state.runMode = m === "full" ? "full" : "master"; document.body.dataset.runmode = state.runMode;
+  $("runBtn").textContent = state.runMode === "master" ? "Run Master" : "Run Panels";
+  document.querySelectorAll("#runModeToggle button").forEach(b => b.classList.toggle("on", b.dataset.mode === state.runMode));
+  save(); refreshBadges();
+}
+const runModeEl = $("runModeToggle"); if (runModeEl) runModeEl.addEventListener("click", e => { const b = e.target.closest("button"); if (b) setRunMode(b.dataset.mode); });   // absent in a Master-only engine
+```
+
+**4. The ui-contract patch (applied 2026-10-22).** `ui-contract` now carries this text, so the override is retired for engines that install the current `ui-contract`. Against an older copy without it, this skill's **explicit override, scoped to Master and Dual-Run engines and to exactly two clauses**, still stands: the sentence in constraint 07 that says Panel mode has no model control in the header, and the one-control sentence in constraint 25 as it applies to panel chips. Nothing else in ui-contract is overridden (its priority order allows an explicit override only when scoped to a named point). Text as applied (constraint 18B also gained one sentence: the Master control's dot is the Master model's provider, resolved with `splitKey`):
+
+- **Constraint 07, replace** "Panel mode has none in the header because per-stage chips own the model" **with:** "Panel mode, Full: none in the header, because per-stage chips own the model. Panel mode, Master (and Dual-Run): the model control is the Master control, `#providerSelect` (value `providerId::modelSlug`), in Zone B between `☰` and `▤`, followed by `Run Master`, `Stop` and, in a Dual-Run engine, the run-mode toggle."
+- **Constraint 25, append:** "In Master Panel mode the one control that chooses the model is the header Master control. Role cards are full-width, stacked vertically, and carry a read-only `Served by:` badge; they never carry a model dropdown, chip or popover."
 
 ---
 
-## MODE A. LANES (reference: osho-refraction-standalone.html; earlier fan-out reference: capsule-tree-engine-v7.html)
+## MODE A. LANES (the model varies; reference: osho-refraction-standalone.html; earlier fan-out reference: capsule-tree-engine-v7.html)
 
 Lanes engines run one input through many models at once. Everything in Sections 1 to 3 applies; this section adds lanes, pins and the single-path run. Native is not a lane (Section 1.1). `isArtifact` is already defined by the core.
 
@@ -517,7 +750,7 @@ function togglePin(pid, m, cb) {
 
 ### A2. The single-path run
 
-One Run button runs every ticked lane. There is no second "Fan out" button and no provider dropdown. With one lane ticked the output is one full-width voice; with several it is one column per lane (`grid`, `auto-fit`, `minmax(300px, 1fr)`), each with its own copy button and a header of `Provider · model` (plus `→ served: X` when it differs).
+One Run button runs every ticked lane. There is no second "Fan out" button and no provider dropdown. With one lane ticked the output is one full-width voice; with several it is one column per lane (`grid`, `auto-fit`, `minmax(300px, 1fr)`), each with its own copy button and a header of `Provider · model` (plus `→ served: X` when it differs). The column grid is a Lanes layout only: a Panel engine does not use it (B9).
 
 ---
 
@@ -540,6 +773,8 @@ async function runLane(l, idx) {
 }
 ```
 (`recordFor`, `paint`, `SYSTEM_BODY`, `USER_TEXT` are the engine's own response record, painter and payload; wire them to the engine's existing names.) An engine that retrieves context first (a RAG engine) retrieves **once**, before `dispatch`, and passes the same grounded prompt to every lane.
+
+**Stop (v4.0).** A Lanes engine with a Stop button starts the run with `var scope = beginRun();` in `dispatch`, passes `signal: scope.signal` to the `callModel` in `runLane`, and wires Stop to `stopRun()`. It never keeps a module-level controller that Stop sets to `null`: a lane still waiting out its stagger would read `.signal` off `null` and throw. A lane that aborts reports it in its own column like any other error.
 
 ---
 
@@ -683,14 +918,14 @@ function renderKeyRows() {
   const box = $("keyFields"); box.innerHTML = "";
   usableProviders().filter(p => !p.native && p.requiresKey).forEach(p => {
     const wrap = document.createElement("div"), lab = document.createElement("label"), inp = document.createElement("input");
-    lab.textContent = p.keyLabel || p.label + " Key"; inp.type = "password"; inp.placeholder = p.keyPlaceholder || ""; inp.id = "keyInput_" + p.keyStorageName; inp.value = getKey(p.keyStorageName);
+    lab.textContent = p.keyLabel || p.label + " Key"; inp.type = "password"; inp.placeholder = p.keyPlaceholder || ""; inp.id = keyFieldId(p.id); inp.value = getKey(p.keyStorageName);   // v4.0: keyFieldId, the Core's one id convention
     wrap.appendChild(lab); wrap.appendChild(inp);
     if (p.keyNote) { const n = document.createElement("div"); n.className = "key-note"; n.textContent = p.keyNote; wrap.appendChild(n); }
     box.appendChild(wrap);
   });
 }
 function wireKeys() {                                            // call once; closeDrawer() is the engine's own
-  $("saveKeysBtn").addEventListener("click", () => { usableProviders().filter(p => !p.native && p.requiresKey).forEach(p => { const el = $("keyInput_" + p.keyStorageName); if (el) setKey(p.keyStorageName, el.value); }); closeDrawer(); });
+  $("saveKeysBtn").addEventListener("click", () => { usableProviders().filter(p => !p.native && p.requiresKey).forEach(p => { const el = $(keyFieldId(p.id)); if (el) setKey(p.keyStorageName, el.value); }); closeDrawer(); });
   $("clearKeysBtn").addEventListener("click", () => { usableProviders().filter(p => !p.native).forEach(p => { try { localStorage.removeItem("hek_" + p.keyStorageName); } catch (e) {} }); renderKeyRows(); toast("Saved keys cleared from this device"); });
   $("catSearch").addEventListener("input", renderCatalog);
 }
@@ -712,30 +947,42 @@ State: `S.settings.lanes`, `S.settings.customLanes` and `S.settings.lanesTouched
 
 ## BANNED PATTERNS
 
-- NEVER re-implement a config loader, key store, request builder, stream reader or call layer: consume the Core API.
+- NEVER re-implement a config loader, key store, request builder, stream reader, call layer, abort handler, 429 countdown or batch scheduler: consume the Core API (`callModel`, `callModelPatient`, `newRunScope` / `beginRun` / `stopRun`, `runBatch`).
+- NEVER keep or re-create `streamChat`, a nullable abort controller that Stop sets to `null`, or an engine-local batch loop.
 - NEVER route, list or count a native provider entry in a standalone engine.
-- NEVER hard-code a provider name, model slug, endpoint or default in the HTML: defaults are `defaultLanes()`; the offline floor is the core's `LOCAL_FALLBACK_CONFIG`.
+- NEVER hard-code a provider name, model slug, endpoint or default in the HTML: defaults are `defaultLanes()` (and `defaultMaster()`); the offline floor is the core's `LOCAL_FALLBACK_CONFIG`.
 - NEVER leave a provider / endpoint / model field block, or a provider dropdown, beside the picker (single path).
-- NEVER store keys outside `hek_{keyStorageName}`, or send a key to any host except its own provider.
+- NEVER store keys outside `hek_{keyStorageName}`, or send a key to any host except its own provider. NEVER build a key input's id by hand: it is `keyFieldId(providerId)`.
 - NEVER render catalog text with `innerHTML`.
 - NEVER send `headersFor()` output, attribution headers or a key to a public catalog endpoint: catalog GETs go through `catalogHeaders`.
 - NEVER start a second catalog fetch for a provider while one is in flight.
 - NEVER auto-refetch the catalog on load, and never remap a model id across providers.
 - NEVER put `openrouter/auto` (the paid router) anywhere.
+- NEVER classify a Panel engine by whether its panels show a model dropdown. The axis decides: Lanes vary the model, Panel varies the role.
 - Mode A: NEVER let a lane fall through to another lane or provider; the label must be the truth.
-- Mode B: NEVER add a free-text Custom entry to the dropdown; the catalog popover is the only route to non-config models.
+- Mode B, Full: NEVER add a free-text Custom entry to the dropdown; the catalog popover is the only route to non-config models.
+- Mode B, Master: NEVER put a model dropdown, chip, popover or button on a role card in a Master run; the card carries a read-only `Served by:` badge only.
+- Mode B, Master: NEVER use "Panel 1 controls everything" (any panel's model standing in for the Master), and NEVER derive the Master from a panel or seed `models[]` from the Master.
+- Mode B, Master: NEVER lay the role cards out as side-by-side columns, a grid, `auto-fit` tracks, wrapping rows or horizontal lanes: one full-width column, stacked vertically.
+- Mode B, Master: NEVER read `#providerSelect` as a bare provider id; its value is `providerId::modelSlug`.
+- Mode B, Dual-Run: NEVER mix models in one run (a Master run reads only `state.master`, a Full run only `state.models[]`), and NEVER hide a wired control with `display:none` (ui-contract 08).
 
 ## PRE-SHIP CHECKLIST (adds to the ui-contract pre-ship gates)
 
-- [ ] Mode gate answered (lanes, panel or no picker); build plan names the mode
-- [ ] Model Core pasted verbatim; the engine has no provider constant, key store, request builder or stream reader of its own
+- [ ] Mode gate answered (lanes, panel or no picker); for Panel, the three steps (what varies, cross-role constraint test, deployment test) and the resulting sub-mode (Full, Master or Dual-Run) are named in the build plan; if Steps 2 and 3 did not settle it, the Master tie-break is stated as an assumption (never Dual-Run by default)
+- [ ] Model Core 2.1 pasted verbatim; `coreSelfCheck().ok` is true; the engine has no provider constant, key store, request builder, stream reader, `streamChat`, abort handler or batch loop of its own
 - [ ] Badge reads Config: Live with the network up and Config: Local Fallback with it blocked; both leave working defaults
-- [ ] Defaults equal `defaultLanes()` (two today); Lanes: only the first is ticked until the user touches the list
-- [ ] Single path: exactly one control chooses the model; no leftover provider / endpoint / model fields; an unknown saved selection falls back to the default instead of erroring
+- [ ] Defaults equal `defaultLanes()` (two today); Lanes: only the first is ticked until the user touches the list; Master: the control starts on `defaultMaster()`
+- [ ] Single path: exactly one control chooses the model per run mode; no leftover provider / endpoint / model fields; an unknown saved selection falls back to the default instead of erroring
 - [ ] Native entry present in config produces no dropdown row, lane, key row or button
-- [ ] Mode B: dropdown has config groups, Recent (max 5, newest first, deduped) and Clear; no Custom; popover row click reassigns and records history; drawer `1..N` / `all` work
-- [ ] Mode B: `max tok` sends `max_tokens`, appends the length line, and flags "cut at token cap"; a 429 shows the countdown and retries
-- [ ] Mode A: pin adds a star lane and ticks it; the max-12 toast fires; lanes never show a model other than the one requested, except a visible `served:` tag
+- [ ] Mode B, Full: dropdown has config groups, Recent (max 5, newest first, deduped) and Clear; no Custom; popover row click reassigns and records history; drawer `1..N` / `all` work
+- [ ] Mode B (every sub-mode): `max tok` sends `max_tokens`, appends the length line, and flags "cut at token cap"; a 429 shows the `callModelPatient` countdown and retries
+- [ ] Mode B, Master: the Master control (`#providerSelect`, value `providerId::modelSlug`, dot inside) sits in header Zone B beside `Run Master`; there is no "Panel 1 controls everything" path
+- [ ] Mode B, Master: the role cards are full-width and stacked vertically at every viewport width (computed `flex-direction: column`, one card per row); each shows Role Name, a full-width parsed output area and a read-only `Served by:` badge; no card has a `<select>`, chip or popover for a model
+- [ ] Mode B, Master: the badge shows the model the run used (a snapshot) and ` → X` when the served model differs; changing the Master after a run does not rewrite finished cards
+- [ ] Mode B, Master: Stop mid-run produces no `TypeError`; unstarted roles read `Stopped`; a failed role halts the run and later roles read `Skipped`; a 401/403 highlights `keyFieldId(provider)`
+- [ ] Mode B, Dual-Run: Master is the default run mode; the toggle is locked while streaming; Full controls are hidden in Master with `visibility`, not `display:none`; the Run button reads `Run Master` or `Run Panels`
+- [ ] Mode A: pin adds a star lane and ticks it; the max-12 toast fires; lanes never show a model other than the one requested, except a visible `served:` tag; Stop (if present) uses `beginRun()` / `stopRun()`
 - [ ] Old ids migrate on boot (`openrouter::`, `provider|model`, `pin|provider|model` to `providerId::model`); saved keys under old names still work through `LEGACY_KEY_SLOTS`
 - [ ] Optional modules (tags, Synth Picks, price sort) are present only if the brief asked for them
 - [ ] Catalog fetch: with an OpenRouter key saved, the Network tab shows the `/models` GET with no `OPTIONS` preflight and no custom headers; Groq's carries only its auth header
@@ -744,18 +991,23 @@ State: `S.settings.lanes`, `S.settings.customLanes` and `S.settings.lanesTouched
 ## QUICK REFERENCE
 
 ```
-LAYER          : optional selection layer on the Model Core (model-config-contract v2); consumes the Core API, owns no config/keys/call code
-MODES          : A lanes (parallel, pins, single path) | B panel (slot per panel + Recent history) | neither = no picker, stay on the core
-DEFAULTS       : config defaultLanes() = groq::openai/gpt-oss-120b + or-auto::openrouter/free; Lanes ticks only the first until touched
+LAYER          : optional selection layer on the Model Core (model-config-contract v2.1); consumes the Core API, owns no config/keys/call/run code
+MODE GATE      : one axis. Lanes vary the model; Panel varies the role. Panel: cross-role constraint test + deployment test pick Full | Master | Dual-Run; tie-break is Master (never Dual-Run); neither axis = no picker, stay on the core. Only an unsettled Step 1 asks a question (hybrid-engine-contract step 4b routes here)
+MODES          : A lanes (parallel, pins, single path) | B Full Panel (slot per panel + Recent history) | B Master Panel (one Master model for every role) | Dual-Run (both, Master canonical)
+DEFAULTS       : config defaultLanes() = groq::openai/gpt-oss-120b + or-auto::openrouter/free; Lanes ticks only the first until touched; Master starts on defaultMaster() (first default lane when absent)
 STANDALONE     : native skipped; fallback = the core's LOCAL_FALLBACK_CONFIG (mirrors the live model.json)
-CONFIG         : the core's fetchModelConfig; badge Live / Local Fallback; render the floor first
+CONFIG         : the core's fetchModelConfig; badge Live / Local Fallback; render the floor first; coreSelfCheck() at boot
 CATALOG        : provider /models via catalogHeaders (OpenRouter none, keyed providers auth only), one in-flight fetch per provider, tab switches before it fetches, cached, user-refreshed; auto-fetch only public endpoints or keyed providers
 BASE FILTERS   : tiers, search + /regex/ | OPTIONAL MODULES: +tags (dashed ? = heuristic), +synth, +price
 CALL           : callModel strict: system fold, 404 hint, fatal 401/402/403/413, served tag, reasoning liveness, empty-reply hint
-A: RETRY       : core retries a 429 once (1800 ms)   | B: RETRY: countdown on status/retryAfter, 3 tries, <= 90 s
-B: CAP         : max tok per panel = maxTokens + auto word target; result.cut flags "cut at token cap"
+RUN PRIMITIVES : Core 2.1: callModelPatient (429 countdown) | newRunScope/beginRun/stopRun (never null) | runBatch (sequential, halt for roles); no streamChat
+A: RETRY       : core retries a 429 once (1800 ms)   | B: RETRY: callModelPatient countdown, 3 tries, <= 90 s
+B: CAP         : max tok per panel/card = maxTokens + auto word target; result.cut flags "cut at token cap"
+MASTER LAYOUT  : header Zone B: Master control (#providerSelect = providerId::slug) + Run Master (+ Stop, + Dual-Run toggle) | full-width cards stacked vertically | read-only "Served by:" badge | no per-card model control
+UI-CONTRACT    : B9 holds the ui-contract patch text for constraints 07, 18B and 25 (applied in ui-contract on 2026-10-22); an older ui-contract copy falls under B9's scoped override of 07 and 25 for Master/Dual-Run
 LANE KEYS      : providerId::modelId (v2 provider|model and pin|provider|model migrate at boot)
 ALIASES        : model.json model_aliases via the core's resolveModelId, only against a fetched catalog, never across providers
-NEW DATA       : catalog cache, A: customLanes + lanes + lanesTouched, B: history[][] + caps[]
+NEW DATA       : catalog cache | A: customLanes + lanes + lanesTouched | B Full: history[][] + caps[] | B Master: master + masterHistory[] + caps[] (+ runMode in Dual-Run)
 OUTPUT         : updated .html per engine; model.json unchanged (defaults and aliases are model.json edits)
 ```
+

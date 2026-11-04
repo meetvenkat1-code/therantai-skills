@@ -1,0 +1,18 @@
+{
+  "skill": "choreograph",
+  "skill_name": "choreograph",
+  "description": "\"Meta-skill that reads a practice domain \u2014 its terrain, friction points, skill ecosystem, cognitive style, and output destinations \u2014 and emits a set of named situational protocols in arrow-chain format. Each protocol is a sequenced chain of moves for a named situation the practice reliably encounters. The generator is second-order: it produces protocols the way ossify produces spines. Does NOT produce generic workflows \u2014 it reads the specific practice and emits sequences native to it. Invoke with /choreograph [domain] or phrases like 'generate protocols for [domain]', 'what are the protocols for this kind of work', 'build the operating sequences for [practice]', 'choreograph [domain]', 'I need protocols for [domain]'. Output always routes to /placement-protocol for ecosystem registration.\"",
+  "source_file": "skills/choreograph/SKILL.md",
+  "source_sha": "88b10442cb15e1548f2ceb79c09816dad773aab6c0798818ad33c03b9076506c",
+  "resources": [],
+  "provider_config": {
+    "model_core": "v2"
+  },
+  "inputs": [
+    {
+      "id": "chatInput",
+      "kind": "textarea",
+      "label": "Invoke the skill"
+    }
+  ]
+}

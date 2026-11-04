@@ -1,0 +1,18 @@
+{
+  "skill": "attune",
+  "skill_name": "attune",
+  "description": "\"Mid-session contextual skill suggester with a strict philosophy of when ambient intelligence earns the right to speak: only when silence would cost the session something irreversible \u2014 not when a skill is available, not when a pattern is recognizable, only when the moment is about to close and the session will be lesser for it. Two modes: ambient (Claude speaks unprompted when an irreversibility threshold is crossed) and manual (/attune for an immediate pulse-check). Constitutively conservative \u2014 watches far more than it speaks. Silence is the default. Transforms the ecosystem from a collection of tools into a self-aware operating system that speaks only when it must. Invoke manually with /attune, 'attune', 'what skill fits here', 'where am I', 'what do I invoke now', 'read the room', 'what wants to happen', 'which skill now'.\"",
+  "source_file": "skills/attune/SKILL.md",
+  "source_sha": "619e114b220987de9d0c628078c318114119ebca9e81bc071056e95e13e6b767",
+  "resources": [],
+  "provider_config": {
+    "model_core": "v2"
+  },
+  "inputs": [
+    {
+      "id": "chatInput",
+      "kind": "textarea",
+      "label": "Invoke the skill"
+    }
+  ]
+}

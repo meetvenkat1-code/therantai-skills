@@ -1,0 +1,18 @@
+{
+  "skill": "handoff",
+  "skill_name": "handoff",
+  "description": "Compresses the current session into a minimal markdown context block designed to be pasted as the opening message of a new chat session, preserving resolved understandings, active decisions, pending threads, and established contracts \u2014 without SVG overhead or full conversation replay. Invoke with /handoff when a session is long, token-heavy, or complete enough to continue in a new chat. Trigger on phrases like \"compress this session\", \"transfer context\", \"continue in new chat\", \"handoff\", \"carry this forward\", \"I want to start a new session from here\", \"too many tokens\". Do NOT trigger automatically \u2014 invoke only when the person is ready to move to a new session.",
+  "source_file": "skills/handoff/SKILL.md",
+  "source_sha": "c49c736351c49e4deaf9300ed233800832dd2d45293c11c4c7b9330184215d3a",
+  "resources": [],
+  "provider_config": {
+    "model_core": "v2"
+  },
+  "inputs": [
+    {
+      "id": "chatInput",
+      "kind": "textarea",
+      "label": "Invoke the skill"
+    }
+  ]
+}

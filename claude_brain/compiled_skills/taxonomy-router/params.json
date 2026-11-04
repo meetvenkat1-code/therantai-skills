@@ -1,0 +1,18 @@
+{
+  "skill": "taxonomy-router",
+  "skill_name": "taxonomy-router",
+  "description": ">",
+  "source_file": "skills/taxonomy-router/SKILL.md",
+  "source_sha": "929c2b0b5a9b320ccf63a1a30642cc48d53cb5657103dc4d4823c71cae230cc1",
+  "resources": [],
+  "provider_config": {
+    "model_core": "v2"
+  },
+  "inputs": [
+    {
+      "id": "chatInput",
+      "kind": "textarea",
+      "label": "Invoke the skill"
+    }
+  ]
+}

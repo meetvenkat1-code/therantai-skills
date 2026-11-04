@@ -1,0 +1,18 @@
+{
+  "skill": "intuition-forge",
+  "skill_name": "intuition-forge",
+  "description": "\"Transforms raw intuition into standalone HTML engines via eight stations: Seed, Intention, Identity, Architecture, Interaction, System Mandate, Stress Test, Artifact.\"",
+  "source_file": "skills/intuition-forge/SKILL.md",
+  "source_sha": "0f6e74450c71d1b48dc31cd4db1c1deb1ae81a0f1dfe0c03d0a913eea13a714d",
+  "resources": [],
+  "provider_config": {
+    "model_core": "v2"
+  },
+  "inputs": [
+    {
+      "id": "chatInput",
+      "kind": "textarea",
+      "label": "Invoke the skill"
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "skill": "kinship",
+  "skill_name": "kinship",
+  "description": ">",
+  "source_file": "skills/kinship/SKILL.md",
+  "source_sha": "9e29de79fa9517500397bd07e89ad18e7c5eadc21b59d597ec5256c4bcfb9de7",
+  "resources": [],
+  "provider_config": {
+    "model_core": "v2"
+  },
+  "inputs": [
+    {
+      "id": "chatInput",
+      "kind": "textarea",
+      "label": "Invoke the skill"
+    }
+  ]
+}

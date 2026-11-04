@@ -1,0 +1,18 @@
+{
+  "skill": "alloy",
+  "skill_name": "alloy",
+  "description": ">",
+  "source_file": "skills/alloy/SKILL.md",
+  "source_sha": "15ab0e884b3f4375c1efb3a44aad661a7066c7af6624abeb60102e011b0d0322",
+  "resources": [],
+  "provider_config": {
+    "model_core": "v2"
+  },
+  "inputs": [
+    {
+      "id": "chatInput",
+      "kind": "textarea",
+      "label": "Invoke the skill"
+    }
+  ]
+}

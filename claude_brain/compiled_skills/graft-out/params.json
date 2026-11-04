@@ -1,0 +1,18 @@
+{
+  "skill": "graft-out",
+  "skill_name": "graft-out",
+  "description": "Preserves a frozen node as a portable context block so it can be re-activated in a fresh session \u2014 stripped clean of branch history, carrying only the root context needed to fork from it again. The cross-session organ of the GRAFT pair. Invoke with /graft-out at the end of any GRAFT-IN session to export the pinned node as a paste-ready block. In a new session, paste the block as the opening message to re-activate the node and begin forking fresh. Do NOT trigger automatically. Trigger on: \"/graft-out\", \"export this node\", \"carry this node forward\", \"preserve this root\", \"I want to fork from this in a new session\".",
+  "source_file": "skills/graft-out/SKILL.md",
+  "source_sha": "9ba3a27d4aa7942609fd8261e98527a4385376c5c3d5fd483f8409ae0fbc3f20",
+  "resources": [],
+  "provider_config": {
+    "model_core": "v2"
+  },
+  "inputs": [
+    {
+      "id": "chatInput",
+      "kind": "textarea",
+      "label": "Invoke the skill"
+    }
+  ]
+}

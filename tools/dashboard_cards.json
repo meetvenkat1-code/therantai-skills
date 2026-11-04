@@ -1,0 +1,67 @@
+{
+  "cards": [
+    {
+      "blurb": "Meta-prompt compiler: 3-axis sliders compile a tailored system prompt, then execute it across current / opposite / centroid presets.",
+      "kicker": "Parameterised",
+      "path": "claude_brain/engines/prompt-generator/dist/prompt-generator-compiled.html",
+      "slug": "prompt-generator",
+      "title": "Prompt Generator"
+    },
+    {
+      "blurb": "Telugu-to-English translation tutor with pronunciation cards, voice selection, and strict-JSON output.",
+      "kicker": "Parameterised",
+      "path": "claude_brain/engines/easy-english/dist/easy-english-compiled.html",
+      "slug": "easy-english",
+      "title": "Easy English"
+    },
+    {
+      "blurb": "Architect plans the slide arc, Writer drafts the JSON slides, Editor audits form only. Copy + ZIP export.",
+      "kicker": "Multi-Step \u00b7 3 stages",
+      "path": "claude_brain/engines/aperture-carousel/dist/aperture-carousel-compiled.html",
+      "slug": "aperture-carousel",
+      "title": "Aperture Carousel"
+    },
+    {
+      "blurb": "One concept in, twelve JSON perspectives out \u2014 explain, decode, invert, steelman, socratic, synthesis and more, with challenge levels.",
+      "kicker": "Multi-Step \u00b7 12 lenses",
+      "path": "claude_brain/engines/cognitive-shift-v7/dist/cognitive-shift-v7-compiled.html",
+      "slug": "cognitive-shift-v7",
+      "title": "Cognitive Shift v7"
+    },
+    {
+      "blurb": "One fragment transformed in parallel through breadth (Fan), depth (Ramify), and momentum (Flywheel) portals.",
+      "kicker": "Multi-Step \u00b7 3 portals",
+      "path": "claude_brain/engines/fan_ramify_flywheel/dist/fan_ramify_flywheel-compiled.html",
+      "slug": "fan_ramify_flywheel",
+      "title": "Fan Ramify Flywheel"
+    },
+    {
+      "blurb": "Three-step wizard: decompose a topic into scenarios, tune intensity and pacing, then play the compiled scene with chat and branch suggestions.",
+      "kicker": "Multi-Step \u00b7 wizard",
+      "path": "claude_brain/engines/scenario-forge/dist/scenario-forge-compiled.html",
+      "slug": "scenario-forge",
+      "title": "Scenario Forge"
+    },
+    {
+      "blurb": "Interpretive classifier mapping thinking fragments to 23 mental models across 6 dimensions, with per-match expand and apply protocols.",
+      "kicker": "Multi-Step \u00b7 multi-lane",
+      "path": "claude_brain/engines/dimensions/dist/dimensions-compiled.html",
+      "slug": "dimensions",
+      "title": "Dimensions"
+    },
+    {
+      "blurb": "Prompt-forging engine: fan orthogonal vectors from a seed, crystallize the path, then forge, score, and revise the dense prompt to convergence.",
+      "kicker": "Multi-Step \u00b7 fan + optimizer",
+      "path": "claude_brain/engines/vectorforge-v3/dist/vectorforge-v3-compiled.html",
+      "slug": "vectorforge-v3",
+      "title": "Vector Forge v3"
+    },
+    {
+      "slug": "12-auto-loop-engine-v15-full-per-role-decompressor-plus-mix-chip",
+      "title": "12 Auto Loop Engine V15 Full Per Role Decompressor Plus Mix Chip",
+      "kicker": "Auto-draft",
+      "blurb": "Auto-onboarded from incoming batch (0 prompt blocks). Triad under review \u2014 verify system.md, then recompile.",
+      "path": "claude_brain/engines/12-auto-loop-engine-v15-full-per-role-decompressor-plus-mix-chip/dist/12-auto-loop-engine-v15-full-per-role-decompressor-plus-mix-chip-compiled.html"
+    }
+  ]
+}

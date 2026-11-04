@@ -1,0 +1,18 @@
+{
+  "skill": "ignition-pipeline",
+  "skill_name": "ignition-pipeline",
+  "description": "\"The self-executing opening chain for any Therantai session. Reads the local claude_brain/ folder, surfaces active threads, flags pending-merge entries, fires an attune pulse, and delivers a single orientation block \u2014 so the practitioner's first thought goes into the work, not into reconstructing where the work lives. Claude drives all four stages; the practitioner says one word to open the session. Ambient attune suspended for pipeline duration, resumes on 'begin'. Invoke with /ignite, 'open session', 'start here', 'where did I leave off', 'orient me', or any phrase signaling session-open intent. Voice-tolerant \u2014 loose trigger matching.\"",
+  "source_file": "skills/ignition-pipeline/SKILL.md",
+  "source_sha": "0b38ad0898c633bf0f23470c7c2e7338adce80c34d0f156557528c3ceb633807",
+  "resources": [],
+  "provider_config": {
+    "model_core": "v2"
+  },
+  "inputs": [
+    {
+      "id": "chatInput",
+      "kind": "textarea",
+      "label": "Invoke the skill"
+    }
+  ]
+}
