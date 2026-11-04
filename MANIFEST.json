@@ -187,9 +187,9 @@
       "url": "https://raw.githubusercontent.com/meetvenkat1-code/therantai-skills/main/skills/harvest-pipeline/SKILL.md"
     },
     "hybrid-engine-contract": {
-      "bytes": 23419,
-      "description": "> Portable architectural contract for building Hybrid HTML Engines from any session or project: provider delegation, streaming, palette, engine taxonomy, build constraints, banned patterns. Provider and model handling is delegated to model-config-contract (the Model Core): providers, chains, keys, defaults and the call layer come from model.json plus one pasted block, never from literals in the HTML. Floor: Claude Native inside claude.ai; Groq gpt-oss-120b (soft-falls to gpt-oss-20b, hard-falls to the OpenRouter free router) standalone; OpenRouter is text-only and standalone-only. Invoke with /hybrid-engine, \"invoke hybrid engine contract\", \"load engine contract\" or \"I want to build a hybrid HTML engine\". Always pair with /ui-contract (layout, copy, rendering, provider dot) and /model-config (provider layer); this skill owns the hybrid law, streaming rules, palette, taxonomy and build law.",
-      "sha256": "51a334fe76543b1fce3099bc1c100b0c39ea47fce539cb653c1af311c8c682d7",
+      "bytes": 28298,
+      "description": "> Portable architectural contract for building Hybrid HTML Engines from any session or project: provider delegation, streaming, palette, engine taxonomy, model-surface router (None / Lanes / Panel), build constraints, banned patterns. Provider and model handling is delegated to model-config-contract (the Model Core): providers, chains, keys, defaults and the call layer come from model.json plus one pasted block, never from literals in the HTML. Floor: Claude Native inside claude.ai; Groq gpt-oss-120b (soft-falls to gpt-oss-20b, hard-falls to the OpenRouter free router) standalone; OpenRouter is text-only and standalone-only. Invoke with /hybrid-engine, \"invoke hybrid engine contract\", \"load engine contract\" or \"I want to build a hybrid HTML engine\". Always pair with /ui-contract (layout, copy, rendering, provider dot) and /model-config (provider layer); this skill owns the hybrid law, streaming rules, palette, taxonomy and build law.",
+      "sha256": "a142b08ab3969994c36af68601e6e12f729c5eb7c1c4553d547a6a6931593d3a",
       "url": "https://raw.githubusercontent.com/meetvenkat1-code/therantai-skills/main/skills/hybrid-engine-contract/SKILL.md"
     },
     "ignition-pipeline": {
@@ -235,15 +235,15 @@
       "url": "https://raw.githubusercontent.com/meetvenkat1-code/therantai-skills/main/skills/meta-forge-v3/SKILL.md"
     },
     "model-catalog-panel": {
-      "bytes": 69991,
-      "description": "> Optional model-picker layer for Hybrid HTML Engines, built on the Model Core (model- config-contract v2). Lanes mode: pin models as exact parallel lanes, one input through many models side by side. Panel mode: each panel, stage or role owns one model, chosen from the config defaults plus a per-panel Recent history, with a reassign popover per panel. Both modes consume the Core API (config, keys, hardened callModel) and never re- implement it. Defaults are the config's defaultLanes; everything else arrives through a live /models catalog (tiers, search, /regex/; tags, Synth Picks and price sort as opt-in modules). Exactly one control chooses the model. Invoke with /catalog lanes or /catalog panel (/catalog fanout aliases lanes), or say \"add live model catalog\", \"pin models as lanes\", \"per-panel model picker\". A bare /catalog asks one gate question. Skip for engines that only need the default models.",
-      "sha256": "56e55a01fd0904ff2a53947e841370a03621085619984c67126ff3dec7d51e43",
+      "bytes": 103357,
+      "description": "> Optional model-picker layer for Hybrid HTML Engines, built on the Model Core (model-config-contract v2.1). One axis decides the mode: Lanes vary the model, Panel varies the role. Lanes: pin models as exact parallel lanes, one input through many models. Panel, Full: each panel, stage or role owns one model (per-panel Recent history, reassign popover). Panel, Master: one Master model serves every role, with a Master control in the header, full-width cards stacked vertically and a read-only Served by badge per card. Dual-Run offers both, Master canonical. All modes consume the Core API (config, keys, callModel, callModelPatient, RunScope, runBatch) and never re-implement it. Invoke with /catalog lanes, /catalog panel, /catalog panel master or /catalog panel full, or say \"add live model catalog\", \"pin models as lanes\", \"per-panel model picker\", \"one model for every stage\". A bare /catalog asks one gate question. Implicit triggers (routed here by hybrid-engine-contract step 4b, no slash command needed): \"compare models\", \"side by side\", \"multi-stage\", \"pipeline\", \"lenses\", \"per stage\". Skip for engines that only need the default models.",
+      "sha256": "5b0c47053b50a839ec6440fe36b0dff249ed021016f60e348b0f8958e1bed57b",
       "url": "https://raw.githubusercontent.com/meetvenkat1-code/therantai-skills/main/skills/model-catalog-panel/SKILL.md"
     },
     "model-config-contract": {
-      "bytes": 52569,
-      "description": "> Model Core v2: the universal provider and model layer for every HTML engine that calls an LLM. Owns model.json (providers, chains, defaultLanes, model_aliases, per-provider timing), the standard two-model floor (Groq gpt-oss-120b plus the OpenRouter free router), key slots (hek_ with legacy-slot fallback), and the ONE hardened call layer, callModel: a curated chain-walk or a strict single-model call, streaming, 429 retry, system-role fold, fatal statuses, served-model tag, reasoning liveness. hybrid-engine-contract delegates to this skill for all provider and model handling; model-catalog-panel is the optional picker built on top of it and never re-implements any of it. Invoke with /model-config or \"invoke model config contract\". Implied by /hybrid-engine for new builds; invoke explicitly to retrofit an existing engine.",
-      "sha256": "5956179034459e89bb7832f5119b4baca6f64f83bf5fa65c3936b32aee4c4547",
+      "bytes": 72576,
+      "description": "> Model Core v2.1: the universal provider and model layer for every HTML engine that calls an LLM. Owns model.json (providers, chains, defaultLanes, defaultMaster, model_aliases, per-provider timing), the standard two-model floor (Groq gpt-oss-120b plus the OpenRouter free router), key slots (hek_ with legacy-slot fallback, one keyFieldId convention), the ONE hardened call layer, callModel (a curated chain-walk or a strict single-model call, streaming, 429 retry, system-role fold, fatal statuses, served-model tag, reasoning liveness), and, new in v2.1, the run primitives every multi-call engine needs: callModelPatient (visible 429 countdown), RunScope (Stop that cannot null itself), runBatch (sequential or parallel scheduler with halt/continue policy) and drift control (CORE_VERSION, BEGIN/END sentinels, coreSelfCheck). hybrid-engine-contract delegates to this skill for all provider and model handling; model-catalog-panel is the optional picker built on top of it and never re-implements any of it. Invoke with /model-config or \"invoke model config contract\". Implied by /hybrid-engine for new builds; invoke explicitly to retrofit an existing engine.",
+      "sha256": "6e33f6d66bf875c577d669866db5ff696f06d219e57c54b355cde756d9157fe1",
       "url": "https://raw.githubusercontent.com/meetvenkat1-code/therantai-skills/main/skills/model-config-contract/SKILL.md"
     },
     "moult": {
@@ -257,6 +257,12 @@
       "description": "Compresses a messy, rambling, or multi-threaded user input down to the single structural fork that actually matters, resolves that fork using best available reasoning, and states the resolution as one transparent receipt line before proceeding. Invoke with /occam, \"Occam's Razor this\", \"occam it\", or \"cut through this\" when a conversation has accumulated multiple open forks, back-and-forth clarifying questions, or the person explicitly says the discussion feels messy, chaotic, or stuck in a rabbit hole. Do NOT trigger automatically \u2014 invoke only on explicit request. The skill never asks \"which do you prefer\" between options Claude could judge itself; it only asks when the fork requires information only the person possesses.",
       "sha256": "eeddd1a5c29da86a017f42d9bd58544663e289ee69b958c2bca7101ba58720c6",
       "url": "https://raw.githubusercontent.com/meetvenkat1-code/therantai-skills/main/skills/occams-razor/SKILL.md"
+    },
+    "open-code-handoff": {
+      "bytes": 14965,
+      "description": "Packages the current Claude session into one standalone prompt for Open Code, the local agent that executes HTML engine work and is the only writer to the shared ledger. Two modes. Ledger mode (Claude Desktop reads the ledger directly, or a web chat has STATE.md attached) takes current state from STATE.md and adds a LEDGER section; Paste mode (no ledger available) takes state from the session. Invoke with /oc-handoff [objective] [optional: path], or phrases like \"handoff to open code\", \"package this for open code\", \"open code prompt\". Names the contract and skill files Open Code must read first, summarizes current state, and issues strict ordered directives bound to the UI and Model contracts. Never fabricates paths or file contents. Never writes to the ledger. Do NOT confuse with /handoff, which compresses a session into a context block for a new Claude chat.",
+      "sha256": "4483f898a66c2b724b10572884c46cbfb6292479f5d36c74149f55b4a3180077",
+      "url": "https://raw.githubusercontent.com/meetvenkat1-code/therantai-skills/main/skills/open-code-handoff/SKILL.md"
     },
     "openrouter-free-path-integration": {
       "bytes": 3653,
@@ -281,6 +287,12 @@
       "description": "The deliberate gate every named friction passes through after it is extracted and before it is installed as a skill. Resolves the four structural questions \u2014 organizing scheme, arc-phase, trigger condition, staffed-or-orphan verdict \u2014 and writes the result to the Skill Registry, the single structured source of truth for the ecosystem. Runs socratic by default (questioning the person through each placement to train structural instinct) with an autonomous escape hatch. The complement of cognitive-friction-extractor \u2014 the extractor NAMES the friction, this skill PLACES it. Invoke with /place to smelt a batch of named-but-unplaced frictions, and /map to regenerate the SVG zone projection from the registry on demand.",
       "sha256": "671dbb658fc4b2e945c584d4f316e4ea55a61151175c893662d14a926973e26b",
       "url": "https://raw.githubusercontent.com/meetvenkat1-code/therantai-skills/main/skills/placement-protocol/SKILL.md"
+    },
+    "plugin-package-architect": {
+      "bytes": 15484,
+      "description": "\"Compiles a design idea, conversation excerpt, system prompt, framework, existing skill, or existing Custom GPT into one of four deployment targets: PLUGIN_CREATOR (default; a copy-paste build specification for ChatGPT Plugin Creator), PORTABLE_PLUGIN (a plugin.json + skills/ package), SKILL_ONLY (a standalone SKILL.md), or CUSTOM_GPT_LEGACY (the V1 five-section Custom GPT package). One pass, source-driven, with a mandatory source-dependent anti-drift block. Invoke with /plugin-package-architect, 'build a plugin from this', 'convert this conversation into a reusable plugin', 'package this workflow for Plugin Creator', 'transform this system prompt into a plugin', 'convert this Custom GPT into a plugin', 'generate a portable plugin package', 'build a reusable skill from this framework'. Legacy aliases (/custom-gpt-package, 'build a custom GPT package', 'turn this into a custom GPT', 'package this for ChatGPT', 'custom GPT from this spine', 'make a custom GPT out of this', 'render this for the GPT builder') route to CUSTOM_GPT_LEGACY.\"",
+      "sha256": "acc74e6c9c0901d02e3467caef854fdde6017f0cd755ab0e7169b9b52732bcda",
+      "url": "https://raw.githubusercontent.com/meetvenkat1-code/therantai-skills/main/skills/plugin-package-architect/SKILL.md"
     },
     "prompt-engine-interface-contract": {
       "bytes": 5970,
@@ -335,6 +347,12 @@
       "description": "> Full mirror of the Rupture transformation protocol. Invoke with /rupture in any project to load the complete response architecture \u2014 threshold descent, tonal register, recursive turn, penultimate denial, and conversion to practice \u2014 at full operational weight. Use whenever the governing mode is perceptual breakdown rather than information transfer. Trigger on /rupture or \"invoke rupture\" or \"activate threshold architecture\".",
       "sha256": "d593ec3c4a3841463ab815337718ab693f74ca663b242379b5c0ed1e56183380",
       "url": "https://raw.githubusercontent.com/meetvenkat1-code/therantai-skills/main/skills/rupture/SKILL.md"
+    },
+    "script-compiler": {
+      "bytes": 9946,
+      "description": "Pure-text meta-compiler for scripts. Takes one or more reference texts (monologue, video-essay narration, sermon, ad copy, explainer, any prose written to move a listener) and builds the slot-grammar script engine that regenerates the same construction on any new subject. Works entirely in the model's own text generation, with no code, scripts or external tools: numbers every sentence, hand-counts length and rhythm in a visible table, maps semantic beats, extracts the modal ladder and register rules by pattern-matching, maps each slot's truth profile so a FIDELITY dial can govern what is allowed to be true, and emits a self-contained, paste-ready engine prompt with scope guard, distress exit and trace. The structured successor to script-dna's qualitative extraction. Invoke with /script-compiler, \"compile this script\", \"build the script engine for this\", \"slot grammar from this text\", \"engine from this reference\".",
+      "sha256": "37692eda2039adf601e6d29018eebef06a98e7f55cb3a09bd340d602d8dc1575",
+      "url": "https://raw.githubusercontent.com/meetvenkat1-code/therantai-skills/main/skills/script-compiler/SKILL.md"
     },
     "script-dna": {
       "bytes": 5075,
@@ -421,11 +439,11 @@
       "url": "https://raw.githubusercontent.com/meetvenkat1-code/therantai-skills/main/skills/typography/SKILL.md"
     },
     "ui-contract": {
-      "bytes": 20588,
+      "bytes": 25770,
       "description": "A living constraint map governing the structural, behavioral, and rendering laws of every HTML engine build. Invoke with /ui-contract or by saying \"invoke UI Contract\" or \"update UI Contract\". Triggers when building any new engine, modifying an existing engine's layout, or adding new resolved constraints discovered during builds. Apply all constraints before writing any code. Update cumulatively as new friction is resolved \u2014 never re-solve a constraint already in this map.",
-      "sha256": "7274b5adf7c7b3c0c88f226a16f3e37b2ce15ad04eeb77c1d03fc2cafc9d8c33",
+      "sha256": "0ff76d990b379975986e14f1b16bd8d13d886c52abea208489d906eee71ba46f",
       "url": "https://raw.githubusercontent.com/meetvenkat1-code/therantai-skills/main/skills/ui-contract/SKILL.md"
     }
   },
-  "version": "v1.1.0"
+  "version": "v1.2.0"
 }
