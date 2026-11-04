@@ -163,12 +163,25 @@ def index(tree, man, tag):
     (pathlib.Path(tree) / "INDEX.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
+def _rm_link(p):
+    try:
+        p.unlink()
+    except OSError:
+        os.rmdir(p)          # junctions and directory symlinks on Windows
+
+
 def activate(tree):
     tmp = ROOT / ".current.tmp"
     if tmp.is_symlink() or tmp.exists():
-        tmp.unlink()
-    tmp.symlink_to(tree)
-    os.replace(tmp, CUR)  # atomic swap of the symlink
+        _rm_link(tmp)
+    if sys.platform == "win32":
+        import subprocess
+        subprocess.run(["cmd", "/c", "mklink", "/J", str(tmp), str(tree)], check=True, stdout=subprocess.DEVNULL)
+        if CUR.is_symlink() or CUR.exists():
+            _rm_link(CUR)
+    else:
+        tmp.symlink_to(tree)
+    os.replace(tmp, CUR)
 
 
 def self_update(tree, man):
